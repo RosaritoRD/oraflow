@@ -11,7 +11,7 @@ Pensado y probado en producción con un canal real de oraciones en español (ví
 [![Docker](https://img.shields.io/badge/docker-listo-2496ED.svg)](docker-compose.yml)
 [![Docs](https://img.shields.io/badge/docs-KEIZAC%20TECH-black.svg)](https://keizactech.com/docs)
 
-[Qué hace](#-qué-hace) · [Cómo funciona](#-cómo-funciona) · [Arranque rápido](#-arranque-rápido) · [Claude Code y Codex](#-conectarlo-a-claude-code-o-codex) · [Novedades](#-novedades-y-mejoras) · [Docs](https://keizactech.com/docs)
+[Qué hace](#-qué-hace) · [Cómo funciona](#-cómo-funciona) · [Arranque rápido](#-arranque-rápido) · [Claude Code y Codex](#-conectarlo-a-claude-code-o-codex) · [Novedades](#-novedades-y-mejoras) · [Ahorro](AHORRO-Y-MEJORAS.md) · [Docs](https://keizactech.com/docs)
 
 </div>
 
@@ -188,6 +188,7 @@ Historial completo en [CHANGELOG.md](CHANGELOG.md).
 
 ## 📚 Documentación
 
+- 💸 **[Ahorro y mejoras](AHORRO-Y-MEJORAS.md)**: cómo gastar menos y qué hace que los vídeos funcionen mejor
 - 📖 **Guías completas, tutoriales y más proyectos:** [keizactech.com/docs](https://keizactech.com/docs)
 - 🏢 **KEIZAC TECH:** [keizactech.com](https://keizactech.com)
 - Guías internas: carpeta [`docs/`](docs/)
