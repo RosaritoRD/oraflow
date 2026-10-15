@@ -1,0 +1,8 @@
+/var/log/oraflow-autodeploy.log {
+    weekly
+    rotate 8
+    compress
+    missingok
+    notifempty
+    su root syslog
+}

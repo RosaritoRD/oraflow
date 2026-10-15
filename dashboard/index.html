@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en" class="preboot">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#05070C">
+  <title>KEIZAC Tube · Studio</title>
+  <link rel="icon" type="image/png" href="/assets/logo-icon-dark.png">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/keizac-shell.css">
+</head>
+<body>
+  <a class="skip-link" href="#studio-main">Skip to content</a>
+  <div class="aurora" aria-hidden="true"></div>
+  <div class="spotlight" aria-hidden="true"></div>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#overview" aria-label="YouTube Automation Studio home">
+        <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg></span>
+        <span><strong>Oraflow</strong><small id="brand-name">Automation Studio</small></span>
+      </a>
+      <p class="sidebar-label" aria-hidden="true">Workspace</p>
+      <nav aria-label="Main navigation">
+        <button class="nav-item active" data-view="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7.5" height="9.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="1.5"/><rect x="13.5" y="11.5" width="7.5" height="9.5" rx="1.5"/><rect x="3" y="15.5" width="7.5" height="5.5" rx="1.5"/></svg> Overview</button>
+        <button class="nav-item" data-view="research"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5M7.5 10.5h6M10.5 7.5v6"/></svg> Research</button>
+        <p class="nav-group" aria-hidden="true">Create</p>
+        <button class="nav-item" data-view="shorts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 9.5v5l4-2.5z"/></svg> Shorts</button>
+        <button class="nav-item" data-view="clipping"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6.5" r="2.6"/><circle cx="6" cy="17.5" r="2.6"/><path d="M8.2 8 20 17.5M8.2 16 20 6.5"/></svg> Clipping</button>
+        <button class="nav-item" data-view="operator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/></svg> Autonomous operator</button>
+        <p class="nav-group" aria-hidden="true">Channel</p>
+        <button class="nav-item" data-view="pipeline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M4 12h16M4 18h7"/><circle cx="17.5" cy="6" r="2"/><circle cx="14.5" cy="18" r="2"/></svg> Pipeline <b id="review-badge" class="badge hidden">0</b></button>
+        <button class="nav-item" data-view="calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16.5" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4M7.5 13.5h3v3h-3z"/></svg> Calendar & ideas</button>
+        <button class="nav-item" data-view="analytics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 20.5h17"/><path d="M6.5 20V11M11 20V4.5M15.5 20v-7M20 20V8.5"/></svg> Analytics</button>
+        <button class="nav-item" data-view="redes" hidden>Redes</button>
+        <button class="nav-item" data-view="engagement"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 01-9.1 8.4 9 9 0 01-3.8-.9L3 20l1-4.9A8.4 8.4 0 1121 11.5z"/><path d="M8 10h8M8 13.5h5"/></svg> Engagement</button>
+        <p class="nav-group" aria-hidden="true">System</p>
+        <button class="nav-item" data-view="readiness"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8l7.5 3v6c0 4.8-3.2 8.2-7.5 9.4-4.3-1.2-7.5-4.6-7.5-9.4v-6z"/><path d="M8.8 12.2l2.3 2.3 4.4-4.6"/></svg> Production readiness</button>
+        <button class="nav-item" data-view="accounts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4.2"/><path d="m11 12 8.5-8.5M16.5 6.5l2.5 2.5M14 9l2 2"/></svg> Accounts</button>
+        <button class="nav-item" data-view="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 1.55V21a2 2 0 11-4 0v-.09A1.7 1.7 0 009 19.4a1.7 1.7 0 00-1.87.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-1.55-1H3a2 2 0 110-4h.09A1.7 1.7 0 004.6 9a1.7 1.7 0 00-.33-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-1.55V3a2 2 0 114 0v.09a1.7 1.7 0 001 1.51 1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06A1.7 1.7 0 0019.4 9c.28.66.9 1.05 1.55 1H21a2 2 0 110 4h-.09a1.7 1.7 0 00-1.51 1z"/></svg> Channel setup</button>
+        <button class="nav-item" data-view="docs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H11v17H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M20 4.5A1.5 1.5 0 0 0 18.5 3H13v17h5.5a1.5 1.5 0 0 0 1.5-1.5z"/><path d="M7 7.5h1.5M15.5 7.5H17M15.5 11H17"/></svg> Guides</button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="system-pill"><i id="system-dot"></i><span id="system-label">Connecting…</span></div>
+        <button id="automation-toggle" class="button secondary full">Pause automation</button>
+      </div>
+    </aside>
+
+    <main id="studio-main" tabindex="-1">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="view-eyebrow">OPERATOR OVERVIEW</p>
+          <h1 id="view-title">Your channel, in production.</h1>
+        </div>
+        <div class="top-actions">
+          <label class="language-control"><span class="sr-only">Interface language</span><select id="language-select" aria-label="Interface language"><option value="es">ES</option><option value="en">EN</option></select></label>
+          <button id="refresh-button" class="icon-button" title="Refresh dashboard" aria-label="Refresh dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 11-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button>
+          <button id="generate-button" class="button primary">＋ Create video</button>
+        </div>
+      </header>
+
+      <div class="sync-status"><span id="sync-label" role="status">Connecting…</span><span>Oraflow Studio</span></div>
+      <div id="connection-warning" class="connection-warning hidden" role="alert"><span>Could not refresh. Displayed data may be outdated.</span><button type="button" class="text-button" id="retry-dashboard">Try again</button></div>
+      <div id="loading" class="loading-bar"></div>
+      <div id="toast" class="toast hidden" role="status"></div>
+
+      <section id="overview-view" class="view active">
+        <div id="setup-banner" class="setup-banner hidden"><div><strong>Finish setup to activate your agents</strong><p>The operator console is ready, but generation and publishing stay disabled until credentials are configured.</p></div><code>npm run walkthrough</code></div>
+        <section id="redes-resumen" class="redes-resumen" aria-label="Redes hoy" hidden></section>
+        <section id="studio-brief" class="studio-brief" aria-label="Next action">
+          <div class="studio-brief-mark" aria-hidden="true">▶</div>
+          <div><p class="eyebrow">YOUR NEXT STEP</p><h2 id="studio-brief-title">Loading your workspace…</h2><p id="studio-brief-detail">Review, schedule and publish from one place.</p></div>
+          <button id="studio-brief-action" class="button secondary" type="button" disabled>View pipeline →</button>
+        </section>
+        <div class="stats-grid">
+          <button type="button" class="stat stat-link" data-pipeline-status="review_queue"><span>Needs review</span><strong id="stat-review">—</strong><small>waiting for a decision →</small></button>
+          <button type="button" class="stat stat-link" data-pipeline-status="scheduled"><span>Scheduled</span><strong id="stat-scheduled">—</strong><small>in your publishing queue →</small></button>
+          <button type="button" class="stat stat-link" data-pipeline-status="published"><span>Published</span><strong id="stat-published">—</strong><small>all time →</small></button>
+          <article class="stat"><span>Average score</span><strong id="stat-score">—</strong><small>recent content performance</small></article>
+        </div>
+
+        <div class="overview-grid">
+          <article class="panel review-panel">
+            <div class="panel-heading"><div><p class="eyebrow">DECISION QUEUE</p><h2>Ready for you</h2></div><button class="text-button" data-go="pipeline">View pipeline →</button></div>
+            <div id="review-list" class="card-list"></div>
+          </article>
+          <article class="panel">
+            <div class="panel-heading"><div><p class="eyebrow">ACTIVE WORK</p><h2>Generation jobs</h2></div></div>
+            <div id="job-list" class="card-list compact"></div>
+          </article>
+        </div>
+
+        <div class="overview-grid lower">
+          <article class="panel">
+            <div class="panel-heading"><div><p class="eyebrow">UP NEXT</p><h2>Publishing calendar</h2></div><button class="text-button" data-go="calendar">Open calendar →</button></div>
+            <div id="next-schedule" class="timeline"></div>
+          </article>
+          <article class="panel">
+            <div class="panel-heading"><div><p class="eyebrow">INBOX</p><h2>Recent activity</h2></div></div>
+            <div id="notification-list" class="activity-list"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="research-view" class="view">
+        <div class="section-intro research-intro">
+          <div><p class="eyebrow">RESEARCH INBOX</p><h2>Research before you generate.</h2><p>Validate the niche, preserve the source material, then hand the strongest idea to Oraflow.</p></div>
+          <div class="research-intro-actions"><span id="research-connection" class="status">Connecting</span><button id="research-refresh-button" class="button secondary small" type="button">Refresh research</button></div>
+        </div>
+
+        <div class="research-flow" aria-label="Research to production workflow">
+          <div><span>01</span><strong>Validate</strong><small>Real channel evidence</small></div><i aria-hidden="true">→</i>
+          <div><span>02</span><strong>Queue</strong><small>Editorial backlog</small></div><i aria-hidden="true">→</i>
+          <div><span>03</span><strong>Produce</strong><small>Oraflow pipeline</small></div>
+        </div>
+
+        <div class="research-tabs" role="tablist" aria-label="Research tools">
+          <button type="button" role="tab" aria-selected="true" data-research-tab="radar">Opportunity radar</button>
+          <button type="button" role="tab" aria-selected="false" data-research-tab="niche">Niche evidence</button>
+          <button type="button" role="tab" aria-selected="false" data-research-tab="ideas">Ideas</button>
+          <button type="button" role="tab" aria-selected="false" data-research-tab="notes">Notes</button>
+          <button type="button" role="tab" aria-selected="false" data-research-tab="prompts">Prompts</button>
+          <button type="button" role="tab" aria-selected="false" data-research-tab="saved">Saved</button>
+        </div>
+
+        <div id="research-error" class="research-error hidden" role="alert"></div>
+
+        <div class="research-pane" data-research-pane="radar">
+          <div class="opportunity-layout">
+            <aside class="opportunity-controls">
+              <form id="opportunity-scan-form" class="panel research-form">
+                <div class="panel-heading"><div><p class="eyebrow">OPEN-SOURCE SIGNAL ENGINE</p><h2>Find demand before supply catches up</h2><p>Scans YouTube demand, competition, outliers, monetization and search momentum.</p></div></div>
+                <label><span>Starting market</span><input name="seed" maxlength="120" placeholder="Prayer and spiritual wellness" required></label>
+                <div class="form-grid two">
+                  <label><span>Audience country</span><select name="region"><option value="US">United States</option><option value="MX">Mexico</option><option value="ES">Spain</option><option value="GB">United Kingdom</option><option value="CA">Canada</option></select></label>
+                  <label><span>Content language</span><select name="language"><option value="en">English</option><option value="es">Spanish</option></select></label>
+                  <label class="full-row"><span>Candidate depth</span><select name="maxCandidates"><option value="3">Quick · 3 opportunities</option><option value="5" selected>Balanced · 5 opportunities</option><option value="8">Deep · 8 opportunities</option></select></label>
+                </div>
+                <p class="callout">Each scan spends YouTube Data API quota. “Next 30 days” is a directional signal, not a guaranteed forecast.</p>
+                <button id="opportunity-scan-button" class="button primary" type="submit">Scan niche opportunities</button>
+              </form>
+
+              <article class="panel opportunity-engine-panel">
+                <div class="panel-heading"><div><p class="eyebrow">ENGINE</p><h2>Research connection</h2></div><span id="opportunity-engine-status" class="status">Checking</span></div>
+                <div id="opportunity-engine-detail" class="opportunity-engine-detail"></div>
+                <div id="opportunity-run-history" class="opportunity-run-history"></div>
+              </article>
+            </aside>
+
+            <section class="panel opportunity-radar-panel" aria-live="polite">
+              <div class="panel-heading opportunity-radar-heading">
+                <div><p class="eyebrow">30-DAY OPPORTUNITY MAP</p><h2 id="opportunity-results-title">No scan selected</h2><p id="opportunity-results-summary">Start with a broad market. The engine will expand and rank specific niches.</p></div>
+                <span id="opportunity-run-status" class="status">Idle</span>
+              </div>
+              <div id="opportunity-progress" class="opportunity-progress hidden"><span></span><div><i></i></div><small>Collecting live evidence from YouTube and Google Trends…</small></div>
+              <div id="opportunity-results" class="opportunity-results"></div>
+            </section>
+          </div>
+        </div>
+
+        <div class="research-pane hidden" data-research-pane="niche">
+          <div class="research-grid">
+            <form id="research-niche-form" class="panel research-form">
+              <div class="panel-heading"><div><p class="eyebrow">CHANNEL EVIDENCE</p><h2>Add one comparable channel</h2></div></div>
+              <label><span>Niche</span><input name="niche" placeholder="Morning prayers" required></label>
+              <label><span>Channel name</span><input name="channelName" placeholder="Morning Prayers Daily" required></label>
+              <div class="form-grid two">
+                <label><span>Evidence type</span><select name="type"><option value="reference">English reference</option><option value="competition">Spanish competition</option></select></label>
+                <label><span>Language</span><select name="language"><option value="en">English</option><option value="es">Spanish</option></select></label>
+                <label><span>Monthly views</span><input name="monthlyViews" type="number" inputmode="numeric" min="0" placeholder="800000"></label>
+                <label><span>Average duration</span><input name="durationMinutes" type="number" inputmode="numeric" min="0" placeholder="30"></label>
+                <label class="full-row"><span>First video published</span><input name="firstVideo" type="date"></label>
+              </div>
+              <p class="callout">Use current figures from VidIQ or Social Blade. The verdict updates every time you add a channel.</p>
+              <button class="button primary" type="submit">Save channel &amp; validate</button>
+            </form>
+            <article class="panel research-result-panel">
+              <div class="panel-heading"><div><p class="eyebrow">LIVE VERDICT</p><h2>Does the evidence hold?</h2></div></div>
+              <div id="research-niche-result" class="research-result"></div>
+            </article>
+          </div>
+        </div>
+
+        <div class="research-pane hidden" data-research-pane="ideas">
+          <div class="research-grid ideas-workbench">
+            <article class="panel">
+              <div class="panel-heading"><div><p class="eyebrow">NICHE CANDIDATES</p><h2>Find a direction to validate</h2></div></div>
+              <label><span>Filter by theme</span><select id="research-theme-filter"><option value="">All themes</option></select></label>
+              <div id="research-candidates" class="research-card-list"></div>
+            </article>
+            <article class="panel">
+              <div class="panel-heading"><div><p class="eyebrow">TITLE HOOKS</p><h2>Shape a production-ready idea</h2></div></div>
+              <form id="research-title-form">
+                <label><span>Video subject</span><input name="titleTopic" placeholder="A prayer for strength before work" required></label>
+                <button class="button secondary" type="submit">Generate title hooks</button>
+              </form>
+              <div id="research-title-hooks" class="research-card-list"></div>
+            </article>
+          </div>
+        </div>
+
+        <div class="research-pane hidden" data-research-pane="notes">
+          <form id="research-note-form" class="panel research-note-form">
+            <div class="panel-heading"><div><p class="eyebrow">SOURCE MATERIAL</p><h2>Preserve a transcript or observation</h2><p>Notes stay in the existing YouTube research archive.</p></div></div>
+            <label><span>Title</span><input name="title" placeholder="morning-prayer-masterclass" required></label>
+            <label><span>Text</span><textarea name="text" rows="14" placeholder="Paste the transcript, research notes, or source material here…" required></textarea></label>
+            <button class="button primary" type="submit">Save research note</button>
+          </form>
+        </div>
+
+        <div class="research-pane hidden" data-research-pane="prompts">
+          <div class="research-grid prompt-workbench">
+            <article class="panel">
+              <div class="panel-heading"><div><p class="eyebrow">PROMPT BUILDER</p><h2>Fill the production brief</h2></div></div>
+              <label><span>Template</span><select id="research-template-select"></select></label>
+              <div id="research-template-variables"></div>
+              <button id="research-copy-prompt" class="button primary" type="button">Copy completed prompt</button>
+            </article>
+            <article class="panel research-prompt-preview">
+              <div class="panel-heading"><div><p class="eyebrow">READY TO USE</p><h2>Prompt preview</h2></div></div>
+              <textarea id="research-prompt-text" rows="20" readonly aria-label="Completed prompt preview"></textarea>
+            </article>
+          </div>
+        </div>
+
+        <div class="research-pane hidden" data-research-pane="saved">
+          <div class="research-grid">
+            <article class="panel"><div class="panel-heading"><div><p class="eyebrow">VALIDATED WORK</p><h2>Saved niches</h2></div></div><div id="research-saved-niches" class="research-card-list"></div></article>
+            <article class="panel"><div class="panel-heading"><div><p class="eyebrow">ARCHIVE</p><h2>Saved notes</h2></div></div><div id="research-saved-notes" class="research-card-list"></div></article>
+          </div>
+        </div>
+      </section>
+
+      <section id="shorts-view" class="view">
+        <div class="section-intro"><div><h2>Verse Shorts</h2><p>Write the verses, press make, download the shorts.</p></div><span id="shorts-status" class="status">Connecting</span></div>
+        <div id="shorts-unavailable" class="callout hidden">The Shorts project folder is not mounted. Check SHORTS_DIR in the container.</div>
+        <div class="research-flow shorts-flow" aria-label="Shorts workflow">
+          <div><span>01</span><strong>Backgrounds &amp; music</strong><small>Pexels, Pixabay, YouTube Audio Library</small></div><i aria-hidden="true">→</i>
+          <div><span>02</span><strong>Verses</strong><small>Only the citation is needed</small></div><i aria-hidden="true">→</i>
+          <div><span>03</span><strong>Download &amp; upload</strong><small>Title and description included</small></div>
+        </div>
+        <div class="vshorts-grid">
+          <article class="panel">
+            <div class="panel-heading"><div><p class="eyebrow">STEP 2 · VERSES</p><h2>Batch of shorts</h2></div><span id="shorts-lote-state" class="meta-line"></span></div>
+            <p class="panel-help">One short per block. Separate blocks with a line containing <code>---</code>. The verse text comes from the Reina-Valera 1909 (public domain).</p>
+            <div class="chip-row" aria-label="Examples">
+              <button type="button" class="chip" data-shorts-example="Salmos 23:1-3">Salmos 23:1-3</button>
+              <button type="button" class="chip" data-shorts-example="Juan 3:16">Juan 3:16</button>
+              <button type="button" class="chip" data-shorts-example="Filipenses 4:13">Filipenses 4:13</button>
+              <button type="button" class="chip" data-shorts-example="Isaías 41:10">Isaías 41:10</button>
+              <button type="button" class="chip" data-shorts-example="Proverbios 3:5-6">Proverbios 3:5-6</button>
+            </div>
+            <textarea id="shorts-lote" class="code-input" rows="14" spellcheck="false" aria-label="Batch of shorts"></textarea>
+            <div class="form-actions"><button id="shorts-save" type="button" class="button secondary">Save batch</button><button id="shorts-run" type="button" class="button primary">Make all shorts</button></div>
+          </article>
+          <div class="shorts-side">
+            <article class="panel">
+              <div class="panel-heading"><div><p class="eyebrow">STEP 1 · BACKGROUNDS</p><h2>Background videos</h2></div><label class="button secondary small file-button">Upload<input type="file" accept="video/*" multiple data-shorts-upload="fondos" hidden></label></div>
+              <p class="panel-help">Landscapes, sky, water or light. They are cropped to vertical automatically and picked at random.</p>
+              <div id="shorts-fondos" class="file-list"></div>
+            </article>
+            <article class="panel">
+              <div class="panel-heading"><div><p class="eyebrow">STEP 1 · MUSIC</p><h2>Music</h2></div><label class="button secondary small file-button">Upload<input type="file" accept="audio/*" multiple data-shorts-upload="musica" hidden></label></div>
+              <p class="panel-help">Tracks from the YouTube Audio Library. If a track requires attribution, paste it under the track: it goes into every description.</p>
+              <div id="shorts-musica" class="file-list"></div>
+            </article>
+          </div>
+        </div>
+        <article class="panel shorts-job hidden" data-shorts-job>
+          <div class="panel-heading"><div><p class="eyebrow">PROGRESS</p><h2 data-job-title>Working…</h2></div><button type="button" class="button danger small" data-job-cancel>Stop</button></div>
+          <pre class="job-log" data-job-log></pre>
+        </article>
+        <article class="panel">
+          <div class="panel-heading"><div><p class="eyebrow">STEP 3 · RESULTS</p><h2>Your shorts</h2></div><span id="shorts-count" class="meta-line"></span></div>
+          <div id="shorts-results" class="shorts-results"></div>
+        </article>
+      </section>
+
+      <section id="clipping-view" class="view">
+        <div class="section-intro"><div><h2>Clipping</h2><p>Vertical clips with captions and Bible references, for campaigns that pay per view.</p></div><span id="clipping-status" class="status">Connecting</span></div>
+        <p class="callout">Only clip videos you have permission for (campaign material or your own). Read each campaign's rules: some forbid added music or require a hashtag.</p>
+        <article class="panel">
+          <div class="panel-heading"><div><p class="eyebrow">SOURCE VIDEOS</p><h2>Videos to clip</h2></div><label class="button secondary small file-button">Upload video<input type="file" accept="video/*" multiple data-shorts-upload="clipping" hidden></label></div>
+          <div class="clip-defaults">
+            <label><span>Framing</span><select id="clip-ajuste"><option value="recorte">Fill the screen (crop sides)</option><option value="entero">Whole video on blurred background</option></select></label>
+            <label><span>Transcription quality</span><select id="clip-modelo"><option value="base">Fast</option><option value="small" selected>Good (recommended)</option><option value="medium">Best · about 3× slower</option></select></label>
+          </div>
+          <div id="clipping-videos" class="file-list clip-list"></div>
+        </article>
+        <article class="panel shorts-job hidden" data-shorts-job>
+          <div class="panel-heading"><div><p class="eyebrow">PROGRESS</p><h2 data-job-title>Working…</h2></div><button type="button" class="button danger small" data-job-cancel>Stop</button></div>
+          <pre class="job-log" data-job-log></pre>
+        </article>
+        <article class="panel">
+          <div class="panel-heading"><div><p class="eyebrow">RESULTS</p><h2>Your clips</h2></div><span id="clips-count" class="meta-line"></span></div>
+          <div id="clipping-results" class="shorts-results"></div>
+        </article>
+      </section>
+
+      <section id="operator-view" class="view">
+        <div class="section-intro"><div><h2>Autonomous Channel Operator</h2><p>Set the destination once. Oraflow researches, plans, produces, and manages the channel workflow around it.</p></div><span id="operator-strategy-status" class="status">Not configured</span></div>
+        <div class="operator-grid">
+          <form id="strategy-form" class="panel settings-form">
+            <div class="panel-heading"><div><p class="eyebrow">CHANNEL MANDATE</p><h2>What should this channel achieve?</h2></div></div>
+            <div class="form-grid">
+              <label class="full-row"><span>Objective</span><textarea name="objective" rows="3" maxlength="1000" placeholder="Become the most trusted practical channel for small businesses adopting AI." required></textarea></label>
+              <label class="full-row"><span>Audience</span><textarea name="audience" rows="2" maxlength="500" placeholder="Owners and operators at 5–50 person service businesses" required></textarea></label>
+              <label class="full-row"><span>Value proposition</span><textarea name="valueProposition" rows="2" maxlength="1000" placeholder="Clear, tested advice viewers can apply this week"></textarea></label>
+              <label class="full-row"><span>Content pillars</span><input name="contentPillars" placeholder="AI workflows, automation playbooks, tool reviews" required><small>Separate 1–8 durable themes with commas.</small></label>
+              <label><span>Videos per week</span><input name="cadencePerWeek" type="number" min="1" max="7" value="1"></label>
+              <label><span>Videos per planning run</span><input name="videosPerRun" type="number" min="1" max="5" value="1"></label>
+              <label><span>Default format</span><select name="defaultFormat"><option value="explainer">Explainer</option><option value="tutorial">Tutorial</option><option value="list">List</option><option value="review">Review</option><option value="story">Story</option></select></label>
+              <label><span>Default length</span><select name="defaultLength"><option value="short">Short · 2–4 min</option><option value="medium">Medium · 8–12 min</option><option value="long">Long · 15–20 min</option></select></label>
+              <label><span>Primary outcome</span><select name="primaryKpi"><option value="views">Views</option><option value="watch_hours">Watch hours</option><option value="subscribers">Net subscribers</option><option value="engagement">Engagement rate</option><option value="revenue">Estimated revenue</option></select></label>
+              <label><span>Target value</span><input name="targetValue" type="number" min="0.01" step="0.01" placeholder="100"></label>
+              <label><span>Target window</span><select name="targetWindowDays"><option value="7">7 days</option><option value="28" selected>28 days</option><option value="90">90 days</option><option value="365">365 days</option></select></label>
+              <label><span>Monthly production budget</span><span class="currency-input"><select name="outcomeCurrency" aria-label="Outcome currency"><option value="USD">USD</option><option value="CAD">CAD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="AUD">AUD</option></select><input name="monthlyBudget" type="number" min="0" step="0.01" placeholder="Optional"></span></label>
+              <label class="full-row"><span>Outcome context</span><input name="successMetric" maxlength="300" placeholder="Grow qualified subscribers who return for practical automation tutorials"><small>Used by planning alongside the measurable primary outcome.</small></label>
+              <label class="full-row"><span>Boundaries and constraints</span><textarea name="constraints" rows="3" maxlength="2000" placeholder="No hype, no unverified statistics, explain costs and tradeoffs."></textarea></label>
+            </div>
+            <p class="callout">The operator uses YouTube trend signals, configured competitors, and channel history. Publishing still obeys your quality, factual-review, rights, and approval gates.</p>
+            <div class="form-actions"><button type="submit" class="button secondary">Save strategy</button><button id="activate-operator-button" type="button" class="button primary">Activate & run now</button><button id="pause-operator-button" type="button" class="button danger hidden">Pause operator</button></div>
+          </form>
+          <div class="operator-side">
+            <article class="panel">
+              <div class="panel-heading"><div><p class="eyebrow">CURRENT RUN</p><h2 id="operator-run-title">Waiting for a strategy</h2></div><div class="run-actions"><button id="resume-operator-run" class="text-button approve hidden">Resume run</button><button id="cancel-operator-run" class="text-button hidden">Stop run</button></div></div>
+              <div id="operator-run-summary"></div>
+            </article>
+            <article class="panel">
+              <div class="panel-heading"><div><p class="eyebrow">EDITORIAL PLAN</p><h2>What Oraflow decided to make</h2></div></div>
+              <div id="operator-plan" class="plan-list"></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="pipeline-view" class="view">
+        <div class="section-intro"><div><h2>Content pipeline</h2><p>Find a video and pick up where you left off.</p></div><span id="pipeline-count" class="meta-line" role="status"></span></div>
+        <div class="pipeline-toolbar">
+          <label class="pipeline-search"><span class="sr-only">Search videos</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="pipeline-search" type="search" placeholder="Search by title or topic" autocomplete="off"></label>
+          <label><span class="sr-only">Filter by status</span><select id="pipeline-filter"><option value="all">All content</option><option value="review_queue">Review queue</option><option value="needs_review">Needs review</option><option value="needs_attention">Needs attention</option><option value="processing">In production</option><option value="approved">Approved</option><option value="scheduled">Scheduled</option><option value="published">Published</option><option value="failed">Failed</option></select></label>
+          <label><span class="sr-only">Sort videos</span><select id="pipeline-sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="title">Title A–Z</option></select></label>
+          <button class="text-button" id="pipeline-reset" type="button">Clear filters</button>
+        </div>
+        <div id="pipeline-list" class="pipeline-list"></div>
+      </section>
+
+      <section id="calendar-view" class="view">
+        <div class="split-heading"><div><h2>Calendar & idea backlog</h2><p>Shape the queue before generation starts.</p></div><button id="add-idea-button" class="button secondary">＋ Add idea</button></div>
+        <div class="calendar-grid">
+          <article class="panel"><div class="panel-heading"><div><p class="eyebrow">SCHEDULED</p><h2>Upcoming releases</h2></div></div><div id="calendar-list" class="calendar-list"></div></article>
+          <article class="panel"><div class="panel-heading"><div><p class="eyebrow">BACKLOG</p><h2>Content ideas</h2></div></div><div id="idea-list" class="idea-list"></div></article>
+        </div>
+      </section>
+
+      <section id="analytics-view" class="view">
+        <div class="section-intro"><div><h2>Performance signals</h2><p>Data translated into decisions, not vanity metrics.</p></div></div>
+        <div class="stats-grid analytics-stats">
+          <article class="stat"><span>Analyzed videos</span><strong id="analytics-total">—</strong><small>last 30 days</small></article>
+          <article class="stat"><span>Performance score</span><strong id="analytics-score">—</strong><small>channel average</small></article>
+          <article class="stat wide"><span>Recommended action</span><strong id="analytics-action" class="recommendation">Collecting enough data to recommend a move.</strong></article>
+        </div>
+        <article class="panel outcome-studio">
+          <div class="panel-heading"><div><p class="eyebrow">GROWTH</p><h2>Subscriber conversion</h2></div></div>
+          <p class="callout">Compare videos of the same format and similar measurement periods. Recent days may still be processing.</p>
+          <div id="subscriber-growth"></div>
+        </article>
+        <article class="panel outcome-studio">
+          <div class="panel-heading"><div><p class="eyebrow">OUTCOME &amp; ROI STUDIO</p><h2>Is the channel achieving its mandate?</h2></div><span id="outcome-status" class="status">Not configured</span></div>
+          <div id="outcome-summary" class="outcome-summary"></div>
+          <div id="outcome-economics" class="outcome-economics"></div>
+          <div id="outcome-breakdowns" class="outcome-breakdowns"></div>
+          <p id="outcome-policy" class="callout">Configure a primary outcome in the Autonomous Operator to align channel learning with a measurable goal.</p>
+        </article>
+        <div class="learning-grid">
+          <article class="panel">
+            <div class="panel-heading"><div><p class="eyebrow">CHANNEL BASELINE</p><h2>What real results say</h2></div><span id="learning-snapshot-count" class="status">0 snapshots</span></div>
+            <div id="learning-baseline" class="baseline-grid"></div>
+            <p class="callout">Only real YouTube analytics enter this evidence layer. Simulated fallback data is excluded.</p>
+          </article>
+          <article class="panel">
+            <div class="panel-heading"><div><p class="eyebrow">WHAT THE AGENT LEARNED</p><h2>Review recommendations</h2></div><span id="learning-approved-count" class="status">0 approved</span></div>
+            <div id="learning-recommendations" class="learning-list"></div>
+          </article>
+        </div>
+        <article class="panel growth-experiment-studio">
+          <div class="panel-heading experiment-heading">
+            <div><p class="eyebrow">CONTROLLED GROWTH EXPERIMENTS</p><h2>Prove the next move</h2><p>Run approved title and thumbnail arms against real YouTube evidence, then separately approve the winner.</p></div>
+            <span id="experiment-status" class="status">0 running</span>
+          </div>
+          <form id="experiment-create-form" class="experiment-create-form">
+            <label><span>Published production</span><select name="productionId" id="experiment-candidate" required></select></label>
+            <label><span>Hours per arm</span><select name="armDurationHours"><option value="24">24 hours</option><option value="48" selected>48 hours</option><option value="72">72 hours</option></select></label>
+            <label><span>Minimum impressions</span><input name="minImpressions" type="number" min="100" max="1000000" step="100" value="1000" required></label>
+            <button id="experiment-create-button" class="button secondary small" type="submit">Create test plan</button>
+          </form>
+          <div id="growth-experiments" class="growth-experiment-list"></div>
+          <p id="experiment-policy" class="callout"></p>
+        </article>
+        <article class="panel retention-studio">
+          <div class="panel-heading retention-heading">
+            <div><p class="eyebrow">SCENE-AWARE RETENTION</p><h2>Where viewers stay—and leave</h2><p>Real YouTube retention points mapped onto the exact production timeline.</p></div>
+            <div class="retention-controls">
+              <label><span class="sr-only">Retention snapshot</span><select id="retention-snapshot-select" aria-label="Choose a retention snapshot"></select></label>
+              <button id="refresh-retention-button" class="button secondary small" disabled>Refresh curve</button>
+            </div>
+          </div>
+          <div id="retention-meta" class="scene-summary"></div>
+          <div id="retention-chart" class="retention-chart"></div>
+          <div id="retention-scenes" class="retention-scene-list"></div>
+          <p class="callout retention-policy">Scene findings remain evidence only. They influence future scripts and pacing only after their recommendation is approved above; published videos are never edited automatically.</p>
+        </article>
+        <article class="panel"><div class="panel-heading"><div><p class="eyebrow">TOP PERFORMERS</p><h2>What is working</h2></div></div><div id="top-performers" class="card-list"></div></article>
+        <article class="panel activation-panel"><div class="panel-heading"><div><p class="eyebrow">LOCAL ACTIVATION</p><h2>First-run journey</h2></div></div><p class="callout">Calculated locally from your database and video files. Nothing is transmitted unless anonymous telemetry is explicitly enabled.</p><div id="activation-list" class="timeline"></div></article>
+      </section>
+
+      <section id="engagement-view" class="view">
+        <div class="engagement-grid">
+          <article class="panel">
+            <div class="panel-heading">
+              <div><p class="eyebrow">AUDIENCE VOICE</p><h2>What commenters are saying</h2></div>
+              <span class="status" id="engagement-posting-status">posting locked</span>
+            </div>
+            <p id="engagement-policy" class="engagement-policy"></p>
+            <div class="panel-heading">
+              <select id="engagement-video-select" aria-label="Choose a synced video"></select>
+              <button id="engagement-sync-button" class="button secondary small">Sync now</button>
+            </div>
+            <div id="engagement-meta" class="engagement-meta"></div>
+            <div id="engagement-themes"></div>
+          </article>
+          <article class="panel">
+            <div class="panel-heading">
+              <div><p class="eyebrow">REPLY QUEUE</p><h2>Approve before anything posts</h2></div>
+              <span class="status" id="engagement-drafts-count">0 drafts</span>
+            </div>
+            <div class="panel-heading"><button id="engagement-draft-button" class="button secondary small">Draft replies</button></div>
+            <div id="engagement-drafts"></div>
+          </article>
+        </div>
+        <div class="engagement-grid">
+          <article class="panel">
+            <div class="panel-heading">
+              <div><p class="eyebrow">NEEDS ATTENTION</p><h2>Likely spam and scams</h2></div>
+              <span class="status warning" id="engagement-attention-count">0 flagged</span>
+            </div>
+            <div id="engagement-attention"></div>
+          </article>
+          <article class="panel">
+            <div class="panel-heading">
+              <div><p class="eyebrow">AUDIENCE-REQUESTED IDEAS</p><h2>Approve to feed the operator</h2></div>
+              <span class="status" id="engagement-ideas-count">0 pending</span>
+            </div>
+            <div id="engagement-ideas"></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="redes-view" class="view">
+        <div class="section-intro"><div><h2>Instagram y Facebook</h2><p>Todo lo que sale solo cada día: enciende o apaga cada pieza, cambia su hora y mira qué salió y qué falló.</p></div><button id="redes-actualizar" type="button" class="button secondary small" onclick="window.renderRedes && window.renderRedes()">Actualizar</button></div>
+        <div id="redes-conexiones" class="redes-grid redes-grid--dos"></div>
+        <div id="redes-lista" class="redes-grid"></div>
+        <div class="section-intro" style="margin-top:28px"><div><h2>Textos y enlaces</h2><p>Lo que escribe el canal solo: comentario fijo, mensaje privado, respuestas «Amén», libro, cupón y pie de YouTube. Lo que guardes se usa desde la siguiente publicación.</p></div></div>
+        <div id="redes-textos" class="redes-textos"></div>
+      </section>
+
+      <section id="readiness-view" class="view">
+        <div class="section-intro readiness-intro">
+          <div><h2>Production readiness</h2><p>Verify the real path from providers to a publishable YouTube upload before autonomy spends time or credits.</p></div>
+          <span id="readiness-status" class="status unverified">Unverified</span>
+        </div>
+        <article class="panel readiness-hero">
+          <div>
+            <p class="eyebrow">VERIFIED DRY RUN</p>
+            <h2 id="readiness-title">Prove the pipeline, without uploading.</h2>
+            <p id="readiness-summary">The check makes small live text and narration requests, verifies channel access, builds a local audio/video MP4, and validates queued metadata. It never creates or uploads a YouTube video.</p>
+            <div id="readiness-meta" class="meta-line">No readiness run recorded.</div>
+          </div>
+          <div class="readiness-actions">
+            <label class="toggle paid-probe"><input id="paid-image-probe" type="checkbox"><span></span> Include paid image probe</label>
+            <label class="toggle paid-probe"><input id="paid-video-probe" type="checkbox"><span></span> Include paid video probe</label>
+            <button id="run-readiness-button" class="button primary">Run verified check</button>
+            <small>Live provider probes can consume a small amount of quota or credits.</small>
+          </div>
+        </article>
+        <div id="readiness-checks" class="readiness-grid"></div>
+        <p class="callout readiness-policy">A recorded blocking failure stops autonomous generation and publishing until a later run passes. An unverified or stale result remains visible but does not interrupt manual work.</p>
+      </section>
+
+      <section id="accounts-view" class="view">
+        <div class="section-intro"><div><h2>Accounts &amp; keys</h2><p>See what is connected, test it for real and reconnect your channel. Keys are never shown here.</p></div><button id="accounts-test-all" type="button" class="button secondary small">Test everything</button></div>
+        <div id="accounts-banner" class="callout hidden" role="status"></div>
+        <article class="panel account-hero">
+          <div class="panel-heading"><div><p class="eyebrow">PUBLISHING</p><h2>YouTube channel</h2></div><span id="yt-status" class="status">Checking</span></div>
+          <p class="panel-help">Oraflow publishes with your permission (OAuth). Two pieces are needed: the Google OAuth client (from Google Cloud) and the channel's permission (the “Connect channel” button).</p>
+          <div id="yt-detail" class="account-detail"></div>
+          <div class="form-actions wrap"><button type="button" class="button secondary small" data-account-test="youtube">Test connection</button><a id="yt-connect" class="button primary small" href="/api/accounts/youtube/connect">Connect channel</a><button id="yt-client-toggle" type="button" class="text-button">Replace OAuth client</button></div>
+          <p class="account-result" data-account-result="youtube" role="status"></p>
+          <form id="yt-client-form" class="account-form hidden" autocomplete="off">
+            <ol class="steps">
+              <li>Open <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud → Credentials</a> and create an <strong>OAuth client ID</strong> of type <strong>Web application</strong>.</li>
+              <li>Under “Authorized redirect URIs” add exactly: <code id="yt-redirect"></code> <button type="button" class="text-button" id="yt-redirect-copy">Copy</button></li>
+              <li>Paste the client ID and secret here, save, and press “Connect channel”.</li>
+            </ol>
+            <div class="form-grid">
+              <label class="full-row"><span>Client ID</span><input name="clientId" placeholder="123456-abc.apps.googleusercontent.com" spellcheck="false" required></label>
+              <label class="full-row"><span>Client secret</span><input name="clientSecret" type="password" placeholder="GOCSPX-…" spellcheck="false" required><small>Stored only on the server. It is never shown again.</small></label>
+            </div>
+            <div class="form-actions"><button type="submit" class="button primary small">Save client</button><button type="button" class="button ghost small" id="yt-client-cancel">Cancel</button></div>
+          </form>
+        </article>
+        <div id="accounts-grid" class="accounts-grid"></div>
+        <p class="callout">Keys marked “from .env” are changed on the server, in <code>oraflow-lab/.env</code>, and need a restart of the container. The guide “Accounts and keys” explains each one.</p>
+      </section>
+
+      <section id="docs-view" class="view">
+        <div class="docs-layout">
+          <aside class="panel docs-nav">
+            <label class="pipeline-search docs-search"><span class="sr-only">Search guides</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="docs-search" type="search" placeholder="Search guides" autocomplete="off"></label>
+            <nav id="docs-list" class="docs-list" aria-label="Guides"></nav>
+          </aside>
+          <article id="docs-article" class="panel docs-article" tabindex="-1"></article>
+        </div>
+      </section>
+
+      <section id="settings-view" class="view">
+        <div class="section-intro"><div><h2>Channel setup</h2><p>These guardrails guide every agent in the pipeline.</p></div></div>
+        <form id="profile-form" class="panel settings-form">
+          <div class="form-grid">
+            <label><span>Channel name</span><input name="channelName" maxlength="120" required></label>
+            <label><span>Default format</span><select name="defaultStyle"><option value="explainer">Explainer</option><option value="tutorial">Tutorial</option><option value="list">List</option><option value="review">Review</option><option value="story">Story</option></select></label>
+            <label class="full-row"><span>Channel goal</span><textarea name="goal" rows="2"></textarea></label>
+            <label class="full-row"><span>Target audience</span><textarea name="targetAudience" rows="2"></textarea></label>
+            <label><span>Brand voice</span><input name="brandVoice" placeholder="Clear, credible, engaging"></label>
+            <label><span>Timezone</span><input name="timezone" placeholder="America/Chicago"></label>
+            <label class="full-row"><span>Default call to action</span><input name="callToAction"></label>
+            <label class="full-row"><span>Visual direction</span><input name="visualStyle"></label>
+            <label class="full-row"><span>Blocked topics or terms</span><input name="bannedTopics" placeholder="term one, term two"><small>Quality review blocks content containing these terms.</small></label>
+          </div>
+          <div class="settings-row">
+            <label class="toggle"><input id="approval-required" type="checkbox"><span></span> Require approval before scheduling</label>
+            <label class="toggle"><input id="notifications-enabled" type="checkbox"><span></span> Save operator notifications</label>
+          </div>
+          <fieldset class="video-extras-settings">
+            <legend>Video elements</legend>
+            <small>Added on top of long videos, burned in with the captions. Start is 0:11, End is 30 seconds before the end.</small>
+              <div class="extras-row" data-extra="suscribir">
+                <label class="toggle"><input type="checkbox" data-extra-activo><span></span> Like · Subscribe · Bell animation</label>
+                <span class="extras-when"><label><input type="checkbox" value="inicio"> Start</label><label><input type="checkbox" value="mitad"> Middle</label><label><input type="checkbox" value="final"> End</label></span>
+                <label class="extras-shorts"><input type="checkbox" id="extras-suscribir-shorts"> Also on Shorts (near the end)</label>
+                <small>A cursor taps like, subscribe and the bell.</small>
+              </div>
+              <div class="extras-row" data-extra="campana">
+                <label class="toggle"><input type="checkbox" data-extra-activo><span></span> “Turn on the bell” reminder</label>
+                <span class="extras-when"><label><input type="checkbox" value="inicio"> Start</label><label><input type="checkbox" value="mitad"> Middle</label><label><input type="checkbox" value="final"> End</label></span>
+                <small>A card with a ringing bell.</small>
+              </div>
+              <div class="extras-row" data-extra="comentar">
+                <label class="toggle"><input type="checkbox" data-extra-activo><span></span> Comment invitation</label>
+                <span class="extras-when"><label><input type="checkbox" value="inicio"> Start</label><label><input type="checkbox" value="mitad"> Middle</label><label><input type="checkbox" value="final"> End</label></span>
+                <small>A card with the text below.</small>
+              </div>
+              <div class="extras-row" data-extra="compartir">
+                <label class="toggle"><input type="checkbox" data-extra-activo><span></span> “Share this prayer” card</label>
+                <span class="extras-when"><label><input type="checkbox" value="inicio"> Start</label><label><input type="checkbox" value="mitad"> Middle</label><label><input type="checkbox" value="final"> End</label></span>
+                <small>Asks the viewer to share it with someone who needs it.</small>
+              </div>
+            <label class="full-row"><span>Comment invitation text</span><input id="extras-comentar-texto" maxlength="60" placeholder="Escribe AMÉN en los comentarios"></label>
+          </fieldset>
+          <div class="form-grid video-provider-settings">
+            <label><span>Video provider</span><select name="videoProvider"><option value="slideshow">Local slideshow · no provider cost</option><option value="auto">Automatic capability routing</option><option value="seedance">ByteDance Seedance 2.5</option><option value="minimax_h3">MiniMax H3</option><option value="google_omni">Google Gemini Omni Flash</option><option value="kling">Kuaishou Kling 3.0 Omni</option><option value="wan">Alibaba Wan 2.7</option></select><small id="video-provider-status">Provider credentials are checked at runtime.</small></label>
+            <label><span>Generation mode</span><select name="videoGenerationMode"><option value="hybrid">Hybrid · generated clips + local assembly</option><option value="slideshow">Local slideshow only</option></select></label>
+            <label><span>Clip duration</span><input name="videoClipDuration" type="number" min="3" max="30" step="1"></label>
+            <label><span>Paid seconds cap</span><input name="videoMaxGeneratedSeconds" type="number" min="0" max="600" step="1"><small>Maximum provider-generated seconds per production.</small></label>
+          </div>
+          <div class="form-actions"><button type="submit" class="button primary">Save channel setup</button><button id="api-key-button" type="button" class="button secondary">Set dashboard API key</button></div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="generate-dialog" class="dialog">
+    <form id="generate-form" method="dialog">
+      <div class="dialog-heading"><div><p class="eyebrow">NEW GENERATION JOB</p><h2>Create a video</h2></div><button type="button" class="close-button" data-close>×</button></div>
+      <label><span>Topic <small>optional—leave blank for agent selection</small></span><input name="topic" maxlength="200" placeholder="How small teams can automate repetitive work"></label>
+      <div class="form-grid two">
+        <label><span>Format</span><select name="style"><option value="explainer">Explainer</option><option value="tutorial">Tutorial</option><option value="list">List</option><option value="review">Review</option><option value="story">Story</option></select></label>
+        <label><span>Length</span><select name="length"><option value="short">Short · 2–4 min</option><option value="medium" selected>Medium · 8–12 min</option><option value="long">Long · 15–20 min</option></select></label>
+      </div>
+      <p class="callout">Generation runs in the background. You can follow each stage and cancel between stages.</p>
+      <div class="form-actions"><button type="submit" class="button primary">Start generation</button><button type="button" class="button ghost" data-close>Cancel</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="content-dialog" class="dialog content-dialog">
+    <div id="content-detail"></div>
+  </dialog>
+
+  <dialog id="idea-dialog" class="dialog">
+    <form id="idea-form" method="dialog">
+      <div class="dialog-heading"><div><p class="eyebrow">BACKLOG</p><h2>Add a content idea</h2></div><button type="button" class="close-button" data-close>×</button></div>
+      <label><span>Topic</span><input name="topic" maxlength="200" required></label>
+      <label><span>Angle</span><textarea name="angle" rows="3" placeholder="What makes this take distinctive?"></textarea></label>
+      <label><span>Why it is worth making</span><textarea name="rationale" rows="2"></textarea></label>
+      <label><span>Format</span><select name="style"><option value="explainer">Explainer</option><option value="tutorial">Tutorial</option><option value="list">List</option><option value="review">Review</option><option value="story">Story</option></select></label>
+      <div class="form-actions"><button type="submit" class="button primary">Add to backlog</button><button type="button" class="button ghost" data-close>Cancel</button></div>
+    </form>
+  </dialog>
+
+  <script src="/i18n.js" defer></script>
+  <script src="/search-core.js" defer></script>
+  <script src="/app.js" defer></script>
+  <script src="/storyboard.js" defer></script>
+  <script src="/research.js" defer></script>
+  <script src="/shorts.js" defer></script>
+  <script src="/accounts.js" defer></script>
+  <script src="/redes.js" defer></script>
+  <script src="/guides.js" defer></script>
+  <script src="/enhance.js" defer></script>
+  <script src="/railnav.js" defer></script>
+  <script src="/perfil.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# La imagen instala sus dependencias con `npm ci --omit=dev`; copiar las del
+# servidor encima duplicaba ~400 MB por imagen.
+node_modules
+.git
+graphify-out
+# Datos y salidas: en el contenedor se montan como volúmenes.
+data
+logs
+temp
+uploads
+# Solo para desarrollo.
+tests
+*.bak*

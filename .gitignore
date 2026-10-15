@@ -1,0 +1,96 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables and credentials
+.env
+.env.local
+.env.production
+config/credentials.json
+config/tokens.json
+config/*.key
+config/*.pem
+
+# API Keys and Secrets
+*.key
+*.pem
+*.cert
+*.crt
+
+# Database
+data/*.db
+data/*.sqlite
+data/*.db-journal
+*.db-shm
+*.db-wal
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+temp/
+tmp/
+uploads/
+*.tmp
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Build outputs
+dist/
+build/
+
+# YouTube specific
+*.mp4
+*.mp3
+*.wav
+*.webm
+*.mkv
+*.avi
+
+# Image files (except examples)
+*.jpg
+*.jpeg
+*.png
+*.gif
+!examples/*.png
+!examples/*.jpg
+!assets/oraflow.jpg
+
+# Backup files
+*.backup
+*.bak
+backup/
+
+# Cache
+.cache/
+*.cache
+# Generated content outputs
+data/assets/
+data/audio/
+data/captions/
+data/scripts/
+data/videos/
+data/thumbnails/
+
+# Claude worktrees
+.claude/worktrees/
+
+# Grafo de conocimiento de graphify — artefacto local, no al repo
+graphify-out/
+.graphify_*

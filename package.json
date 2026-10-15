@@ -1,0 +1,59 @@
+{
+  "name": "oraflow",
+  "version": "2.10.0",
+  "description": "Oraflow is an open-source AI agent that runs a YouTube channel end to end",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "setup": "node setup.js",
+    "walkthrough": "node walkthrough.js",
+    "growth:snapshot": "node scripts/growth/snapshot-github.js",
+    "scheduler": "node schedules/daily-automation.js",
+    "test": "node test.js",
+    "test:thumbnail": "node --test tests/thumbnail/*.test.js",
+    "test:shorts": "node --test tests/shorts-studio/*.test.js",
+    "test:accounts": "node --test tests/accounts/*.test.js tests/dashboard/*.test.js",
+    "thumbnail:jeshua": "node scripts/jeshua-thumbnail.js",
+    "agent:strategy": "node agents/content-strategy-agent.js",
+    "agent:script": "node agents/script-writer-agent.js",
+    "agent:thumbnail": "node agents/thumbnail-designer-agent.js",
+    "agent:seo": "node agents/seo-optimizer-agent.js",
+    "agent:production": "node agents/production-management-agent.js",
+    "agent:publishing": "node agents/publishing-scheduling-agent.js",
+    "agent:analytics": "node agents/analytics-optimization-agent.js",
+    "credentials:setup": "node utils/credential-manager.js setup",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@google/genai": "^2.9.0",
+    "axios": "^1.7.0",
+    "chalk": "^4.1.2",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "form-data": "^4.0.4",
+    "googleapis": "^173.0.0",
+    "inquirer": "^8.2.6",
+    "moment": "^2.29.4",
+    "node-cron": "^3.0.2",
+    "openai": "^6.0.0",
+    "playwright": "^1.54.2",
+    "replicate": "^1.4.0",
+    "sqlite3": "^5.1.6",
+    "winston": "^3.11.0",
+    "sharp": "^0.33.0"
+  },
+  "optionalDependencies": {
+    "ffmpeg-static": "^5.2.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "eslint": "9.39.4",
+    "@eslint/js": "9.39.4"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "overrides": {
+    "tar": "7.5.22"
+  }
+}

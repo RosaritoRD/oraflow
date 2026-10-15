@@ -1,0 +1,241 @@
+/* ============================================================
+   KEIZAC — carcasa de panel.tu-dominio.com
+   Misma identidad que tu-dominio.com / el panel de Keizac (tema oscuro):
+   Keizac Blue #0C7BEB, negros del sistema, Sora + Inter + JetBrains Mono,
+   y la navegación del panel (keizac-web css/meganav.css, modo body.sidenav).
+   Va DESPUÉS de styles.css y solo sobreescribe.
+   ============================================================ */
+
+@font-face { font-family: 'Sora'; font-style: normal; font-weight: 100 800; font-display: swap; src: url('/assets/fonts/sora-latin-var.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 100 900; font-display: swap; src: url('/assets/fonts/inter-latin-var.woff2') format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 100 800; font-display: swap; src: url('/assets/fonts/jetbrains-mono-latin-var.woff2') format('woff2'); }
+
+:root {
+  /* Tokens del tema oscuro de Keizac (keizac-web css/styles.css) */
+  --bg: #05070C;
+  --surface-1: #0D1119;
+  --surface-2: #121724;
+  --surface-3: #171D2C;
+  --surface-inset: #090C13;
+  --line: rgba(244, 247, 251, .09);
+  --line-strong: rgba(244, 247, 251, .16);
+  --text: #F4F7FB;
+  --text-2: #C9D1DE;
+  --muted: #97A1B4;
+
+  --brand: #0C7BEB;          /* Keizac Blue, el del logo */
+  --brand-hot: #3B9DFF;      /* el que se lee sobre negro */
+  --brand-deep: #0A5FB8;
+  --brand-soft: rgba(12, 123, 235, .14);
+  --blue: #3B9DFF;
+  --blue-soft: rgba(12, 123, 235, .12);
+  --green: #2BD576;
+  --green-soft: rgba(43, 213, 118, .11);
+  --amber: #F5B84D;
+  --amber-soft: rgba(245, 184, 77, .11);
+  --red: #F16063;
+  --red-hot: #F47A7C;
+  --red-soft: rgba(241, 96, 99, .12);
+
+  --radius-lg: 16px;
+  --radius: 12px;
+  --radius-sm: 9px;
+
+  --shadow-cta: 0 0 30px rgba(12, 123, 235, .32), 0 8px 22px -8px rgba(10, 95, 184, .6);
+  --ring: 0 0 0 3px rgba(12, 123, 235, .35);
+  --shadow-panel: inset 0 1px 0 rgba(255, 255, 255, .03), 0 8px 32px rgba(0, 0, 0, .45);
+
+  --font-display: "Sora", "Inter", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --rail-w: 188px;
+  --bar-h: 60px;
+  --rail-bg: #05070C;
+  --rail-panel: #0B0F17;
+  --rail-hover: #121724;
+  --rail-text: #CBD3E1;
+  --rail-text-on: #F4F7FB;
+  --rail-line: rgba(244, 247, 251, .09);
+  accent-color: var(--brand);
+}
+
+body { background: var(--bg); font-family: var(--font-sans); }
+.aurora { opacity: .55; }
+
+/* Titulares en Sora, como tu-dominio.com: grandes, apretados. */
+h1, h2, .docs-article h2, .section-intro h2, .panel-heading h2 { font-family: var(--font-display); letter-spacing: -.025em; }
+h1 { font-weight: 700; letter-spacing: -.035em; }
+.eyebrow { color: var(--brand-hot); letter-spacing: .2em; }
+
+/* Botón principal: el azul de Keizac con su brillo. */
+.button.primary { background: var(--brand); border-color: transparent; box-shadow: var(--shadow-cta); }
+.button.primary:hover:not(:disabled) { background: #1487FA; filter: none; box-shadow: 0 0 40px rgba(12, 123, 235, .45), 0 10px 26px -8px rgba(10, 95, 184, .7); }
+
+/* ── El menú viejo se queda oculto (app.js lo usa para el estado activo) ── */
+body.keizac-shell .sidebar > .brand,
+body.keizac-shell .sidebar > .sidebar-label,
+body.keizac-shell .sidebar > nav { display: none !important; }
+
+/* ═══════════════ Columna negra (escritorio) ═══════════════ */
+@media (min-width: 901px) {
+  body.keizac-shell .app-shell { grid-template-columns: var(--rail-w) minmax(0, 1fr); }
+  body.keizac-shell .sidebar {
+    box-sizing: border-box; width: var(--rail-w); padding: 0 0 16px;
+    background:
+      radial-gradient(220px 180px at 16% 4%, rgba(12, 123, 235, .18), transparent 68%),
+      var(--rail-bg);
+    border-right: 1px solid var(--rail-line);
+    backdrop-filter: none;           /* con backdrop-filter, los hijos fixed se anclan a la columna */
+    z-index: 62;
+  }
+  body.keizac-shell .sidebar-footer { margin: auto 12px 0; border-top-color: var(--rail-line); }
+  body.keizac-shell .sidebar-footer .button { background: var(--rail-hover); border-color: var(--rail-line); }
+  body.keizac-shell main { padding-top: var(--bar-h); }
+  body.keizac-shell .loading-bar { left: var(--rail-w); top: var(--bar-h); }
+  .kbar__burger, .kbar__brand { display: none; }
+}
+
+.rnav__brand {
+  display: flex; align-items: center; gap: 9px; height: var(--bar-h); padding: 0 16px; box-sizing: border-box;
+  color: var(--rail-text-on); text-decoration: none; font: 700 15px var(--font-sans); letter-spacing: .2px;
+  border-bottom: 1px solid var(--rail-line); white-space: nowrap;
+}
+.rnav__brand em, .kbar__brand em { color: var(--brand-hot); font-style: normal; }
+.rnav__brand img, .kbar__brand img { flex: 0 0 auto; }
+.rnav__tabs { display: flex; flex-direction: column; gap: 0; padding: 10px 0; }
+.rnav__tab {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
+  padding: 11px 16px; border: 0; border-left: 3px solid transparent; background: transparent; cursor: pointer;
+  color: var(--rail-text); font: 500 14px var(--font-sans); text-align: left; transition: color .15s, background .15s;
+}
+.rnav__tab > span { flex: 1 1 auto; min-width: 0; }
+.rnav__tab:hover { background: var(--rail-hover); color: var(--brand-hot); }
+.rnav__tab.is-current { color: #fff; border-left-color: var(--brand-hot); background: rgba(12, 123, 235, .1); }
+.rnav__tab.is-open {
+  background: linear-gradient(90deg, rgba(12, 123, 235, .32), rgba(12, 123, 235, .08));
+  color: #fff; border-left-color: var(--brand-hot); box-shadow: inset 0 1px rgba(255, 255, 255, .04);
+}
+.rnav__tab:focus-visible { outline: 2px solid var(--brand-hot); outline-offset: -2px; box-shadow: none; border-radius: 0; }
+.rnav__chev { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.2; opacity: .55; flex: 0 0 auto; transition: transform .18s; }
+
+/* Panel que se abre AL LADO de la columna, a la altura de su fila. */
+.rnav__panels { position: fixed; left: var(--rail-w); top: 0; z-index: 61; }
+.rnav__panel {
+  position: fixed; left: var(--rail-w); top: var(--rnav-top, 72px);
+  width: min(300px, calc(100vw - var(--rail-w) - 20px));
+  max-height: calc(100vh - var(--rnav-top, 72px) - 12px); overflow-y: auto;
+  background: var(--rail-panel); border: 1px solid var(--rail-line); border-left: 0; border-top: 2px solid var(--brand);
+  border-radius: 0 12px 12px 0; box-shadow: 0 18px 40px rgba(0, 0, 0, .55); padding: 8px 0 10px;
+  scrollbar-width: thin; scrollbar-color: #2A3242 transparent;
+}
+.rnav__panel.anim { animation: rnavIn .18s ease-out; }
+@keyframes rnavIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+.rnav-col { padding: 4px 0; }
+.rnav-col__h { padding: 9px 16px 3px; color: #97A1B4; font: 700 11px var(--font-sans); letter-spacing: .3px; text-transform: uppercase; }
+.rnav-opt {
+  display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px 16px; border: 0; background: transparent;
+  color: var(--rail-text); font: 500 13.5px var(--font-sans); text-align: left; cursor: pointer; transition: color .14s, background .14s;
+}
+.rnav-opt__dot { width: 6px; height: 6px; border-radius: 50%; background: #97A1B4; flex: 0 0 auto; transition: background .14s, box-shadow .14s; }
+.rnav-opt__txt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rnav-opt kbd { font: 600 10.5px var(--font-mono); color: var(--rail-text); border: 1px solid var(--rail-line); border-radius: 5px; padding: 1px 5px; }
+.rnav-opt:hover, .rnav-opt:focus-visible { background: rgba(12, 123, 235, .14); color: var(--brand-hot); outline: none; box-shadow: none; border-radius: 0; }
+.rnav-opt:hover .rnav-opt__dot, .rnav-opt:focus-visible .rnav-opt__dot { background: var(--brand-hot); box-shadow: 0 0 8px 1px rgba(59, 157, 255, .55); }
+.rnav-opt.is-current { color: #fff; }
+.rnav-opt.is-current .rnav-opt__dot { background: var(--brand-hot); }
+
+/* ═══════════════ Barra superior (negra, como el panel) ═══════════════ */
+.kbar {
+  position: fixed; top: 0; left: var(--rail-w); right: 0; height: var(--bar-h); z-index: 56;
+  display: flex; align-items: center; gap: 14px; padding: 0 22px; box-sizing: border-box;
+  background: linear-gradient(90deg, #05070c, #080d16 62%, #05070c);
+  border-bottom: 1px solid var(--rail-line); box-shadow: 0 10px 34px rgba(0, 0, 0, .16);
+}
+.kbar__channel {
+  display: inline-flex; align-items: center; gap: 8px; min-width: 0;
+  color: var(--rail-text); font: 600 12px var(--font-mono); letter-spacing: .06em; text-transform: uppercase;
+}
+.kbar__channel::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); flex: 0 0 auto; }
+.kbar__channel small { color: inherit; font: inherit; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kbar__right { margin-left: auto; }
+.kbar .top-actions { gap: 10px; }
+/* El buscador con forma de caja, como el de Keizac. */
+.kbar .kbd-trigger {
+  min-width: 260px; height: 38px; justify-content: flex-start; gap: 8px; padding: 0 11px;
+  background: color-mix(in srgb, var(--rail-panel) 88%, transparent); border: 1px solid var(--rail-line);
+  border-radius: 12px; color: var(--rail-text);
+}
+.kbar .kbd-trigger span { flex: 1; text-align: left; }
+.kbar .kbd-trigger:hover { border-color: var(--brand); background: var(--rail-panel); }
+.kbar .icon-button, .kbar .language-control select { background: var(--rail-panel); border-color: var(--rail-line); }
+.kbar .button.primary { height: 38px; padding-block: 0; }
+
+/* La cabecera de cada pantalla ya no lleva botones: queda solo el título, sin
+   caja ni pegajosa (la barra fija de arriba ya es la que se queda). */
+body.keizac-shell main > .topbar {
+  position: static; min-height: 0; margin: 0 0 4px; padding: 30px 0 18px;
+  background: none; backdrop-filter: none; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; box-shadow: none;
+}
+body.keizac-shell main > .topbar h1 { font-size: clamp(24px, 2.3vw, 34px); }
+/* El texto del buscador lo escondía una regla vieja de styles.css para la barra estrecha. */
+@media (min-width: 901px) {
+  .kbar .kbd-trigger span { display: inline; }
+  .kbar .kbd-trigger kbd { display: inline-grid; }
+}
+body.keizac-shell .sidebar-footer #automation-toggle { font-size: 12.5px; padding-inline: 8px; white-space: nowrap; }
+
+/* ═══════════════ Móvil: barra con hamburguesa + cajón ═══════════════ */
+.rnav__drawer[hidden], .rnav-acc__body[hidden] { display: none; }
+@media (max-width: 900px) {
+  body.keizac-shell .rnav, body.keizac-shell .rnav__panels { display: none; }
+  .kbar { left: 0; padding: 0 12px; gap: 8px; }
+  body.keizac-shell main { padding-top: 0; }
+  body.keizac-shell .sidebar { padding-top: calc(var(--bar-h) + 8px); }
+  .kbar__burger {
+    display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex: 0 0 40px;
+    border: 1px solid var(--rail-line); border-radius: 10px; background: var(--rail-panel); color: var(--rail-text-on); cursor: pointer;
+  }
+  .kbar__burger svg, .rnav__drawer-close svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
+  .kbar__brand { display: inline-flex; align-items: center; gap: 7px; color: var(--rail-text-on); text-decoration: none; font: 700 14px var(--font-sans); white-space: nowrap; }
+  .kbar__channel { display: none; }
+  .kbar .kbd-trigger { min-width: 0; width: 40px; padding: 0; justify-content: center; }
+  .kbar .kbd-trigger span, .kbar .kbd-trigger kbd, .kbar .language-control { display: none; }
+  .kbar .button.primary { font-size: 12px; padding-inline: 11px; }
+  .rnav__drawer { position: fixed; inset: 0; z-index: 200; background: var(--rail-bg); overflow-y: auto; }
+  body.rnav-locked { overflow: hidden; }
+}
+@media (max-width: 420px) {
+  .kbar .icon-button#refresh-button { display: none; }
+}
+.rnav__drawer-head {
+  position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px;
+  background: #080d16; border-bottom: 1px solid var(--rail-line); color: var(--rail-text-on); font-weight: 700;
+}
+.rnav__drawer-close { width: 38px; height: 38px; display: inline-grid; place-items: center; border: 1px solid var(--rail-line); border-radius: 10px; background: var(--rail-panel); color: var(--rail-text-on); cursor: pointer; }
+.rnav__drawer-body { padding: 6px 12px 40px; }
+.rnav-acc__home, .rnav-acc__h {
+  display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 15px 12px;
+  border: 0; border-bottom: 1px solid var(--rail-line); background: transparent; color: var(--rail-text-on);
+  font: 600 15px var(--font-sans); text-align: left; cursor: pointer;
+}
+.rnav-acc__h[aria-expanded="true"] .rnav__chev { transform: rotate(180deg); }
+.rnav-acc__body { padding: 4px 0 12px; border-bottom: 1px solid var(--rail-line); }
+.rnav-acc__body .rnav-opt { padding: 12px 14px; font-size: 15px; }   /* táctil: ≥44 px de alto */
+
+@media (prefers-reduced-motion: reduce) {
+  .rnav__panel.anim { animation: none; }
+  .rnav__tab, .rnav-opt, .rnav__chev { transition: none; }
+}
+
+/* Idioma dentro del cajón del móvil (segmentado ES/EN, como el menú de cuenta de Keizac). */
+.rnav-lang { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 12px 0; color: var(--rail-text); font-size: 13px; }
+.rnav-lang__seg { display: inline-flex; border: 1px solid var(--rail-line); border-radius: 8px; overflow: hidden; }
+.rnav-lang__seg button { border: 0; background: transparent; color: var(--rail-text); font: 700 12px var(--font-sans); padding: 6px 14px; cursor: pointer; }
+.rnav-lang__seg button.is-on { background: var(--brand); color: #fff; }
+@media (max-width: 900px) { body.keizac-shell .sidebar-footer { border-top: 0; padding-top: 0; } }
+
+/* «← Panel principal»: vuelta a Keizac, en ámbar como en el modo producto de Fleet. */
+.rnav__back { display: block; padding: 12px 16px 4px; color: var(--amber); font: 700 13.5px var(--font-sans); text-decoration: none; }
+.rnav__back:hover { color: var(--brand-hot); }
+.rnav__drawer .rnav__back { padding: 15px 12px; color: var(--amber); }

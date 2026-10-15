@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "ruta": "/salida/voz_123.mp3",
+  "url": "/api/audio/voz_123.mp3",
+  "motor": "kokoro",
+  "voz": "em_alex",
+  "velocidad": 0.92,
+  "duracion_s": 3.25,
+  "caracteres": 22,
+  "segundos_de_proceso": 1.1,
+  "formato": "mp3"
+}
