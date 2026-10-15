@@ -1,5 +1,0 @@
-# Pruebas de test.js que ya fallaban antes del 01/10/2026 y no dependen del
-# código del panel (ffmpeg-static ausente en el host, credenciales de prueba).
-# El autodespliegue solo se bloquea si falla algo que NO está aquí.
-Research and Provenance Desk
-Resumable Generation Checkpoints

@@ -1,17 +1,17 @@
-# Oraflow con Docker. Uso:  cp .env.example .env  →  edita .env  →  docker compose up -d
-# El panel queda en http://localhost:3456 (solo en tu máquina).
+# Oraflow with Docker. Usage:  cp .env.example .env  →  edit .env  →  docker compose up -d
+# The dashboard runs at http://localhost:3456 (only on your machine).
 services:
   oraflow:
     build: .
     container_name: oraflow
     env_file: .env
     environment:
-      TZ: America/New_York            # cámbialo a tu zona horaria
+      TZ: America/New_York            # change it to your time zone
     ports:
-      - "127.0.0.1:3456:3456"         # solo localhost; para entrar desde fuera usa un túnel o un proxy con HTTPS
+      - "127.0.0.1:3456:3456"         # localhost only; to reach it from outside use a tunnel or an HTTPS proxy
     volumes:
-      - ./data:/app/data              # base de datos, vídeos y miniaturas
-      - ./config:/app/config          # credenciales de YouTube (no se suben a git)
+      - ./data:/app/data              # database, videos and thumbnails
+      - ./config:/app/config          # YouTube credentials (never committed)
       - ./uploads:/app/uploads
       - ./logs:/app/logs
       - ./temp:/app/temp

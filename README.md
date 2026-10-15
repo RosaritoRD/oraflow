@@ -2,110 +2,110 @@
 
 # 🎬 Oraflow
 
-**Un agente de IA que lleva un canal de YouTube de principio a fin: guion, voz, vídeo, miniatura, publicación y aprendizaje.**
+**An AI agent that runs a YouTube channel end to end: script, voice, video, thumbnail, publishing and learning.**
 
-Pensado y probado en producción con un canal real de oraciones en español (vídeos largos + Shorts diarios, YouTube + Instagram + Facebook).
+Designed and battle-tested in production on a real Spanish-language prayer channel (long videos + daily Shorts, YouTube + Instagram + Facebook).
 
-[![MIT License](https://img.shields.io/badge/licencia-MIT-blue.svg)](LICENSE)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node.js 22](https://img.shields.io/badge/node-22-43853d.svg)](package.json)
-[![Docker](https://img.shields.io/badge/docker-listo-2496ED.svg)](docker-compose.yml)
+[![Docker](https://img.shields.io/badge/docker-ready-2496ED.svg)](docker-compose.yml)
 [![Docs](https://img.shields.io/badge/docs-KEIZAC%20TECH-black.svg)](https://keizactech.com/docs)
 
-[Qué hace](#-qué-hace) · [Cómo funciona](#-cómo-funciona) · [Arranque rápido](#-arranque-rápido) · [Claude Code y Codex](#-conectarlo-a-claude-code-o-codex) · [Novedades](#-novedades-y-mejoras) · [Ahorro](AHORRO-Y-MEJORAS.md) · [Docs](https://keizactech.com/docs)
+[What it does](#-what-it-does) · [How it works](#-how-it-works) · [Quick start](#-quick-start) · [Claude Code & Codex](#-connect-it-to-claude-code-or-codex) · [What's new](#-whats-new) · [Savings](SAVINGS-AND-TIPS.md) · [Docs](https://keizactech.com/docs)
 
 </div>
 
 ---
 
-## ✨ Qué hace
+## ✨ What it does
 
-Le das un tema y un horario. Oraflow cada día:
+Give it a topic and a schedule. Every day, Oraflow:
 
-1. **Escribe el guion** con IA (OpenRouter, OpenAI, Gemini o un modelo local con Ollama).
-2. **Lo narra** con ElevenLabs (voces, velocidad y pausas configurables).
-3. **Monta el vídeo**: escenas, fondos de paisaje, música, subtítulos y volumen a -14 LUFS.
-4. **Crea la miniatura** (plantillas propias, biblioteca de imágenes o IA).
-5. **Optimiza título, descripción y tags** y revisa que no repita títulos.
-6. **Publica** en YouTube y, si quieres, en Instagram (Reels, carrusel) y Facebook.
-7. **Mide y aprende**: guarda vistas, retención y comentarios, y usa los Shorts que mejor funcionaron como ejemplo para los siguientes.
+1. **Writes the script** with AI (OpenRouter, OpenAI, Gemini or a local model with Ollama).
+2. **Narrates it** with ElevenLabs (configurable voices, speed and pauses).
+3. **Edits the video**: scenes, landscape backgrounds, music, subtitles and loudness at -14 LUFS.
+4. **Creates the thumbnail** (its own templates, an image library or AI).
+5. **Optimizes title, description and tags**, and checks it isn't repeating titles.
+6. **Publishes** to YouTube and, if you want, to Instagram (Reels, carousel) and Facebook.
+7. **Measures and learns**: stores views, retention and comments, and uses the best-performing Shorts as examples for the next ones.
 
-Todo se controla desde un **panel web en español** y nada se publica sin pasar los controles de calidad.
+Everything is controlled from a **web dashboard** (in Spanish), and nothing gets published without passing the quality checks.
 
-## 🧠 Cómo funciona
+## 🧠 How it works
 
 ```mermaid
 flowchart LR
-    A[Estrategia del canal] --> B[Guionista IA]
-    B --> C[Voz ElevenLabs]
-    C --> D[Storyboard + render FFmpeg]
-    D --> E[Miniatura / portada]
-    E --> F[SEO: título, descripción, tags]
-    F --> G{Controles de calidad}
-    G -->|ok| H[Publicación programada]
+    A[Channel strategy] --> B[AI scriptwriter]
+    B --> C[ElevenLabs voice]
+    C --> D[Storyboard + FFmpeg render]
+    D --> E[Thumbnail / cover]
+    E --> F[SEO: title, description, tags]
+    F --> G{Quality checks}
+    G -->|ok| H[Scheduled publishing]
     H --> I[YouTube · Instagram · Facebook]
-    I --> J[Analítica y comentarios]
-    J -->|lo que funciona| B
+    I --> J[Analytics and comments]
+    J -->|what works| B
 ```
 
-| Pieza | Archivo | Qué hace |
+| Piece | File | What it does |
 |---|---|---|
-| Estrategia | `agents/content-strategy-agent.js` | Elige temas según el nicho y lo que ya funcionó |
-| Guion | `agents/script-writer-agent.js` | Escribe el guion (formato largo o Short, con tope de palabras) |
-| Producción | `agents/production-management-agent.js` | Voz, escenas y montaje del vídeo |
-| Miniaturas | `agents/thumbnail-designer-agent.js` | Plantillas, biblioteca propia o imagen IA |
-| SEO | `agents/seo-optimizer-agent.js` | Título, descripción y hashtags |
-| Publicación | `agents/publishing-scheduling-agent.js` | Programa y sube, protegiendo la cuota de YouTube |
-| Analítica | `agents/analytics-optimization-agent.js` | Mide a 24 h y 7 días y guarda lo aprendido |
-| Automatización | `schedules/daily-automation.js` | Las tareas diarias (generar, publicar, medir, limpiar) |
-| Panel | `dashboard/` + `index.js` | Panel web y API HTTP |
+| Strategy | `agents/content-strategy-agent.js` | Picks topics based on the niche and what already worked |
+| Script | `agents/script-writer-agent.js` | Writes the script (long-form or Short, with a word cap) |
+| Production | `agents/production-management-agent.js` | Voice, scenes and video editing |
+| Thumbnails | `agents/thumbnail-designer-agent.js` | Templates, your own library or AI images |
+| SEO | `agents/seo-optimizer-agent.js` | Title, description and hashtags |
+| Publishing | `agents/publishing-scheduling-agent.js` | Schedules and uploads, protecting your YouTube quota |
+| Analytics | `agents/analytics-optimization-agent.js` | Measures at 24 h and 7 days and stores what it learned |
+| Automation | `schedules/daily-automation.js` | The daily jobs (generate, publish, measure, clean up) |
+| Dashboard | `dashboard/` + `index.js` | Web dashboard and HTTP API |
 
-## 🚀 Arranque rápido
+## 🚀 Quick start
 
-**Necesitas:** Node.js 22 (o Docker), FFmpeg, una clave de IA de texto (OpenRouter es lo más fácil), una clave de ElevenLabs y un proyecto de Google Cloud con YouTube Data API v3.
+**You need:** Node.js 22 (or Docker), FFmpeg, a text-AI key (OpenRouter is the easiest), an ElevenLabs key and a Google Cloud project with YouTube Data API v3.
 
-### Con Docker (recomendado)
+### With Docker (recommended)
 
 ```bash
 git clone https://github.com/RosaritoRD/oraflow.git
 cd oraflow
-cp .env.example .env        # abre .env y cambia cada AQUI_VA_... por tu valor
+cp .env.example .env        # open .env and replace every YOUR_..._HERE with your value
 docker compose up -d
 ```
 
-Abre **http://localhost:3456**, ve a **Conexiones** y conecta tu canal de YouTube.
+Open **http://localhost:3456**, go to **Conexiones** (Connections) and connect your YouTube channel.
 
-### Sin Docker
+### Without Docker
 
 ```bash
 git clone https://github.com/RosaritoRD/oraflow.git
 cd oraflow
 npm ci
 cp .env.example .env
-npm run setup               # asistente de configuración
+npm run setup               # setup wizard
 npm start
 ```
 
-### Variables importantes
+### Key variables
 
-Todas están en [`.env.example`](.env.example), con `AQUI_VA_...` donde va tu dato.
+They're all in [`.env.example`](.env.example), with `YOUR_..._HERE` wherever your value goes.
 
-| Variable | Para qué |
+| Variable | Purpose |
 |---|---|
-| `OPENROUTER_API_KEY` | IA de texto (guiones, títulos, respuestas) |
-| `ELEVENLABS_API_KEY` · `ELEVENLABS_VOICE_ID` | Voz de la narración |
-| `YOUTUBE_API_KEY` + `config/credentials.json` | Subir vídeos a tu canal (OAuth de Google) |
-| `API_KEY` | Clave para usar la API del panel (cabecera `x-api-key`) |
-| `CHANNEL_THEME` · `VISUAL_STYLE` · `TARGET_AUDIENCE` | El estilo de tu canal |
-| `DAILY_PUBLISH_TIME` · `TZ` | Cuándo publica |
-| `LOCAL_LLM_URL` · `LOCAL_LLM_MODEL` | (Opcional) modelo local con Ollama |
-| `FFMPEG_REMOTO_URL` | (Opcional) renderizar en otro PC — ver `pc/taller/` |
-| `FACEBOOK_PAGE_ID` · `INSTAGRAM_TOKEN` | (Opcional) publicar en Meta |
+| `OPENROUTER_API_KEY` | Text AI (scripts, titles, replies) |
+| `ELEVENLABS_API_KEY` · `ELEVENLABS_VOICE_ID` | Narration voice |
+| `YOUTUBE_API_KEY` + `config/credentials.json` | Upload videos to your channel (Google OAuth) |
+| `API_KEY` | Key for the dashboard API (`x-api-key` header) |
+| `CHANNEL_THEME` · `VISUAL_STYLE` · `TARGET_AUDIENCE` | Your channel's style |
+| `DAILY_PUBLISH_TIME` · `TZ` | When it publishes |
+| `LOCAL_LLM_URL` · `LOCAL_LLM_MODEL` | (Optional) local model with Ollama |
+| `FFMPEG_REMOTO_URL` | (Optional) render on another PC — see `pc/taller/` |
+| `FACEBOOK_PAGE_ID` · `INSTAGRAM_TOKEN` | (Optional) publish to Meta |
 
-> 🔒 **Nunca subas tu `.env`, `config/credentials.json` ni `config/tokens.json`.** Ya están en `.gitignore`.
+> 🔒 **Never commit your `.env`, `config/credentials.json` or `config/tokens.json`.** They're already in `.gitignore`.
 
-## 🤖 Conectarlo a Claude Code o Codex
+## 🤖 Connect it to Claude Code or Codex
 
-Oraflow trae instrucciones para que un asistente de código entienda el proyecto desde el primer minuto: [`CLAUDE.md`](CLAUDE.md) (Claude Code) y [`AGENTS.md`](AGENTS.md) (Codex y otros agentes).
+Oraflow ships instructions so a coding assistant understands the project from minute one: [`CLAUDE.md`](CLAUDE.md) (Claude Code) and [`AGENTS.md`](AGENTS.md) (Codex and other agents).
 
 ### Claude Code
 
@@ -115,11 +115,11 @@ cd oraflow
 claude
 ```
 
-Claude Code lee `CLAUDE.md` solo. Prueba a pedirle:
+Claude Code reads `CLAUDE.md` on its own. Try asking:
 
-- *"Explícame cómo se genera un Short, desde el guion hasta la subida."*
-- *"Añade un nuevo estilo de miniatura y sus tests."*
-- *"Mira los logs de hoy y dime por qué falló la publicación."*
+- *"Explain how a Short is made, from script to upload."*
+- *"Add a new thumbnail style with its tests."*
+- *"Look at today's logs and tell me why publishing failed."*
 
 ### Codex
 
@@ -129,81 +129,81 @@ cd oraflow
 codex
 ```
 
-Codex lee `AGENTS.md` solo. Mismos ejemplos que arriba.
+Codex reads `AGENTS.md` on its own. Same examples as above.
 
-### Controlar el canal desde el asistente (API del panel)
+### Control the channel from the assistant (dashboard API)
 
-Con el panel en marcha, cualquiera de los dos puede usar la API HTTP con tu `API_KEY`:
+With the dashboard running, either assistant can use the HTTP API with your `API_KEY`:
 
 ```bash
-# Estado general
+# Overall status
 curl -s -H "x-api-key: $API_KEY" http://localhost:3456/api/dashboard
-# ¿Está todo listo para producir?
+# Is everything ready to produce?
 curl -s -H "x-api-key: $API_KEY" http://localhost:3456/api/readiness
-# Guardar una idea (devuelve su id)…
+# Save an idea (returns its id)…
 curl -s -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
-     -d '{"topic":"Oración para dormir en paz"}' http://localhost:3456/api/ideas
-# …y producir el vídeo de esa idea
-curl -s -X POST -H "x-api-key: $API_KEY" http://localhost:3456/api/ideas/ID_DE_LA_IDEA/generate
+     -d '{"topic":"Prayer to sleep in peace"}' http://localhost:3456/api/ideas
+# …and produce the video for that idea
+curl -s -X POST -H "x-api-key: $API_KEY" http://localhost:3456/api/ideas/IDEA_ID/generate
 ```
 
-> ⚠️ Pon siempre un `API_KEY` largo en tu `.env`: **si lo dejas vacío, la API queda abierta** a cualquiera que llegue al puerto.
+> ⚠️ Always set a long `API_KEY` in your `.env`: **if you leave it empty, the API is open** to anyone who can reach the port.
 
-Pídele a Claude Code o a Codex: *"Usa la API del panel (está en index.js) para decirme qué vídeos salen mañana."*
+Ask Claude Code or Codex: *"Use the dashboard API (it's in index.js) to tell me which videos go out tomorrow."*
 
-> Un servidor MCP nativo está en la lista de ideas: si te interesa, abre un issue.
+> A native MCP server is on the ideas list — if you're interested, open an issue.
 
-## 🆕 Novedades y mejoras
+## 🆕 What's new
 
-Más de 170 cambios para llevarlo a producción con un canal real que publica todos los días:
+More than 170 changes to take it to production with a real channel that publishes every day:
 
-**Contenido**
-- Modo **canal de oraciones**: guiones con reglas de fe, versículos bien citados y cierre configurable.
-- **Shorts** de 60–90 s con tope duro de palabras y gancho que nombra la situación del que mira.
-- El guionista **aprende de tus Shorts con más vistas** en su primera semana (la forma, no el texto).
-- Control de **títulos repetidos** antes de gastar en voz.
+**Content**
+- **Prayer channel** mode: scripts with faith rules, correctly quoted verses and a configurable closing.
+- 60–90 s **Shorts** with a hard word cap and a hook that names the viewer's situation.
+- The scriptwriter **learns from your most-viewed Shorts** in their first week (the shape, not the text).
+- **Duplicate-title** check before spending on voice.
 
-**Voz y vídeo**
-- **Calendario de voces** (principal, secundaria y voz de mujer en días fijos).
-- Pausas, velocidad y estabilidad ajustables; modelo de voz barato opcional para Shorts.
-- Volumen normalizado a **-14 LUFS**, movimiento fluido y reintentos si la IA falla.
-- **Taller remoto**: el FFmpeg pesado puede correr en tu PC y, si falla, en el servidor (`pc/taller/`).
-- **IA local** con Ollama para analizar comentarios, con caída a la nube si el PC no responde.
+**Voice and video**
+- **Voice calendar** (main, secondary and a female voice on fixed days).
+- Adjustable pauses, speed and stability; optional cheaper voice model for Shorts.
+- Loudness normalized to **-14 LUFS**, smooth motion and retries when the AI fails.
+- **Remote workshop**: heavy FFmpeg work can run on your PC and fall back to the server (`pc/taller/`).
+- **Local AI** with Ollama to analyze comments, falling back to the cloud if the PC doesn't answer.
 
-**Miniaturas y portadas**
-- Plantillas de miniatura de oración y **biblioteca de imágenes propias** elegidas por tema.
-- La **portada del Short** sube sola como miniatura de YouTube y como portada del Reel.
+**Thumbnails and covers**
+- Prayer thumbnail templates and a **library of your own images** picked by topic.
+- The **Short's cover** is uploaded automatically as the YouTube thumbnail and the Reel cover.
 
-**Redes y comunidad**
-- Publicación en **Instagram** (Reels y carrusel) y **Facebook**.
-- **Respuestas automáticas** a comentarios con IA, en contexto del vídeo, con tope diario.
-- Mensaje privado opcional a quien comenta «Amén», con lista de no contactar y borrado de datos por petición.
+**Social and community**
+- Publishing to **Instagram** (Reels and carousel) and **Facebook**.
+- AI **auto-replies** to comments, in the context of the video, with a daily cap.
+- Optional private message to whoever comments «Amén», with a do-not-contact list and data deletion on request.
 
-**Operación**
-- Panel **en español**, adaptado al móvil, con tarjetas de estado y guías.
-- Protección de la **cuota de YouTube** y aviso cuando se agota o caduca un acceso.
-- Revisión de **seguridad**: secretos ocultos en el panel, dependencias corregidas.
+**Operations**
+- Mobile-friendly **Spanish-language dashboard** with status cards and guides.
+- **YouTube quota** protection and alerts when it runs out or an access token expires.
+- **Security** review: secrets hidden in the dashboard, dependencies patched.
 
-Historial completo en [CHANGELOG.md](CHANGELOG.md).
+Full history in [CHANGELOG.md](CHANGELOG.md).
 
-## 📚 Documentación
+## 📚 Documentation
 
-- 💸 **[Ahorro y mejoras](AHORRO-Y-MEJORAS.md)**: cómo gastar menos y qué hace que los vídeos funcionen mejor
-- 📖 **Guías completas, tutoriales y más proyectos:** [keizactech.com/docs](https://keizactech.com/docs)
+- 💸 **[Savings and tips](SAVINGS-AND-TIPS.md)**: how to spend less and what makes videos perform better
+- 📖 **Full guides, tutorials and more projects:** [keizactech.com/docs](https://keizactech.com/docs)
 - 🏢 **KEIZAC TECH:** [keizactech.com](https://keizactech.com)
-- Guías internas: carpeta [`docs/`](docs/)
+- Internal guides: the [`docs/`](docs/) folder
 
-## 🤝 Contribuir
+## 🤝 Contributing
 
-1. Haz fork del repo
-2. Crea una rama: `git checkout -b mi-mejora`
-3. Haz tus cambios **con tests** (`npm test` y `npm run lint` deben pasar)
-4. Abre un Pull Request
+1. Fork the repo
+2. Create a branch: `git checkout -b my-improvement`
+3. Make your changes **with tests** (`npm test` and `npm run lint` must pass)
+4. Open a Pull Request
 
-Reglas cortas en [CONTRIBUTING.md](CONTRIBUTING.md). Preguntas → *Discussions*. Errores → *Issues*.
+Short rules in [CONTRIBUTING.md](CONTRIBUTING.md). New here? Look for the [`good first issue`](https://github.com/RosaritoRD/oraflow/labels/good%20first%20issue) label. Questions → [Discussions](https://github.com/RosaritoRD/oraflow/discussions). Bugs → [Issues](https://github.com/RosaritoRD/oraflow/issues).
 
-## 📄 Licencia
+## 📄 License
 
-MIT — ver [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).
 
-> Usa esta herramienta para crear contenido legítimo y respeta los [Términos de YouTube](https://www.youtube.com/t/terms).
+> Use this tool to create legitimate content and respect [YouTube's Terms of Service](https://www.youtube.com/t/terms).
