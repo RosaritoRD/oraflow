@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { ChannelLearningEngine } = require('../../utils/channel-learning-engine');
 const { GrowthExperimentService } = require('../../utils/growth-experiment-service');
 
-test('el aprendizaje conserva métricas ausentes como null hasta los indicadores derivados', () => {
+test('learning keeps missing metrics as null through to the derived indicators', () => {
   const metrics = new ChannelLearningEngine({}).normalizeMetrics({
     analytics: {
       views: { available: true, totalViews: 300, impressionsAvailable: false, totalImpressions: 0, averageCTR: 0 },
@@ -18,7 +18,7 @@ test('el aprendizaje conserva métricas ausentes como null hasta los indicadores
   }
 });
 
-test('el aprendizaje conserva ceros medidos', () => {
+test('learning keeps measured zeros', () => {
   const metrics = new ChannelLearningEngine({}).normalizeMetrics({ analytics: {
     views: { available: true, totalViews: 300, impressionsAvailable: true, totalImpressions: 1000, averageCTR: 0 },
     watchTime: { available: true, totalWatchTime: 0, averageViewPercentage: 0 },
@@ -28,7 +28,7 @@ test('el aprendizaje conserva ceros medidos', () => {
   for (const key of ['ctr', 'retention', 'watchMinutes', 'engagementRate', 'performanceScore', 'netSubscribers']) assert.equal(metrics[key], 0);
 });
 
-test('no recomienda una duración ni un título por comparar datos ausentes con buenos resultados', () => {
+test('doesn\'t recommend a duration or a title by comparing missing data with good results', () => {
   const engine = new ChannelLearningEngine({});
   const samples = [0, 1, 2, 3].map(i => ({
     contentAttributes: { length: i < 2 ? 'short' : 'long', titleLength: i < 2 ? 'concise' : 'long' },
@@ -48,7 +48,7 @@ function report() {
   }, thumbnailMetrics: { available: true, impressions: 1000, clickThroughRate: 5 } };
 }
 
-test('los experimentos mantienen ausentes suscriptores e ingresos en la captura y la diferencia', async () => {
+test('experiments keep subscribers and revenue missing in the snapshot and the difference', async () => {
   const service = new GrowthExperimentService({}, { analyzeVideoPerformance: async () => report() }, {});
   const { metrics } = await service.captureMetrics('video');
   assert.equal(metrics.netSubscribers, null);
@@ -61,7 +61,7 @@ test('los experimentos mantienen ausentes suscriptores e ingresos en la captura 
   assert.equal(measured.estimatedRevenue, 0);
 });
 
-test('un experimento no avanza si faltan las métricas que determinan el ganador', async () => {
+test('an experiment doesn\'t advance if the metrics that decide the winner are missing', async () => {
   for (const key of ['views', 'watchTime', 'trafficSources', 'ctr']) {
     const data = report();
     if (key === 'ctr') {

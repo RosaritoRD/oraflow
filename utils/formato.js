@@ -1,17 +1,18 @@
 /**
- * Formato del vídeo: largo (horizontal, el de siempre) o Short (vertical).
+ * Video format: long (horizontal, the usual) or Short (vertical).
  *
- * 29/09/2026: el autor quiere 2 Shorts de oración al día (mañana y noche) además
- * de los 2 vídeos largos. El formato viaja con cada encargo en
- * `strategy.contentFormat`; VIDEO_ASPECT_RATIO del .env sigue mandando para
- * los largos, así que un Short nunca vuelve vertical al resto del canal.
+ * 29/09/2026: the owner wants 2 prayer Shorts a day (morning and evening)
+ * besides the 2 long videos. The format travels with each job in
+ * `strategy.contentFormat`; VIDEO_ASPECT_RATIO in .env still rules the long
+ * ones, so a Short never turns the rest of the channel vertical.
  */
 
 const SHORT = 'short';
 const LONG = 'long';
 
-// YouTube acepta Shorts de hasta 3 min; 60-90 s es lo que se termina de ver.
-// 12/10/2026: SHORT_MAX_WORDS va como tope duro en el prompt del guionista (el Short del 13/10 salió con 220).
+// YouTube accepts Shorts up to 3 min; 60-90 s is what gets watched to the end.
+// 12/10/2026: SHORT_MAX_WORDS goes as a hard cap in the scriptwriter's prompt (the 13/10 Short came
+// out with 220).
 const SHORT_MAX_WORDS = 190;
 const SHORT_LENGTH = `60-90 seconds (about 150-${SHORT_MAX_WORDS} spoken words in total)`;
 
@@ -24,7 +25,7 @@ function esShort(strategyOrFormat) {
   return normalizaFormato(valor) === SHORT;
 }
 
-/** Relación de aspecto y resolución del render para un formato. */
+/** Aspect ratio and render resolution for a format. */
 function lienzo(formato, env = process.env) {
   if (esShort(formato)) return { aspectRatio: '9:16', resolution: '1080x1920' };
   return {

@@ -54,8 +54,8 @@ class AIVideoGenerator {
     this.elevenLabsApiKey = resolvedCredentials.elevenLabs?.apiKey || process.env.ELEVENLABS_API_KEY;
     this.elevenLabsVoiceId = resolvedCredentials.elevenLabs?.voiceId || process.env.ELEVENLABS_VOICE_ID;
     this.elevenLabsModel = process.env.ELEVENLABS_TTS_MODEL || 'eleven_v3';
-    // 05/10/2026 (ahorro): modelo para narraciones cortas (Shorts, <1.500 caracteres).
-    // eleven_flash_v2_5 gasta la mitad de créditos; vacío = el mismo que los largos.
+    // 05/10/2026 (savings): model for short narrations (Shorts, <1,500 characters).
+    // eleven_flash_v2_5 uses half the credits; empty = the same as long videos.
     this.elevenLabsModelCorto = process.env.ELEVENLABS_TTS_MODEL_SHORT || '';
     
     // Azure Speech configuration
@@ -66,7 +66,7 @@ class AIVideoGenerator {
       : null);
   }
 
-  /** `voiceId` (opcional): la voz de ESTE vídeo (utils/voces.js); sin ella, la de siempre. */
+  /** `voiceId` (optional): THIS video's voice (utils/voces.js); without it, the usual one. */
   async generateTTSAudio(text, outputPath, { voiceId = null } = {}) {
     this.logger.info('Generating TTS audio...');
     this.lastNarrationResult = null;
@@ -158,10 +158,10 @@ class AIVideoGenerator {
   }
 
   /**
-   * 12/10/2026: con la misma `speed`, eleven_flash_v2_5 habla ~30 % más lento que
-   * multilingual_v2 con la voz principal (8,8 frente a 11,2 caracteres/s, mismo texto):
-   * los Shorts pasaron de ~1:30 a ~2 min y a la mitad de vistas en 24 h. Con el modelo
-   * de los Shorts manda ELEVENLABS_SPEED_SHORT; sin ella, VOICE_SPEED como siempre.
+   * 12/10/2026: at the same `speed`, eleven_flash_v2_5 speaks ~30 % slower than
+   * multilingual_v2 with the main voice (8.8 vs 11.2 characters/s, same text): Shorts went
+   * from ~1:30 to ~2 min and to half the views in 24 h. With the Shorts model,
+   * ELEVENLABS_SPEED_SHORT rules; without it, VOICE_SPEED as always.
    */
   velocidadActual() {
     const corto = this.elevenLabsModelCorto && this.modeloActual === this.elevenLabsModelCorto;
@@ -986,7 +986,7 @@ class AIVideoGenerator {
     const music = prayerTheme.pickMusic(await prayerTheme.listMusic());
     if (music) {
       const narrationSeconds = await this.probeAudioDuration(audioPath);
-      // Con formato (largo/Short) el volumen sale de musicGainFor; sin él, la base de siempre.
+      // With a format (long/Short) the volume comes from musicGainFor; without it, the usual base.
       const gain = options.format
         ? prayerTheme.musicGainFor({ formato: options.format, semilla: options.seed || outputPath })
         : prayerTheme.musicGainDb();

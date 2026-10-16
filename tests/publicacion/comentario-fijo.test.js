@@ -2,24 +2,25 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { textoComentario, tipoDeVideo, comentaPublicados } = require('../../utils/comentario-fijo');
 
-// 30/09: cada vídeo público lleva un comentario del canal invitando a
-// suscribirse. Se pone cuando el vídeo YA es público (en privado YouTube no deja).
+// 30/09: every public video gets a comment from the channel inviting people to
+// subscribe. It's posted once the video IS public (YouTube doesn't allow it while
+// private).
 
-test('distingue Short, mañana y noche', () => {
+test('tells Short, morning and night apart', () => {
   assert.deepEqual(tipoDeVideo({ snippet: { title: 'Oración corta #shorts' }, contentDetails: { duration: 'PT45S' } }), { formato: 'short', franja: 'mañana' });
   assert.equal(tipoDeVideo({ snippet: { title: 'Oración de la noche para dormir en paz' }, contentDetails: { duration: 'PT58S' } }).formato, 'short');
   assert.deepEqual(tipoDeVideo({ snippet: { title: 'ORACIÓN DE LA NOCHE — MARTES' }, contentDetails: { duration: 'PT17M30S' } }), { formato: 'long', franja: 'noche' });
   assert.deepEqual(tipoDeVideo({ snippet: { title: 'ORACIÓN DE LA MAÑANA — JUEVES' }, contentDetails: { duration: 'PT7M2S' } }), { formato: 'long', franja: 'mañana' });
 });
 
-test('el texto invita a suscribirse, encaja con el vídeo y es estable por vídeo', () => {
+test('the text invites subscribing, fits the video and is stable per video', () => {
   const noche = textoComentario({ videoId: 'abc', formato: 'long', franja: 'noche' });
   assert.match(noche, /suscr[ií]b/i);
   assert.match(noche, /noche/i);
   assert.equal(textoComentario({ videoId: 'abc', formato: 'long', franja: 'noche' }), noche);
   assert.match(textoComentario({ videoId: 'abc', formato: 'short', franja: 'mañana' }), /suscr[ií]b/i);
   const variados = new Set(['a', 'b', 'c', 'd', 'e', 'f'].map(videoId => textoComentario({ videoId, formato: 'long', franja: 'mañana' })));
-  assert.ok(variados.size > 1);                                           // no el mismo texto en todos
+  assert.ok(variados.size > 1);                                           // not the same text on every one
 });
 
 function fakeYouTube(videos) {
@@ -47,7 +48,7 @@ function fakeDb() {
 
 const video = (id, privacy, extra = {}) => ({ id, status: { privacyStatus: privacy }, snippet: { title: 'ORACIÓN DE LA MAÑANA' }, contentDetails: { duration: 'PT7M' }, ...extra });
 
-test('comenta solo los públicos, una sola vez, y recuerda los que no se pueden', async () => {
+test('comments only on public ones, only once, and remembers the ones it can\'t', async () => {
   const yt = fakeYouTube([video('pub1', 'public'), video('priv', 'private'), video('pub2', 'public'), video('cerr', 'public', { cerrado: true })]);
   const db = fakeDb();
   const logger = { info() {}, warn() {} };
@@ -61,14 +62,14 @@ test('comenta solo los públicos, una sola vez, y recuerda los que no se pueden'
   assert.ok(estado.cerr.error);
 });
 
-test('un vídeo con comentarios cerrados se deja tras 3 intentos', async () => {
+test('a video with closed comments is dropped after 3 attempts', async () => {
   const yt = fakeYouTube([video('cerr', 'public', { cerrado: true })]);
   const db = fakeDb();
   for (let i = 0; i < 5; i++) await comentaPublicados({ youtube: yt, db, logger: { info() {}, warn() {} } });
   assert.equal(JSON.parse(db.s.get('comentarios_canal')).cerr.intentos, 3);
 });
 
-test('ningún texto pide peticiones de oración ni promete orar por nadie (30/09)', () => {
+test('no text asks for prayer requests or promises to pray for anyone (30/09)', () => {
   const { TEXTOS } = require('../../utils/comentario-fijo');
   for (const texto of Object.values(TEXTOS).flat()) {
     assert.doesNotMatch(texto, /petici[oó]n|por qui[eé]n|oraremos|oramos por ti|entregarle a Dios esta noche/i, texto);

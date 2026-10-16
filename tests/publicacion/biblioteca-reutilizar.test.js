@@ -6,25 +6,25 @@ const fs = require('fs').promises;
 const { fichaDe, guardaFicha, leeFichas, busca, registraUso, elegirVariante } = require('../../utils/biblioteca-stock');
 const { filtroVariante, claveDePlano } = require('../../utils/timeline-renderer');
 
-// 30/09: cada vídeo descargaba clips nuevos de Pexels y la carpeta llegó a 16 GB.
-// Ahora los clips descargados llevan ficha y se reutilizan con otra "variante".
+// 30/09: every video downloaded new Pexels clips and the folder reached 16 GB.
+// Now downloaded clips carry a record and are reused with another "variant".
 
 const clip = (id, extra = {}) => ({
   source: 'pexels', id, type: 'video', title: `sunrise over calm beach ${id}`, keywords: ['sea', 'dawn'],
   width: 1920, height: 1080, durationSec: 20, url: `https://videos.pexels.com/${id}.mp4`, license: 'Pexels', ...extra
 });
 
-test('la ficha guarda lo necesario para volver a encontrar el clip', () => {
+test('the record stores what\'s needed to find the clip again', () => {
   const f = fichaDe(clip('1'));
   assert.equal(f.id, '1');
   assert.equal(f.url, 'https://videos.pexels.com/1.mp4');
   assert.deepEqual(f.usos, []);
 });
 
-test('busca por palabras, orientación y duración, y excluye los ya usados', () => {
+test('searches by words, orientation and duration, and excludes the ones already used', () => {
   const fichas = [
     { ruta: '/s/a.mp4', ficha: fichaDe(clip('a')) },
-    { ruta: '/s/b.mp4', ficha: fichaDe(clip('b', { title: 'city traffic night', keywords: [] })) },  // no casa
+    { ruta: '/s/b.mp4', ficha: fichaDe(clip('b', { title: 'city traffic night', keywords: [] })) },  // doesn't match
     { ruta: '/s/c.mp4', ficha: fichaDe(clip('c', { width: 1080, height: 1920 })) },                 // vertical
     { ruta: '/s/d.mp4', ficha: fichaDe(clip('d', { durationSec: 3 })) },                            // corto
     { ruta: '/s/e.mp4', ficha: fichaDe(clip('e')) }
@@ -35,7 +35,7 @@ test('busca por palabras, orientación y duración, y excluye los ya usados', ()
   assert.equal(r[0].downloadable, true);
 });
 
-test('un clip usado hace poco queda detrás de uno que descansa', () => {
+test('a recently used clip ranks behind a rested one', () => {
   const ahora = Date.parse('2026-09-30T12:00:00Z');
   const reciente = fichaDe(clip('r')); reciente.usos = [{ produccion: 'p1', en: '2026-09-30T08:00:00Z' }];
   const r = busca([{ ruta: '/s/r.mp4', ficha: reciente }, { ruta: '/s/l.mp4', ficha: fichaDe(clip('l')) }],
@@ -44,13 +44,13 @@ test('un clip usado hace poco queda detrás de uno que descansa', () => {
   assert.equal(r[1].usos, 1);
 });
 
-test('guarda la ficha junto al clip, conserva los usos y los registra', async () => {
+test('stores the record next to the clip, keeps the uses and records them', async () => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'biblio-'));
   const media = path.join(dir, 'x.mp4');
   await fs.writeFile(media, 'video');
   await guardaFicha(media, clip('x'));
   await registraUso(media, 'prod_1', new Date('2026-09-29T10:00:00Z'));
-  await guardaFicha(media, clip('x', { title: 'otro título' }));        // re-descarga: no pierde usos
+  await guardaFicha(media, clip('x', { title: 'otro título' }));        // re-download: doesn't lose uses
   const [{ ruta, ficha }] = await leeFichas(dir);
   assert.equal(ruta, media);
   assert.equal(ficha.title, 'otro título');
@@ -58,13 +58,13 @@ test('guarda la ficha junto al clip, conserva los usos y los registra', async ()
   await fs.rm(dir, { recursive: true });
 });
 
-test('la primera vez el clip va tal cual; después, cada uso con otra variante', () => {
+test('the first time the clip goes as is; afterwards, each use with another variant', () => {
   assert.equal(elegirVariante(0, 'a'), null);
   const v1 = elegirVariante(1, 'a');
   const v2 = elegirVariante(2, 'a');
   assert.ok(v1 && v2);
   assert.notDeepEqual(v1, v2);
-  assert.deepEqual(elegirVariante(1, 'a'), v1);                         // determinista: caché de planos estable
+  assert.deepEqual(elegirVariante(1, 'a'), v1);                         // deterministic: stable shot cache
   for (const v of [v1, v2]) {
     assert.ok(v.inicio >= 0 && v.inicio < 0.6);
     assert.ok(['neutro', 'calido', 'frio', 'suave'].includes(v.tono));
@@ -72,7 +72,7 @@ test('la primera vez el clip va tal cual; después, cada uso con otra variante',
   }
 });
 
-test('el filtro de la variante: espejo, tono, velocidad y movimiento', () => {
+test('the variant filter: mirror, tone, speed and motion', () => {
   const f = filtroVariante({ espejo: true, tono: 'calido', movimiento: 'pan-right', velocidad: 0.8, inicio: 0.2 },
     { width: 1920, height: 1080, fps: 30, frames: 300 });
   assert.match(f, /setpts=PTS\/0\.8/);
@@ -83,7 +83,7 @@ test('el filtro de la variante: espejo, tono, velocidad y movimiento', () => {
     'scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=30');
 });
 
-test('la variante cambia la clave de la caché de planos', () => {
+test('the variant changes the shot cache key', () => {
   const base = { duration: 5, selectedAsset: { localPath: '/no/existe.mp4' } };
   const dim = { width: 1920, height: 1080, fps: 30 };
   assert.notEqual(claveDePlano(base, 0, dim), claveDePlano({ ...base, variante: { espejo: true } }, 0, dim));

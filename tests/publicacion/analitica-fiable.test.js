@@ -9,7 +9,7 @@ function agent(rows = []) {
 }
 const period = ['video', '2026-10-01', '2026-10-03'];
 
-test('la fuente principal se elige por visitas; reconoce búsqueda y relacionados de la API real', async () => {
+test('the main source is picked by views; it recognizes search and related from the real API', async () => {
   const a = agent([['NO_LINK_OTHER', 0], ['YT_SEARCH', 300], ['RELATED_VIDEO', 600], ['EXT_URL', 100]]);
   const traffic = await a.getTrafficSourcesAnalytics(...period);
   assert.equal(traffic.topSource, 'RELATED_VIDEO');
@@ -18,7 +18,7 @@ test('la fuente principal se elige por visitas; reconoce búsqueda y relacionado
   assert.equal(a.analyzeSearchPerformance(traffic).searchQuality, 'good');
 });
 
-test('sin visitas de tráfico no inventa una fuente principal ni porcentajes NaN', async () => {
+test('without traffic views it doesn\'t invent a main source or NaN percentages', async () => {
   for (const rows of [[], [['YT_SEARCH', 0], ['SHORTS', 0]]]) {
     const a = agent(rows);
     const traffic = await a.getTrafficSourcesAnalytics(...period);
@@ -33,7 +33,7 @@ test('sin visitas de tráfico no inventa una fuente principal ni porcentajes NaN
   }
 });
 
-test('al recargar informes antiguos corrige el origen y la recomendación de búsqueda', async () => {
+test('reloading old reports fixes the source and the search recommendation', async () => {
   const a = agent();
   a.db.getAnalyticsHistory = async () => [{
     video_id: 'old', analyzed_at: '2026-10-03T13:00:00Z',
@@ -49,7 +49,7 @@ test('al recargar informes antiguos corrige el origen y la recomendación de bú
   assert.deepEqual(report.seoMetrics.recommendations, []);
 });
 
-test('filas ausentes o inválidas de suscriptores e ingresos quedan sin datos, no como cero', async () => {
+test('missing or invalid subscriber and revenue rows stay without data, not as zero', async () => {
   for (const rows of [undefined, [], [[]], [[null, null, null]], [['', '', '']], [[NaN, 0, 0]]]) {
     const result = await agent(rows).getOutcomeAnalytics(...period);
     assert.equal(result.subscribersAvailable, false);
@@ -59,7 +59,7 @@ test('filas ausentes o inválidas de suscriptores e ingresos quedan sin datos, n
   }
 });
 
-test('un cero medido y una pérdida neta de suscriptores sí son resultados válidos', async () => {
+test('a measured zero and a net subscriber loss are valid results', async () => {
   const a = agent();
   a.youtubeAnalytics.reports.query = async query => ({ data: { rows: query.metrics.includes('estimatedRevenue')
     ? [[0, 0, 0]] : [['2026-10-01', 100, 50, 0, 0]] } });
@@ -87,7 +87,7 @@ for (const [method, field] of [
   ['getWatchTimeAnalytics', 'watchTime'], ['getTrafficSourcesAnalytics', 'trafficSources'],
   ['getDeviceAnalytics', 'devices'], ['calculateEngagementMetrics', 'engagement']
 ]) {
-  test(`un fallo en ${field} conserva las vistas reales y marca solo ese grupo como ausente`, async () => {
+  test(`a failure in ${field} keeps the real views and flags only that group as missing`, async () => {
     const a = measuredAgent();
     a[method] = async () => { throw new Error('temporary API error'); };
     const result = await a.getVideoAnalytics('video', { startDate: period[1], endDate: period[2] });
@@ -106,7 +106,7 @@ for (const [method, field] of [
   });
 }
 
-test('si falla la consulta de vistas no fabrica visitas ni calificaciones', async () => {
+test('if the views query fails it doesn\'t fabricate views or ratings', async () => {
   const a = measuredAgent();
   a.getViewsAnalytics = async () => { throw new Error('unavailable'); };
   const result = await a.getVideoAnalytics('video');
@@ -116,7 +116,7 @@ test('si falla la consulta de vistas no fabrica visitas ni calificaciones', asyn
   assert.equal(a.calculatePerformanceScore(result).score, null);
 });
 
-test('un fallo total no crea cifras aleatorias', async () => {
+test('a total failure doesn\'t create random figures', async () => {
   const a = agent();
   a.youtubeAnalytics.reports.query = async () => { throw new Error('offline'); };
   a.getVideoDetails = async () => { throw new Error('offline'); };
@@ -128,7 +128,7 @@ test('un fallo total no crea cifras aleatorias', async () => {
   assert.equal(result.outcomes.netSubscribers, null);
 });
 
-test('una consulta de vistas vacía no se trata como una medición de cero', async () => {
+test('an empty views query isn\'t treated as a zero measurement', async () => {
   const empty = await agent([]).getViewsAnalytics(...period);
   assert.equal(empty.available, false);
   assert.equal(empty.totalViews, null);
@@ -137,7 +137,7 @@ test('una consulta de vistas vacía no se trata como una medición de cero', asy
   assert.equal(zero.totalViews, 0);
 });
 
-test('un informe sin vistas medibles se guarda como diagnóstico, sin alimentar aprendizaje ni retención', async () => {
+test('a report without measurable views is stored as a diagnostic, without feeding learning or retention', async () => {
   const a = agent();
   let saved = 0;
   a.db.getPublishedContentContext = async () => ({});
@@ -153,7 +153,7 @@ test('un informe sin vistas medibles se guarda como diagnóstico, sin alimentar 
   assert.equal(report.retention.available, false);
 });
 
-test('los indicadores no califican ni ordenan datos marcados explícitamente como no disponibles', async () => {
+test('indicators don\'t rate or rank data explicitly flagged as unavailable', async () => {
   const a = agent();
   const analytics = { available: false, views: { totalViews: 1000 }, watchTime: { averageViewPercentage: 80 } };
   assert.equal(a.calculatePerformanceScore(analytics).score, null);

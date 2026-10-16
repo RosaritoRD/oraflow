@@ -1,8 +1,8 @@
 /**
- * Contadores de visitas y clics (05/10/2026): página del libro, botón Comprar,
- * enlace /hoy y página de enlaces. Sin cookies ni datos personales: solo un
- * número por día. Los robots (vistas previas de WhatsApp, Facebook, Google…)
- * no cuentan. Setting `contadores` = { 'YYYY-MM-DD': { clave: n } }, 60 días.
+ * Visit and click counters (05/10/2026): the book page, the Buy button, the /hoy
+ * link and the links page. No cookies or personal data: just one number per day.
+ * Bots (WhatsApp, Facebook, Google link previews…) don't count. Setting
+ * `contadores` = { 'YYYY-MM-DD': { key: n } }, 60 days.
  */
 const ROBOT = /bot|crawl|spider|preview|facebookexternalhit|whatsapp|telegram|slack|discord|curl|wget|python|headless/i;
 

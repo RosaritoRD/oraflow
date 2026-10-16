@@ -1,16 +1,16 @@
 /**
- * Títulos de los vídeos largos con el formato de los canales grandes del nicho
- * (pedido del autor, 03/10/2026, sobre @AbrazoDivino y Sol Naciente):
+ * Long-video titles in the format of the niche's big channels (requested by the owner, 03/10/2026,
+ * based on @AbrazoDivino and Sol Naciente):
  *
  *   ORACIÓN DE LA MAÑANA | EL SEÑOR ES MI LUZ Y MI SALVACIÓN: NO TEMAS LO QUE TRAIGA ESTE DÍA | Salmo 27
  *
- * Cabecera fija con la franja que dice el CONTENIDO, la promesa del pasaje y lo
- * que el oyente recibe en mayúsculas, y la cita al final tal como se escribe.
- * 05/10/2026 (el autor): con la FECHA de publicación detrás de la franja, como la
- * competencia que más crece ("Oración de la mañana 5 de octubre de 2026"):
+ * A fixed header with the time of day the CONTENT says, the passage's promise and what the
+ * listener receives in capitals, and the reference at the end as it's written.
+ * 05/10/2026 (the owner): with the publishing DATE after the time of day, like the fastest-growing
+ * competitor ("Oración de la mañana 5 de octubre de 2026"):
  *   ORACIÓN DE LA MAÑANA · 6 DE OCTUBRE | DIOS CUIDA DE TI: … | Isaías 26:3
- * La gente busca la oración "de hoy" con la fecha. Sin fecha si no hay hueco de publicación.
- * YouTube corta a 100: primero se sacrifica la cita, después se corta en palabra.
+ * People search for "today's" prayer with the date. No date if there's no publishing slot.
+ * YouTube cuts at 100: the reference is sacrificed first, then it's cut at a word.
  */
 const { tituloLimpio } = require('./titulo-limpio');
 const { esShort } = require('./formato');
@@ -18,7 +18,7 @@ const { esShort } = require('./formato');
 const MAX = 100;
 const CABECERA = /^\s*ORACI[ÓO]N\s+DE\s+LA\s+(MAÑANA|MANANA|TARDE|NOCHE)(?:\s*[·•-]?\s*\d{1,2}\s+DE\s+\p{L}+(?:\s+DE\s+\d{4})?)?\s*(?:[|—–:·•-]\s*)*/iu;
 
-/** «6 DE OCTUBRE» en la zona del canal (el día en que se publica, no en el que se genera). */
+/** «6 DE OCTUBRE» in the channel's time zone (the day it's published, not the day it's generated). */
 function fechaTitulo(fecha, tz = 'America/New_York') {
   const d = fecha ? new Date(fecha) : null;
   if (!d || Number.isNaN(d.getTime())) return '';
@@ -29,7 +29,7 @@ const CITA_FINAL = /\s*[|—–]\s*(?:[1-3]\s*)?\p{L}[\p{L}\s]{1,24}?\s+\d{1,3}(
 
 const sinEmojis = t => String(t || '').replace(/\p{Extended_Pictographic}|️|‍/gu, '').replace(/\s+/g, ' ').trim();
 
-/** «Salmos 32:8» → «Salmo 32:8» (así se titula en el nicho). */
+/** «Salmos 32:8» → «Salmo 32:8» (that's how the niche titles it). */
 function citaDelTitulo(ref) {
   const r = sinEmojis(ref).replace(/^Salmos\b/i, 'Salmo');
   return r || null;
@@ -57,7 +57,7 @@ function tituloEstiloOracion({ titulo = '', franja = null, referencia = null, fe
   return cortaEnPalabra(`${cabeza} | ${cuerpo}`, MAX);
 }
 
-/** Solo los vídeos largos del canal de oración en español. */
+/** Only the Spanish prayer channel's long videos. */
 function usaEstiloOracion(strategy = {}, env = process.env) {
   return /^es\b/i.test(String(env.CONTENT_LANGUAGE || '')) &&
     String(env.CHANNEL_THEME || '').toLowerCase() === 'prayer' &&

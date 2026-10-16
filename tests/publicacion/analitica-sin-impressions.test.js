@@ -1,6 +1,6 @@
-// 02/10/2026: YouTube Analytics v2 rechaza «impressions» («Unknown identifier»), y como
-// iba en la misma consulta que las vistas, TODA la analítica caía a datos simulados y el
-// aprendizaje del canal descartaba el vídeo. Las vistas se piden solas; sin impresiones.
+// 02/10/2026: YouTube Analytics v2 rejects «impressions» («Unknown identifier»), and since
+// it was in the same query as views, ALL analytics fell back to simulated data and the
+// channel's learning discarded the video. Views are requested on their own; no impressions.
 const test = require('node:test');
 const assert = require('node:assert');
 const { AnalyticsOptimizationAgent } = require('../../agents/analytics-optimization-agent');
@@ -18,7 +18,7 @@ function agenteCon(respuestas) {
   return agent;
 }
 
-test('las vistas por día se piden sin impressions y suman bien', async () => {
+test('daily views are requested without impressions and add up correctly', async () => {
   const agent = agenteCon({ views: [['2026-10-01', 100], ['2026-10-02', 50]] });
   const v = await agent.getViewsAnalytics('abc', '2026-10-01', '2026-10-02');
   assert.strictEqual(v.totalViews, 150);
@@ -26,7 +26,7 @@ test('las vistas por día se piden sin impressions y suman bien', async () => {
   assert.strictEqual(v.impressionsAvailable, false);
 });
 
-test('el rendimiento de miniatura no consulta una métrica que no existe', async () => {
+test('thumbnail performance doesn\'t query a metric that doesn\'t exist', async () => {
   let consultas = 0;
   const agent = agenteCon({});
   const original = agent.youtubeAnalytics.reports.query;

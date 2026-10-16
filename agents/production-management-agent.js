@@ -98,12 +98,12 @@ class ProductionManagementAgent {
       // Save to database
       await this.db.saveProductionData(productionData);
       
-      // Optional AI stills: used as B-roll fallback by the storyboard, or as
-      // slides by the legacy path. Failures here never stop production.
-      // 29/09/2026: eran 5 imágenes gpt-image-2 en calidad ALTA por vídeo y en 9
-      // storyboards no se usó ninguna (368 planos, todos de Pexels). Con el
-      // storyboard activo solo se piden si el storyboard falla (AI_SCENE_IMAGES=on
-      // vuelve a pedirlas siempre).
+      // Optional AI stills: used as B-roll fallback by the storyboard, or as slides by
+      // the legacy path. Failures here never stop production.
+      // 29/09/2026: it was 5 gpt-image-2 images at HIGH quality per video, and across
+      // 9 storyboards none was used (368 shots, all from Pexels). With the storyboard
+      // active they're only requested if the storyboard fails (AI_SCENE_IMAGES=on
+      // always requests them again).
       const pedirImagenesAntes = !storyboardEnabled() || String(process.env.AI_SCENE_IMAGES || 'off').toLowerCase() === 'on';
       if (pedirImagenesAntes) await this.generateVideoContent(productionData);
 
@@ -248,7 +248,7 @@ class ProductionManagementAgent {
   }
 
   async processThumbnail(thumbnail, script) {
-    // Shorts: sin miniatura (YouTube enseña un fotograma del vídeo).
+    // Shorts: no thumbnail (YouTube shows a frame from the video).
     if (!thumbnail) return null;
     // The designer has already composed the exact channel typography. Validate
     // the finished asset before the legacy AI path, which would replace it.
@@ -263,10 +263,10 @@ class ProductionManagementAgent {
       }
       return { ...thumbnail, originalPath: thumbnail.path, fileSize: stats.size, generatedWith: 'jeshua-divine-dawn' };
     }
-    // Miniatura del canal de oración (THUMBNAIL_STYLE=oracion): ya viene compuesta
-    // con el diseño del autor. El camino de IA de abajo la sustituía por otra "loud"
-    // y era esa la que se subía a YouTube (pasó con todos los vídeos desde el 24/09).
-    // 'propio' = una de la biblioteca del autor (11/10/2026): también terminada.
+    // Prayer channel thumbnail (THUMBNAIL_STYLE=oracion): it already comes composed with
+    // the channel's design. The AI path below used to replace it with a "loud" one, and
+    // that was the one uploaded to YouTube (it happened to every video since 24/09).
+    // 'propio' = one from the owner's library (11/10/2026): also finished.
     if (['oracion', 'propio'].includes(thumbnail?.concept?.style) && thumbnail.path) {
       const stats = await fs.stat(thumbnail.path);
       return { ...thumbnail, originalPath: thumbnail.path, fileSize: stats.size };
@@ -275,8 +275,9 @@ class ProductionManagementAgent {
       // Try to generate AI thumbnail first
       const thumbnailScript = thumbnail.script || script || { title: thumbnail.title || 'Untitled Video' };
       const aiThumbnail = await this.aiVideoGenerator.generateThumbnail(thumbnailScript, 'ethereal');
-      /* Sin proveedor de IA, generateThumbnail NO falla: devuelve un .info de
-         simulación. Subido a YouTube da «image content is invalid» (13/10/2026). */
+      /* With no AI provider, generateThumbnail does NOT fail: it returns a simulated
+         .info file. Uploaded to YouTube it gives «image content is invalid»
+         (13/10/2026). */
       if (!aiThumbnail?.path || String(aiThumbnail.path).endsWith('.info')) {
         throw new Error('AI thumbnail is a simulation, keeping the original image');
       }
@@ -296,7 +297,9 @@ class ProductionManagementAgent {
         __dirname, '..', 'data', 'assets', 
         `thumbnail_${Date.now()}.jpg`
       );
-      
+      // A fresh checkout has no data/assets yet.
+      await fs.mkdir(path.dirname(productionThumbnailPath), { recursive: true });
+
       if (thumbnail.path && await fs.access(thumbnail.path).then(() => true).catch(() => false)) {
         const originalBuffer = await fs.readFile(thumbnail.path);
         await fs.writeFile(productionThumbnailPath, originalBuffer);

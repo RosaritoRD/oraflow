@@ -1,26 +1,26 @@
 /**
- * ffmpeg en el PC del autor (07/10/2026): "haz los vídeos en mi PC; solo si
- * falla, en la VPS". Todo el ffmpeg de Oraflow pasa por runFFmpeg
- * (utils/ffmpeg.js), que primero prueba aquí.
+ * ffmpeg on the owner's PC (07/10/2026): "make the videos on my PC; only if it
+ * fails, on the VPS". All of Oraflow's ffmpeg goes through runFFmpeg
+ * (utils/ffmpeg.js), which tries here first.
  *
- * El taller (C:\taller\taller.py, puerto 8096, solo acepta a la VPS) guarda
- * los archivos por su sha256: cada entrada se sube una vez y lo que el taller
- * produce ya está allí para el paso siguiente. Las rutas absolutas de la VPS se
- * cambian por relativas (e/0.mp4, e/d0/, e/q0/f_%03d.png) y la salida vuelve a
- * su ruta original. Lo que no se puede llevar (tuberías, `-f null -`, salidas
- * con patrón, rutas que no existen) se queda en la VPS: preparaTrabajo → null.
+ * The workshop (C:\taller\taller.py, port 8096, only accepts the VPS) stores files
+ * by their sha256: each input is uploaded once and whatever the workshop produces
+ * is already there for the next step. The VPS's absolute paths are swapped for
+ * relative ones (e/0.mp4, e/d0/, e/q0/f_%03d.png) and the output goes back to its
+ * original path. Whatever can't be carried over (pipes, `-f null -`, patterned
+ * outputs, paths that don't exist) stays on the VPS: preparaTrabajo → null.
  *
- * Cualquier fallo del taller (PC apagado, red, error de ffmpeg) lo resuelve
- * runFFmpeg haciéndolo en local: nunca se pierde un render por esto.
+ * Any workshop failure (PC off, network, ffmpeg error) is handled by runFFmpeg
+ * doing it locally: a render is never lost because of this.
  */
 const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
 
-// Rutas absolutas de la VPS/contenedor dentro de un argumento (sueltas o en un filtro).
+// Absolute VPS/container paths inside an argument (standalone or in a filter).
 const PATRON_RUTA = /\/(?:app|tmp|shorts|usr|data|root|home|opt|var)\/[A-Za-z0-9_.\/@+%'-]*[A-Za-z0-9_%]/g;
-const HAY_RUTA = new RegExp(PATRON_RUTA.source); // sin /g: .test() sin estado
+const HAY_RUTA = new RegExp(PATRON_RUTA.source); // no /g: stateless .test()
 const NOMBRE_SEGURO = /^[A-Za-z0-9_.%-]{1,100}$/;
 const SALIDA_LOCAL = /^(-|pipe:.*|\/dev\/null)$/;
 const MAX_ARCHIVOS_CARPETA = 300;
@@ -28,7 +28,7 @@ const FUENTES_POR_DEFECTO = path.join(__dirname, '..', 'data', 'assets', 'fuente
 
 const espera = ms => new Promise(r => setTimeout(r, ms));
 
-// sha256 por (ruta, tamaño, fecha): no se vuelve a leer un archivo que no cambió.
+// sha256 by (path, size, date): a file that didn't change isn't read again.
 const shas = new Map();
 async function sha256DeArchivo(ruta) {
   const st = await fsp.stat(ruta);
@@ -44,7 +44,7 @@ async function sha256DeArchivo(ruta) {
 
 const existe = async ruta => fsp.stat(ruta).catch(() => null);
 
-/** Lista de concat ("file '/ruta'"): rutas que nombra, o null si no lo es. */
+/** Concat list ("file '/ruta'"): the paths it names, or null if it isn't one. */
 function rutasDeLista(texto) {
   const lineas = String(texto).split(/\r?\n/).filter(l => l.trim() && !l.trim().startsWith('#'));
   if (!lineas.length) return null;
@@ -58,8 +58,8 @@ function rutasDeLista(texto) {
 }
 
 /**
- * args de ffmpeg con rutas de la VPS → trabajo para el taller, o null si se
- * queda en local. { args, entradas: [{ rel, ruta?|contenido? }], salida: { rel, ruta } }
+ * ffmpeg args with VPS paths → a job for the workshop, or null if it stays local. { args,
+ * entradas: [{ rel, ruta?|contenido? }], salida: { rel, ruta } }
  */
 async function preparaTrabajo(args, { fuentes = FUENTES_POR_DEFECTO } = {}) {
   if (!Array.isArray(args) || args.length < 2) return null;
@@ -105,7 +105,7 @@ async function preparaTrabajo(args, { fuentes = FUENTES_POR_DEFECTO } = {}) {
     return `${rel}/${patron}`;
   };
 
-  // Cada ruta que aparece en las entradas: archivo, carpeta, secuencia o lista de concat.
+  // Every path that shows up in the inputs: file, folder, sequence or concat list.
   const resuelve = async (ruta) => {
     if (ruta === rutaSalida) return null;
     if (ruta.includes('%')) return secuencia(ruta);
@@ -118,8 +118,10 @@ async function preparaTrabajo(args, { fuentes = FUENTES_POR_DEFECTO } = {}) {
         const lineas = [];
         for (const r of lista) {
           if (!r.startsWith('/') || !(await existe(r))?.isFile()) return null;
-          // ffmpeg resuelve cada línea relativa a la propia lista, que también va a e/:
-          // 'e/0.mp4' sería e/e/0.mp4 (así fallaban los concat en el taller).
+          // ffmpeg resolves each line relative to the list itself, which also
+          // goes to e/:
+          // 'e/0.mp4' would be e/e/0.mp4 (that's how the concats were failing in
+          // the workshop).
           lineas.push(`file '${path.posix.relative('e', archivo(r))}'`);
         }
         return archivo(ruta, Buffer.from(`${lineas.join('\n')}\n`));
@@ -141,7 +143,7 @@ async function preparaTrabajo(args, { fuentes = FUENTES_POR_DEFECTO } = {}) {
     nuevos.push(a);
   }
 
-  // Subtítulos sin carpeta de fuentes: en Windows no están Cinzel/Oswald/Bebas.
+  // Captions without a fonts folder: Cinzel/Oswald/Bebas aren't on Windows.
   const stFuentes = fuentes && await existe(fuentes);
   for (let i = 0; i < nuevos.length; i++) {
     if (!/(^|[,;\]])\s*(subtitles|ass)=/.test(nuevos[i]) || /fontsdir=/.test(nuevos[i])) continue;
@@ -151,7 +153,7 @@ async function preparaTrabajo(args, { fuentes = FUENTES_POR_DEFECTO } = {}) {
     nuevos[i] = nuevos[i].replace(/((?:^|[,;\]])\s*(?:subtitles|ass)=(?:'[^']*'|[^:,;[\]']+))/g, `$1:fontsdir='${relFuentes}'`);
   }
 
-  // Si queda alguna ruta de la VPS sin traducir, el taller no la tendría.
+  // If any VPS path is left untranslated, the workshop wouldn't have it.
   if (nuevos.some(a => HAY_RUTA.test(a))) return null;
   const relSalida = `s/0${path.extname(rutaSalida).toLowerCase().replace(/[^.a-z0-9]/g, '')}`;
   return { args: [...nuevos, relSalida], entradas, salida: { rel: relSalida, ruta: rutaSalida } };
@@ -211,25 +213,28 @@ class ClienteTaller {
 
   async baja(sha, destino) {
     const r = await this.pide(`/api/archivos/${sha}`, {}, 30 * 60000);
-    if (!r.ok || !r.body) throw new Error(`bajar la salida: HTTP ${r.status}`);
+    if (!r.ok || !r.body) throw new Error(`download output: HTTP ${r.status}`);
     const tmp = `${destino}.taller-${process.pid}-${Date.now()}`;
     try {
       const { Readable } = require('stream');
       const { pipeline } = require('stream/promises');
       await pipeline(Readable.fromWeb(r.body), fs.createWriteStream(tmp));
       const bajado = await sha256DeArchivo(tmp);
-      if (bajado !== sha) throw new Error('la salida llegó dañada');
+      if (bajado !== sha) throw new Error('the output arrived damaged');
       await fsp.rename(tmp, destino);
     } finally {
       await fsp.rm(tmp, { force: true });
     }
   }
 
-  /** Hace el trabajo en el taller. null = no se puede llevar (se hace en local); lanza si el taller falla. */
+  /**
+   * Does the job in the workshop. null = can't be carried over (done locally); throws if the
+   * workshop fails.
+   */
   async ejecuta(args) {
     const trabajo = await preparaTrabajo(args);
     if (!trabajo) return null;
-    if (!await this.disponible()) throw new Error('el taller no responde');
+    if (!await this.disponible()) throw new Error('the workshop is not responding');
     const t0 = Date.now();
     const entradas = {};
     for (const e of trabajo.entradas) entradas[e.rel] = await this.sube(e);
@@ -237,13 +242,13 @@ class ClienteTaller {
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ args: trabajo.args, entradas, salidas: [trabajo.salida.rel], limite_s: Math.round(this.limiteMs / 1000) })
     });
-    if (!r.ok) throw new Error(`el taller rechazó el trabajo: HTTP ${r.status} ${(await r.text()).slice(0, 200)}`);
+    if (!r.ok) throw new Error(`the workshop rejected the job: HTTP ${r.status} ${(await r.text()).slice(0, 200)}`);
     const { id } = await r.json();
 
     let sinRedDesde = 0;
     let pausa = Math.min(300, this.pausaSondeoMs);
     for (;;) {
-      if (Date.now() - t0 > this.limiteMs) throw new Error('el taller tardó demasiado');
+      if (Date.now() - t0 > this.limiteMs) throw new Error('the workshop took too long');
       await espera(pausa);
       pausa = this.pausaSondeoMs;
       let estado;
@@ -254,11 +259,11 @@ class ClienteTaller {
         sinRedDesde = 0;
       } catch (error) {
         sinRedDesde = sinRedDesde || Date.now();
-        if (Date.now() - sinRedDesde > this.sinRedMaxMs) throw new Error(`se perdió el taller a mitad de trabajo: ${error.message}`);
+        if (Date.now() - sinRedDesde > this.sinRedMaxMs) throw new Error(`lost the workshop mid-job: ${error.message}`);
         continue;
       }
       if (estado.estado === 'error') {
-        const error = new Error(`ffmpeg falló en el taller: ${estado.error} ${String(estado.stderr || '').slice(-300)}`);
+        const error = new Error(`ffmpeg failed in the workshop: ${estado.error} ${String(estado.stderr || '').slice(-300)}`);
         error.enTaller = true;
         throw error;
       }

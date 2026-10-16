@@ -1,8 +1,8 @@
 /**
- * Paisajes según la hora del día (02/10/2026, el autor: «que sean más paisajes y
- * relacionados si es de noche o de día»). Lo usa la selección de clips de
- * storyboard-pipeline: una de las búsquedas de cada escena es un paisaje de la
- * franja, y la puntuación sube los paisajes y hunde lo que choca con la hora.
+ * Landscapes by time of day (02/10/2026, the owner: «more landscapes, and related
+ * to whether it's night or day»). Used by storyboard-pipeline's clip picking: one
+ * of each scene's searches is a landscape for the time of day, and the score
+ * boosts landscapes and sinks what clashes with the time.
  */
 const { franjaDelContenido } = require('./franja');
 
@@ -27,13 +27,13 @@ const PAISAJE = /\b(mountains?|lakes?|seas?|ocean|forests?|trees|fields?|meadows
 const DE_DIA = /\b(sunrise|morning|sunny|daylight|daytime|noon|blue sky|dawn)\b/;
 const DE_NOCHE = /\b(night|nighttime|stars|starry|moon|moonlight|moonlit|milky way|midnight|dark sky)\b/;
 
-/** 'manana' | 'tarde' | 'noche' del contenido (guion) o del hueco; por defecto mañana. */
+/** 'manana' | 'tarde' | 'noche' from the content (script) or the slot; morning by default. */
 function momentoDe(production = {}) {
   const f = franjaDelContenido(production.script || {}, production.strategy || {});
   return { 'MAÑANA': 'manana', TARDE: 'tarde', NOCHE: 'noche' }[f] || 'manana';
 }
 
-/** Búsqueda de paisaje para la escena `i` (rota para no repetir el mismo sitio). */
+/** Landscape search for scene `i` (rotates so the same place doesn't repeat). */
 function consultaPaisaje(momento, i = 0) {
   const lista = PAISAJES[momento] || PAISAJES.manana;
   return lista[((i % lista.length) + lista.length) % lista.length];
@@ -44,7 +44,7 @@ function texto(asset = {}) {
   return `${asset.title || ''} ${asset.description || ''} ${claves}`.toLowerCase();
 }
 
-/** Ajuste de puntuación: + paisaje, + franja correcta, −− franja contraria. */
+/** Score adjustment: + landscape, + right time of day, −− opposite time of day. */
 function ajustePaisaje(asset, momento) {
   const t = texto(asset);
   let ajuste = PAISAJE.test(t) ? 8 : 0;
@@ -52,7 +52,7 @@ function ajustePaisaje(asset, momento) {
   const noche = DE_NOCHE.test(t);
   if (momento === 'noche') ajuste += (noche ? 6 : 0) - (dia && !noche ? 25 : 0);
   else if (momento === 'manana') ajuste += (dia ? 6 : 0) - (noche && !dia ? 25 : 0);
-  else ajuste -= noche && !dia ? 12 : 0;   // tarde: hora dorada; la noche cerrada desentona
+  else ajuste -= noche && !dia ? 12 : 0;   // afternoon: golden hour; full night is out of place
   return ajuste;
 }
 

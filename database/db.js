@@ -505,6 +505,66 @@ class Database {
         FOREIGN KEY (production_id) REFERENCES productions(id),
         FOREIGN KEY (scene_id) REFERENCES production_scenes(id)
       )`,
+      // Messages (15/10/2026): several Instagram, Facebook and WhatsApp accounts in one
+      // place, per-post automatic message rules and their log.
+      // The main accounts from .env are NOT stored here (utils/mensajes/cuentas.js).
+      `CREATE TABLE IF NOT EXISTS social_accounts (
+        id TEXT PRIMARY KEY,
+        red TEXT NOT NULL,
+        nombre TEXT NOT NULL,
+        externo_id TEXT NOT NULL,
+        token TEXT NOT NULL,
+        extra TEXT NOT NULL DEFAULT '{}',
+        activa INTEGER NOT NULL DEFAULT 1,
+        ultimo_error TEXT,
+        verificada_at TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(red, externo_id)
+      )`,
+      `CREATE TABLE IF NOT EXISTS message_rules (
+        id TEXT PRIMARY KEY,
+        cuenta_id TEXT NOT NULL,
+        nombre TEXT NOT NULL,
+        publicacion_id TEXT,
+        publicacion_titulo TEXT,
+        palabras TEXT NOT NULL DEFAULT '[]',
+        dm_texto TEXT NOT NULL DEFAULT '',
+        respuestas TEXT NOT NULL DEFAULT '[]',
+        una_vez INTEGER NOT NULL DEFAULT 1,
+        activa INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+      )`,
+      `CREATE TABLE IF NOT EXISTS message_runs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cuenta_id TEXT NOT NULL,
+        red TEXT NOT NULL,
+        regla_id TEXT,
+        publicacion_id TEXT,
+        comentario_id TEXT NOT NULL,
+        usuario TEXT,
+        comentario TEXT,
+        privado TEXT,
+        publica TEXT,
+        estado TEXT NOT NULL,
+        detalle TEXT,
+        intentos INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL,
+        UNIQUE(cuenta_id, comentario_id)
+      )`,
+      // Chats that arrive by webhook or polling (WhatsApp, Telegram): their APIs don't list
+      // conversations.
+      // id = '<account>:<message id>' so they don't clash across accounts. (Replaces
+      // whatsapp_messages, which was empty.)
+      `CREATE TABLE IF NOT EXISTS chat_messages (
+        id TEXT PRIMARY KEY,
+        cuenta_id TEXT NOT NULL,
+        contacto TEXT NOT NULL,
+        nombre TEXT,
+        texto TEXT,
+        de_mi INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL
+      )`,
       `CREATE TABLE IF NOT EXISTS shorts_clips (
         id TEXT PRIMARY KEY,
         production_id TEXT NOT NULL,
@@ -1861,8 +1921,8 @@ class Database {
   }
 
   // Publishing methods
-  /** Títulos finales de lo programado y publicado, los más recientes primero (para no repetirlos). */
-  /** 12/10/2026: los Shorts con más vistas en su primera semana (utils/shorts-que-funcionan.js). */
+  /** Final titles of what's scheduled and published, newest first (so they aren't repeated). */
+  /** 12/10/2026: the Shorts with the most views in their first week (utils/shorts-que-funcionan.js). */
   async getBestShortTitles(limit = 5) {
     const rows = await this.getAllRows(
       `SELECT p.video_id, p.metrics, s.title, s.metadata
@@ -1899,7 +1959,7 @@ class Database {
     );
     for (const row of rows) {
       let metadata = {};
-      try { metadata = JSON.parse(row.metadata || '{}') || {}; } catch (_) { /* Usa el título de la cola antigua. */ }
+      try { metadata = JSON.parse(row.metadata || '{}') || {}; } catch (_) { /* Uses the title from the old queue. */ }
       const finalTitle = String(metadata.seo?.title || '').trim() || row.title;
       if (normalizaTituloPublicacion(finalTitle) === normalized) {
         return { id: row.id, productionId: row.production_id, title: finalTitle, status: row.status };
@@ -1986,7 +2046,7 @@ class Database {
     return rows.map(row => this.deserializeScheduleEntry(row));
   }
 
-  /** Vídeos ya subidos a YouTube desde `sinceIso`: los que aún pueden ir a Facebook/Instagram. */
+  /** Videos already uploaded to YouTube since `sinceIso`: the ones that can still go to Facebook/Instagram. */
   async getRecentPublishedForSocial(sinceIso) {
     const rows = await this.getAllRows(
       `SELECT * FROM publish_schedule

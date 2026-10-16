@@ -1,7 +1,7 @@
-// Estudio de Shorts: puente entre el panel y el proyecto /ruta/a/shorts
-// (scripts de Python que hacen los shorts de versículos y los clips con subtítulos).
-// Aquí solo se gestionan archivos y se lanza un trabajo a la vez; el render vive en
-// los scripts, que siguen funcionando igual desde la terminal.
+// Shorts studio: a bridge between the panel and the shorts-versiculos project (SHORTS_DIR;
+// Python scripts that make the verse shorts and the captioned clips).
+// This only manages files and launches one job at a time; rendering lives in the scripts,
+// which still work the same from the terminal.
 const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
@@ -29,10 +29,11 @@ function fallo(status, message) {
   return error;
 }
 
-/* La ficha .txt que escribe hacer_versiculos.py: "TÍTULO: ..." y, tras
-   "DESCRIPCIÓN:", todo lo que se pega en YouTube. */
+/* The .txt sheet written by hacer_versiculos.py: "TITLE: ..." and, after
+   "DESCRIPTION:", everything that gets pasted into YouTube. Sheets made before
+   16/10/2026 use the Spanish labels (TÍTULO/DESCRIPCIÓN); both are read. */
 function leerFicha(texto) {
-  const m = String(texto).match(/^TÍTULO:\s*(.*)\n[\s\S]*?DESCRIPCIÓN:\n([\s\S]*)$/);
+  const m = String(texto).match(/^(?:TITLE|TÍTULO):\s*(.*)\n[\s\S]*?(?:DESCRIPTION|DESCRIPCIÓN):\n([\s\S]*)$/);
   if (!m) return { title: '', description: String(texto).trim() };
   return { title: m[1].trim(), description: m[2].trim() };
 }
@@ -60,7 +61,7 @@ class ShortsStudioService {
     };
   }
 
-  /* Solo el nombre, sin rutas ni caracteres que confundan al sistema de archivos. */
+  /* Just the name, with no paths or characters that confuse the file system. */
   safeName(area, nombre) {
     const exts = area === 'shorts' || area === 'clips' ? ['.mp4'] : EXT[area];
     if (!exts) throw fallo(400, 'Área desconocida');
@@ -185,7 +186,7 @@ class ShortsStudioService {
   async remove(area, nombre) {
     const full = await this.mediaPath(area, nombre);
     await fsp.unlink(full);
-    // La ficha del short y la atribución de la pista viven al lado con el mismo nombre.
+    // The short's sheet and the track's attribution live next to it with the same name.
     if (area === 'shorts' || area === 'musica') {
       await fsp.unlink(full.replace(/\.[^.]+$/, '.txt')).catch(() => {});
     }
@@ -254,7 +255,7 @@ class ShortsStudioService {
     this.proceso = proceso;
 
     const agregar = linea => {
-      // Los avisos internos de las librerías no le dicen nada al operador.
+      // The libraries' internal warnings mean nothing to the operator.
       if (!linea.trim() || /Warning|warnings\.warn/.test(linea)) return;
       job.log.push(linea.replace(/\s+$/, ''));
       if (job.log.length > MAX_LOG) job.log.splice(0, job.log.length - MAX_LOG);

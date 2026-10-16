@@ -1,4 +1,4 @@
-// 04/10/2026: carrusel de oraciones con versículos para Instagram.
+// 04/10/2026: a carousel of prayers with verses for Instagram.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
@@ -13,20 +13,20 @@ const BIBLIA = {
   Filipenses: { 4: { 6: 'Por nada estéis afanosos;', 7: 'Y la paz de Dios guardará vuestros corazones.' } }
 };
 
-test('el versículo sale de la Biblia, nunca de la IA', () => {
+test('the verse comes from the Bible, never from the AI', () => {
   assert.equal(c.buscaVersiculo('Salmo 4:8', BIBLIA).cita, 'Salmos 4:8');
   assert.equal(c.buscaVersiculo('1 pedro 5:7', BIBLIA).texto, BIBLIA['1 Pedro'][5][7]);
   assert.equal(c.buscaVersiculo('Filipenses 4:6-7', BIBLIA).cita, 'Filipenses 4:6-7');
   assert.equal(c.buscaVersiculo('Salmos 92:1-2', BIBLIA).texto.endsWith('noches…'), true); // a media frase → …
-  assert.equal(c.buscaVersiculo('Salmos 4:99', BIBLIA), null); // no existe
+  assert.equal(c.buscaVersiculo('Salmos 4:99', BIBLIA), null); // doesn't exist
   assert.equal(c.buscaVersiculo('Hechos 2:1', BIBLIA), null);
-  assert.equal(c.buscaVersiculo('Salmos 4:1-9', BIBLIA), null); // más de 3
+  assert.equal(c.buscaVersiculo('Salmos 4:1-9', BIBLIA), null); // more than 3
   assert.equal(c.buscaVersiculo('no es una cita', BIBLIA), null);
 });
 
 const larga = 'Señor, gracias por este día y por cada persona que pusiste en mi camino. Te entrego lo que no pude resolver y descanso en tu cuidado fiel esta noche, sabiendo que estás conmigo siempre.';
 
-test('validaContenido descarta citas inventadas y exige 3 oraciones válidas', () => {
+test('validaContenido drops invented references and requires 3 valid prayers', () => {
   const crudo = {
     portada: 'Para cuando el corazón no encuentra paz al llegar la noche', destacado: 'no encuentra paz', subtitulo: 'Ora conmigo estas palabras:',
     oraciones: [
@@ -42,26 +42,26 @@ test('validaContenido descarta citas inventadas y exige 3 oraciones válidas', (
   assert.ok(d.oraciones.every(o => /Amén\.$/.test(o.texto)));
   assert.equal(d.destacado, 'no encuentra paz');
   crudo.oraciones = crudo.oraciones.slice(0, 2);
-  assert.throws(() => c.validaContenido(crudo, BIBLIA, 'x'), /Solo 2/);
+  assert.throws(() => c.validaContenido(crudo, BIBLIA, 'x'), /Only 2/);
 });
 
-test('nunca una portada que diga que la gente no sabe orar', () => {
+test('never a cover that says people don\'t know how to pray', () => {
   const oraciones = [{ texto: larga, cita: 'Salmos 4:8' }, { texto: larga, cita: '1 Pedro 5:7' }, { texto: larga, cita: 'Filipenses 4:6-7' }];
   for (const portada of ['¿No sabes qué decirle a Dios antes de dormir?', '¿Llegas cansado y no sabes cómo orar?',
     'Aprende a orar antes de dormir', 'Cómo orar cuando tienes ansiedad', '¿No sabes orar? Empieza aquí']) {
-    assert.throws(() => c.validaContenido({ portada, oraciones }, BIBLIA, 't'), /no sabe orar/, portada);
+    assert.throws(() => c.validaContenido({ portada, oraciones }, BIBLIA, 't'), /does not know how to pray/, portada);
   }
-  assert.throws(() => c.validaContenido({ portada: 'Para cuando la noche pesa', subtitulo: 'Si no sabes qué decir, ora así:', oraciones }, BIBLIA, 't'), /no sabe orar/);
+  assert.throws(() => c.validaContenido({ portada: 'Para cuando la noche pesa', subtitulo: 'Si no sabes qué decir, ora así:', oraciones }, BIBLIA, 't'), /does not know how to pray/);
   assert.ok(c.validaContenido({ portada: 'Oraciones para entregarle a Dios el cansancio de hoy', oraciones }, BIBLIA, 't'));
   assert.doesNotMatch(c.promptContenido('antes de dormir'), /No sabes qué decirle/);
 });
 
-test('extraeJson tolera ```json y texto alrededor', () => {
+test('extraeJson tolerates ```json and surrounding text', () => {
   assert.deepEqual(c.extraeJson('Aquí está:\n```json\n{"a":1}\n```'), { a: 1 });
   assert.throws(() => c.extraeJson('sin json'), /JSON/);
 });
 
-test('texto del carrusel: gancho, guardar/enviar/Amén y 5 hashtags como máximo', () => {
+test('carousel text: hook, save/send/Amén and at most 5 hashtags', () => {
   const t = c.textoCarrusel({ portada: '¿No sabes qué decirle a Dios?', pie: 'Descansa.', tema: 'antes de dormir' });
   assert.match(t, /^¿No sabes/);
   assert.match(t, /Guarda/);
@@ -70,7 +70,7 @@ test('texto del carrusel: gancho, guardar/enviar/Amén y 5 hashtags como máximo
   assert.equal((t.match(/#\S+/g) || []).length, 5);
 });
 
-test('diapositivas: portada + una por oración + cierre, con el versículo y su cita', () => {
+test('slides: cover + one per prayer + closing, with the verse and its reference', () => {
   const d = c.validaContenido({ portada: 'Para cuando el corazón no encuentra paz al llegar la noche', destacado: 'no encuentra paz',
     oraciones: [{ texto: larga, cita: 'Salmos 4:8' }, { texto: larga, cita: '1 Pedro 5:7' }, { texto: larga, cita: 'Filipenses 4:6-7' }] }, BIBLIA, 't');
   const h = c.diapositivas(d);
@@ -81,12 +81,12 @@ test('diapositivas: portada + una por oración + cierre, con el versículo y su 
   assert.doesNotMatch(h.join(''), /<script>alert/);
 });
 
-test('el tema rota y evita los últimos usados', () => {
+test('the topic rotates and avoids the latest ones used', () => {
   const usados = c.TEMAS.slice(0, c.TEMAS.length - 1);
   assert.equal(c.temaDelDia(new Date(), usados), c.TEMAS.at(-1));
 });
 
-test('Instagram: carrusel = un contenedor por imagen + CAROUSEL con todos', async () => {
+test('Instagram: carousel = one container per image + CAROUSEL with all of them', async () => {
   const cuerpos = [];
   let n = 0;
   const fetchImpl = async (url, opts = {}) => {
@@ -102,7 +102,7 @@ test('Instagram: carrusel = un contenedor por imagen + CAROUSEL con todos', asyn
   assert.equal(cuerpos[2].get('children'), 'C1,C2');
   assert.equal(cuerpos[2].get('caption'), 'Hola');
   assert.deepEqual(r, { containerId: 'C3', igUserId: 'IG1' });
-  await assert.rejects(preparaCarruselIG({ token: 'T', imageUrls: ['a'], fetchImpl }), /entre 2 y 10/);
+  await assert.rejects(preparaCarruselIG({ token: 'T', imageUrls: ['a'], fetchImpl }), /between 2 and 10/);
 });
 
 function dbFalsa(inicial = {}) {
@@ -110,7 +110,7 @@ function dbFalsa(inicial = {}) {
   return { s, getSetting: async k => (k in s ? s[k] : null), setSetting: async (k, v) => { s[k] = v; } };
 }
 
-test('tocaHoy: apagado por defecto, a partir de su hora y una vez al día', async () => {
+test('tocaHoy: off by default, from its time on and once a day', async () => {
   const mediodia = new Date('2026-10-04T16:30:00Z'); // 12:30 NY
   assert.equal(await tocaHoy({ db: dbFalsa(), now: mediodia }), null);
   const db = dbFalsa({ instagram_carousel_enabled: 'true' });
@@ -146,22 +146,22 @@ function depsFalsas(extra = {}) {
 }
 const ENV_TODO = { INSTAGRAM_TOKEN: 'T', FACEBOOK_PAGE_ID: 'P', FACEBOOK_PAGE_TOKEN: 'F' };
 
-test('por defecto: carrusel de imágenes en Instagram + Reel con música en Facebook', async () => {
+test('by default: image carousel on Instagram + Reel with music on Facebook', async () => {
   const db = dbFalsa({ instagram_carousel_enabled: 'true' });
   const { deps, llamadas } = depsFalsas();
   const r = await publicaCarruselDelDia({ db, ai: {}, now: MEDIODIA, dirBase: dirTmp(), env: ENV_TODO, deps });
   assert.equal(r.status, 'published');
   assert.deepEqual(Object.keys(r.redes).sort(), ['facebook_reel', 'instagram_carrusel']);
   assert.deepEqual(llamadas.igCarrusel[0].imageUrls, ['https://x/a.jpg', 'https://x/b.jpg']);
-  assert.doesNotMatch(llamadas.igCarrusel[0].caption, /Música/); // las imágenes no llevan música
-  assert.match(llamadas.fb[0], /🎵 Música: Autor · CC BY 4.0/); // el Reel sí, con su crédito
+  assert.doesNotMatch(llamadas.igCarrusel[0].caption, /Música/); // the images carry no music
+  assert.match(llamadas.fb[0], /🎵 Música: Autor · CC BY 4.0/); // the Reel does, with its credit
   assert.equal(r.redes.facebook_reel.url, 'https://www.facebook.com/reel/FB1');
   assert.deepEqual(llamadas.borradas, ['a.jpg', 'b.jpg']);
   assert.equal(JSON.parse(db.s.instagram_carousel_temas)[0], r.tema);
   assert.equal(await tocaHoy({ db, now: new Date('2026-10-04T18:00:00Z') }), null);
 });
 
-test('formato reel/ambos en Instagram: el vídeo con música sube como Reel', async () => {
+test('reel/ambos format on Instagram: the video with music goes up as a Reel', async () => {
   for (const formato of ['reel', 'ambos']) {
     const db = dbFalsa({ instagram_carousel_enabled: 'true', instagram_carousel_format: formato, facebook_carousel_reel: 'false' });
     const { deps, llamadas } = depsFalsas();
@@ -175,7 +175,7 @@ test('formato reel/ambos en Instagram: el vídeo con música sube como Reel', as
   }
 });
 
-test('sin enlace público de Instagram, Facebook sale igual', async () => {
+test('without an Instagram public link, Facebook goes out anyway', async () => {
   const db = dbFalsa({ instagram_carousel_enabled: 'true' });
   const { deps, llamadas } = depsFalsas({ enlace: null });
   const r = await publicaCarruselDelDia({ db, ai: {}, now: MEDIODIA, dirBase: dirTmp(), env: { ...ENV_TODO }, deps });
@@ -184,7 +184,7 @@ test('sin enlace público de Instagram, Facebook sale igual', async () => {
   assert.deepEqual(llamadas.renders, ['video']);
 });
 
-test('si una red falla, el reintento solo repite esa y con el mismo tema', async () => {
+test('if one network fails, the retry only repeats that one and with the same topic', async () => {
   const db = dbFalsa({ instagram_carousel_enabled: 'true' });
   let falla = true;
   const { deps, llamadas } = depsFalsas({
@@ -200,10 +200,10 @@ test('si una red falla, el reintento solo repite esa y con el mismo tema', async
   assert.equal(r2.status, 'published');
   assert.equal(r2.intentos, 2);
   assert.equal(r2.tema, r1.tema);
-  assert.equal(llamadas.fb.length, 1); // Facebook no se repite
+  assert.equal(llamadas.fb.length, 1); // Facebook isn't repeated
 });
 
-test('vídeo del carrusel: tiempos de lectura, ≤ 89 s, música con fundidos y crédito CC BY', () => {
+test('carousel video: reading times, ≤ 89 s, music with fades and CC BY credit', () => {
   const v = require('../../utils/carrusel-video');
   const corta = { oraciones: [{ texto: 'a '.repeat(30), versiculo: { texto: 'b '.repeat(10) } }] };
   assert.deepEqual(v.duraciones(corta), [4, 10, 5]);
@@ -226,7 +226,7 @@ test('vídeo del carrusel: tiempos de lectura, ≤ 89 s, música con fundidos y 
   assert.match(v.eligeMusica(dir), /a\.mp3$/);
 });
 
-test('«para empezar la semana» solo sale los lunes (hora de Nueva York) (07/10/2026)', () => {
+test('«para empezar la semana» only comes out on Mondays (New York time) (07/10/2026)', () => {
   const miercoles = new Date('2026-10-07T16:00:00Z');
   for (let i = 0; i < 40; i += 1) {
     const d = new Date(miercoles.getTime() + i * 86400000);
@@ -235,7 +235,7 @@ test('«para empezar la semana» solo sale los lunes (hora de Nueva York) (07/10
   }
   const lunes = new Date('2026-10-12T16:00:00Z');
   assert.equal(c.temaDelDia(lunes, []), 'para empezar la semana');
-  assert.notEqual(c.temaDelDia(lunes, ['para empezar la semana']), 'para empezar la semana'); // ya salió: rota normal
-  // domingo 23:30 en Nueva York (lunes en UTC) todavía no es lunes
+  assert.notEqual(c.temaDelDia(lunes, ['para empezar la semana']), 'para empezar la semana'); // already went out: normal rotation
+  // Sunday 23:30 in New York (Monday in UTC) isn't Monday yet
   assert.notEqual(c.temaDelDia(new Date('2026-10-12T03:30:00Z'), []), 'para empezar la semana');
 });

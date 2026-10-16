@@ -188,11 +188,21 @@ function renderCurrentView(derived = {}) {
     case 'clipping':
       window.renderShorts?.();
       break;
+    case 'outliers':
+      window.renderOutliers?.();
+      break;
     case 'accounts':
       window.renderAccounts?.();
       break;
     case 'redes':
       window.renderRedes?.();
+      break;
+    case 'msj-resumen':
+    case 'msj-bandeja':
+    case 'msj-reglas':
+    case 'msj-ejecuciones':
+    case 'msj-cuentas':
+      window.renderMensajes?.(ui.currentView);
       break;
     case 'docs':
       window.renderDocs?.();
@@ -855,8 +865,8 @@ function renderOperator(strategy, runs, system) {
   }).join('') : empty(i18n.t('Research and planning will appear here when the run begins.'));
 }
 
-/* «Elementos del vídeo» (03/10/2026): suscribirse, campana y comentar; cuándo sale cada uno.
-   Sin ajuste guardado, los mismos valores por defecto que utils/extras-video.js. */
+/* «Video elements» (03/10/2026): subscribe, bell and comment; when each one appears.
+   With no saved setting, the same defaults as utils/extras-video.js. */
 const EXTRAS_DEFECTO = { suscribir: { activo: true, momentos: ['inicio'], shorts: true }, campana: { activo: true, momentos: ['mitad'] }, comentar: { activo: true, momentos: ['final'], texto: 'Escribe AMÉN en los comentarios' }, compartir: { activo: false, momentos: ['mitad'] } };
 function pintaExtras(guardado) {
   let e = null;
@@ -933,6 +943,7 @@ function switchView(view) {
     research: [i18n.t('RESEARCH INBOX'), i18n.t('Turn evidence into the next production.')],
     shorts: [i18n.t('VERSE SHORTS'), i18n.t('Verses in, shorts out.')],
     clipping: [i18n.t('CLIPPING'), i18n.t('Long videos into short clips.')],
+    outliers: [i18n.t('OUTLIERS'), i18n.t('What already works, before you film.')],
     operator: [i18n.t('AUTONOMOUS OPERATOR'), i18n.t('Give Oraflow the strategy.')],
     pipeline: [i18n.t('CONTENT OPERATIONS'), i18n.t('From idea to published.')],
     calendar: [i18n.t('EDITORIAL PLANNING'), i18n.t('Plan before you generate.')],
@@ -940,7 +951,12 @@ function switchView(view) {
     engagement: [i18n.t('AUDIENCE ENGAGEMENT'), i18n.t('Talk with the people watching.')],
     readiness: [i18n.t('PRODUCTION READINESS'), i18n.t('Verify before autonomy runs.')],
     accounts: [i18n.t('ACCOUNTS'), i18n.t('Every connection, tested.')],
-    redes: ['REDES SOCIALES', 'Instagram y Facebook en piloto automático.'],
+    redes: [i18n.t('SOCIAL MEDIA'), i18n.t('Instagram and Facebook on autopilot.')],
+    'msj-resumen': [i18n.t('MESSAGES'), i18n.t('All your accounts in one place.')],
+    'msj-bandeja': [i18n.t('MESSAGES · INBOX'), i18n.t('All your conversations together.')],
+    'msj-reglas': [i18n.t('MESSAGES · AUTOMATIONS'), i18n.t('An automatic message for each video.')],
+    'msj-ejecuciones': [i18n.t('MESSAGES · RUNS'), i18n.t('What went out, to whom and what failed.')],
+    'msj-cuentas': [i18n.t('MESSAGES · ACCOUNTS'), i18n.t('Connect all your accounts.')],
     settings: [i18n.t('CHANNEL GUARDRAILS'), i18n.t('Make every agent sound like you.')],
     docs: [i18n.t('GUIDES'), i18n.t('How to get the most out of Oraflow.')]
   };
@@ -1894,7 +1910,8 @@ $('#api-key-button').addEventListener('click', () => {
 });
 
 const initialView = location.hash.slice(1);
-if (['overview', 'research', 'shorts', 'clipping', 'operator', 'pipeline', 'calendar', 'analytics', 'engagement', 'readiness', 'accounts', 'settings', 'docs', 'redes'].includes(initialView)) switchView(initialView);
+if (['overview', 'research', 'outliers', 'shorts', 'clipping', 'operator', 'pipeline', 'calendar', 'analytics', 'engagement', 'readiness', 'accounts', 'settings', 'docs', 'redes',
+  'msj-resumen', 'msj-bandeja', 'msj-reglas', 'msj-ejecuciones', 'msj-cuentas'].includes(initialView)) switchView(initialView);
 refreshDashboard();
 setInterval(() => {
   if (!document.hidden) refreshDashboard(true);

@@ -23,9 +23,9 @@ const DEFAULTS = Object.freeze({
   activeColour: '&H0060D9FF',   // warm amber (BGR order in ASS)
   outlineColour: '&H80000000',
   backColour: '&H80000000',
-  // 03/10/2026 (el autor): la audiencia es mayor y quiere letras grandes. En los
-  // largos (horizontal) todo el texto sale ×1,5 y con borde más grueso; los
-  // Shorts no cambian. CAPTION_LONG_SCALE lo ajusta (1 = como antes).
+  // 03/10/2026: the audience is older and wants big letters. On long
+  // (horizontal) videos all the text comes out ×1.5 with a thicker outline;
+  // Shorts don't change. CAPTION_LONG_SCALE adjusts it (1 = as before).
   longScale: 1.5
 });
 
@@ -153,7 +153,7 @@ function toAss(segments, { width = 1920, height = 1080, titleCards = [], verseCa
   const scale = height / 1080;
   const horizontal = width > height;
   const fontSize = Math.round(opt.fontSize * scale * (width < height ? 0.9 : horizontal ? opt.longScale : 1));
-  // Borde y sombra crecen con la letra: blanco fino sobre cielo claro no se lee.
+  // Outline and shadow grow with the letters: thin white over a light sky can't be read.
   const grosor = horizontal ? opt.longScale : 1;
   const centered = opt.position === 'center';
   // Alignment: 5 = middle centre, 2 = bottom centre. Title cards go to the top

@@ -1,15 +1,15 @@
 /**
- * Posts de comunidad: la frase corta sobre papel o pared, en tipografía de
- * máquina de escribir, que en este nicho hace más comentarios que los vídeos
- * (8-13 mil likes y 200-466 comentarios por post en los canales grandes).
+ * Community posts: the short quote on paper or a wall, in a typewriter font,
+ * which in this niche gets more comments than videos (8-13 thousand likes and
+ * 200-466 comments per post on the big channels).
  *
- * Formato: cuadrado 1080×1080, texto NEGRO en mayúsculas sobre fondo claro con
- * textura, 2-3 líneas cortas, y la marca del canal pequeña abajo.
+ * Format: 1080×1080 square, BLACK capitalized text on a light textured
+ * background, 2-3 short lines, and the channel's mark small at the bottom.
  */
 const path = require('path');
 const fs = require('fs').promises;
 
-// Texturas claras: nada de fotos con motivo, solo superficie.
+// Light textures: no photos with a subject, only surface.
 const TEXTURAS = [
   'white concrete wall texture',
   'crumpled white paper texture',
@@ -18,7 +18,7 @@ const TEXTURAS = [
   'plain white wall background'
 ];
 
-// Cuando no hay banco de imágenes: papel hecho a mano con grano y manchas.
+// When there's no image library: hand-made paper with grain and stains.
 function papelSvg(width, height, semilla = 1) {
   const tonos = [['#f4f2ee', '#e8e5df'], ['#f6f5f2', '#eae7e0'], ['#f2f0ec', '#e4e1d9']];
   const [claro, oscuro] = tonos[semilla % tonos.length];
@@ -47,7 +47,7 @@ function escapa(texto) {
   return String(texto ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-/** Parte la frase en 2-3 líneas cortas, cortando por puntos cuando se puede. */
+/** Splits the sentence into 2-3 short lines, cutting at periods when possible. */
 function reparte(frase, maximo = 19) {
   const limpio = String(frase || '').trim().replace(/\s+/g, ' ');
   const porPunto = limpio.split(/(?<=\.)\s+/).filter(Boolean);
@@ -66,8 +66,8 @@ function reparte(frase, maximo = 19) {
 }
 
 /**
- * SVG del texto sobre el fondo. Tipografía de máquina: en el contenedor está
- * "Courier 10 Pitch", que es la que da ese aire de papel escrito.
+ * SVG of the text over the background. Typewriter type: the container has "Courier 10 Pitch",
+ * which gives that written-paper feel.
  */
 function textoSvg(frase, { width = 1080, height = 1080, marca = '' } = {}) {
   const lineas = reparte(frase);
@@ -83,9 +83,11 @@ function textoSvg(frase, { width = 1080, height = 1080, marca = '' } = {}) {
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
     <style>
-      /* 'Special Elite' es una máquina de escribir de verdad, con la tinta
-         irregular; sin ella el post parece hecho en un procesador de textos.
-         Se instala desde data/assets/fuentes/. */
+      /*
+       * 'Special Elite' is a real typewriter, with uneven ink; without it the post looks made in
+       * a word processor.
+       * Installed from data/assets/fuentes/.
+       */
       .frase { font-family: 'Special Elite', 'Courier Prime', 'Courier 10 Pitch', 'Liberation Mono', monospace;
                font-size: ${cuerpo}px; fill: #1f1c19; text-anchor: middle;
                letter-spacing: ${Math.round(cuerpo * 0.05)}px; }
@@ -99,8 +101,8 @@ function textoSvg(frase, { width = 1080, height = 1080, marca = '' } = {}) {
 }
 
 /**
- * Pide las frases a la IA. Cortas, en español, sin comillas ni emojis: el post
- * vive de que la frase se lea de un vistazo.
+ * Asks the AI for the quotes. Short, in Spanish, no quotes or emojis: the post lives on the
+ * sentence being read at a glance.
  */
 async function generaFrases(aiTextService, cantidad = 5, contexto = {}) {
   if (!aiTextService?.isAvailable?.()) return [];
@@ -126,14 +128,14 @@ Devuelve SOLO un JSON: {"frases":["...","..."]}`;
 }
 
 /**
- * Compone un post. `fondo` es una imagen de textura opcional; si no hay, se
- * dibuja papel.
- * @returns {Promise<string>} ruta del PNG
+ * Composes a post. `fondo` is an optional texture image; if there's none,
+ * paper is drawn.
+ * @returns {Promise<string>} the PNG's path
  */
 async function generaPost(frase, { sharp, fondo = null, salida, width = 1080, height = 1080, marca = process.env.CHANNEL_NAME || '', semilla = 1 } = {}) {
   const base = fondo
     ? await sharp(fondo).resize(width, height, { fit: 'cover' })
-        .modulate({ brightness: 1.12, saturation: 0.25 })   // la textura no compite con el texto
+        .modulate({ brightness: 1.12, saturation: 0.25 })   // the texture doesn't compete with the text
         .toBuffer()
     : await sharp(Buffer.from(papelSvg(width, height, semilla))).png().toBuffer();
 

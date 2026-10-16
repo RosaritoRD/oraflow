@@ -1,5 +1,5 @@
-// Núcleo del buscador (paleta Ctrl K): sin tildes, sin mayúsculas, todas las
-// palabras en cualquier orden. Puro: se prueba en Node y se usa en el navegador.
+// The search core (Ctrl K palette): no accents, no capitals, every word in any
+// order. Pure: tested in Node and used in the browser.
 (function (root) {
   'use strict';
 
@@ -25,8 +25,8 @@
     return total;
   }
 
-  /* Ordena por grupo (en el orden en que aparece cada grupo) y, dentro del
-     grupo, por puntuación. `limitPerGroup` recorta grupos largos (videos…). */
+  /* Sorts by group (in the order each group appears) and, within the group, by
+     score. `limitPerGroup` trims long groups (videos…). */
   function rank(items, query, { limitPerGroup = {} } = {}) {
     const toks = words(query);
     if (!toks.length) return items.slice();
@@ -45,21 +45,22 @@
       .map(x => x.item));
   }
 
-  /* Escapa SIEMPRE el texto y luego envuelve en <mark> lo que coincide. Se
-     compara letra a letra sin tildes, así "oracion" marca "Oración". */
+  /* ALWAYS escapes the text and then wraps what matches in <mark>. It
+     compares letter by letter without accents, so "oracion" highlights
+     "Oración". */
   function highlight(text, query, escape) {
     const original = String(text ?? '');
     const toks = words(query);
     const chars = [...original];
     if (!toks.length) return escape(original);
-    // Texto plano + mapa posición-plana → letra original. Una letra puede dar 0
-    // caracteres planos (selector de variante de un emoji) o varios.
+    // Plain text + a plain-position → original-letter map. A letter can give 0
+    // plain characters (an emoji variation selector) or several.
     let flat = '';
     const origen = [];
     chars.forEach((c, i) => {
       const n = normalize(c);
       flat += n;
-      for (let k = 0; k < n.length; k += 1) origen.push(i); // por unidad UTF-16, como indexOf
+      for (let k = 0; k < n.length; k += 1) origen.push(i); // per UTF-16 unit, like indexOf
     });
     const marca = new Array(chars.length).fill(false);
     for (const t of toks) {

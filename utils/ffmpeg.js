@@ -23,9 +23,9 @@ function getFFmpegPath() {
 
   try {
     cachedPath = require('ffmpeg-static');
-    // El paquete puede estar instalado SIN su binario (la descarga del
-    // postinstall falló o se saltó): entonces su ruta no existe y todo render
-    // moría con ENOENT aunque hubiera ffmpeg en el sistema (02/10/2026).
+    // The package can be installed WITHOUT its binary (the postinstall download
+    // failed or was skipped): then its path doesn't exist and every render died
+    // with ENOENT even though the system had ffmpeg (02/10/2026).
     if (cachedPath && !require('fs').existsSync(cachedPath)) cachedPath = null;
   } catch (error) {
     cachedPath = null;
@@ -44,8 +44,8 @@ async function checkFFmpeg() {
   }
 }
 
-// 07/10/2026: el ffmpeg se hace en el PC del autor (utils/ffmpeg-remoto.js) y,
-// si el PC no está o falla, aquí mismo. FFMPEG_REMOTO_URL vacío = todo local.
+// 07/10/2026: ffmpeg runs on the owner's PC (utils/ffmpeg-remoto.js) and, if the
+// PC isn't there or fails, right here. FFMPEG_REMOTO_URL empty = all local.
 const { ClienteTaller } = require('./ffmpeg-remoto');
 const taller = new ClienteTaller({ url: process.env.FFMPEG_REMOTO_URL || '' });
 
@@ -55,9 +55,9 @@ async function runFFmpeg(args) {
       const hecho = await taller.ejecuta(args);
       if (hecho) return hecho;
     } catch (error) {
-      // Un fallo de ffmpeg en el taller no tumba el PC para lo demás; uno de red sí, un rato.
+      // An ffmpeg failure in the workshop doesn't take the PC down for everything else; a network one does, for a while.
       if (error.enTaller) { taller.stats.fallos += 1; taller.stats.ultimoError = error.message.slice(0, 300); } else taller.marcaCaido(error);
-      console.warn(`[ffmpeg] el PC no pudo (${error.message.slice(0, 500)}); se hace en la VPS`);
+      console.warn(`[ffmpeg] the PC could not do it (${error.message.slice(0, 500)}); running on the VPS`);
     }
     taller.stats.locales += 1;
   }

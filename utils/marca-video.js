@@ -1,14 +1,15 @@
 /**
- * Marca en los vídeos largos (02/10/2026, OK del autor). Inspirada en el formato de los
- * canales grandes del nicho, con diseño propio:
- *  - Intro de 8 s: nubes en sepia dorado y tres tarjetas en Cinzel (saludo según la
- *    franja + el nombre del canal en dos líneas), piano suave. Se pega DELANTE del vídeo
- *    ya mezclado, así la voz, la música y los subtítulos no se mueven entre sí.
- *  - Cuerpo: nombre del canal arriba-dcha, logo abajo-dcha y la animación «me gusta ·
- *    SUSCRÍBETE → SUSCRITO · campana» a los 3 s (0:11 del vídeo final). Se queman en la
- *    misma pasada que los subtítulos, sin coste de render extra.
- * Si algo falla el vídeo sale sin marca, nunca se pierde. BRAND_VIDEO=0 la apaga.
- * ⚠ blend necesita format=gbrp delante: con rgb24 tiñe la imagen de magenta.
+ * Branding on long videos (02/10/2026, approved by the owner). Inspired by the format of
+ * the niche's big channels, with an in-house design:
+ *  - 8 s intro: clouds in golden sepia and three cards in Cinzel (a greeting for the time
+ *    of day + the channel's name on two lines), soft piano. It's glued IN FRONT of the
+ *    already mixed video, so voice, music and captions don't shift against each other.
+ *  - Body: channel name top-right, logo bottom-right and the «like · SUBSCRIBE → SUBSCRIBED
+ *    · bell» animation at 3 s (0:11 of the final video). Burned in the same pass as the
+ *    captions, at no extra render cost.
+ * If anything fails the video goes out unbranded, it's never lost. BRAND_VIDEO=0 turns it
+ * off.
+ * ⚠ blend needs format=gbrp in front: with rgb24 it tints the image magenta.
  */
 const fs = require('fs').promises;
 const path = require('path');
@@ -28,7 +29,7 @@ function lineasIntro(momento, env = process.env) {
   return [saludoDe(momento), ...lineas.slice(0, 2)];
 }
 
-/** drawtext: «:» separa opciones y «'» cierra el texto. */
+/** drawtext: «:» separates options and «'» closes the text. */
 const escapaTexto = t => String(t).replace(/\\/g, '').replace(/:/g, '\\:').replace(/'/g, '\u2019');
 const rutaFiltro = p => String(p).replace(/\\/g, '/').replace(/'/g, "\\'").replace(/:/g, '\\:');
 
@@ -46,19 +47,19 @@ function rutas(dataRoot) {
   };
 }
 
-/** Texto seguro para ASS: sin llaves ni barras (son etiquetas de estilo). */
+/** Safe text for ASS: no braces or slashes (they're style tags). */
 const assTexto = t => String(t).replace(/[{}\\]/g, '').replace(/\r?\n/g, ' ');
 const assHora = seg => { const cs = Math.round(seg * 100); const h = Math.floor(cs / 360000), m = Math.floor(cs / 6000) % 60, sg = Math.floor(cs / 100) % 60; return `${h}:${String(m).padStart(2, '0')}:${String(sg).padStart(2, '0')}.${String(cs % 100).padStart(2, '0')}`; };
 const cabeceraAss = (width, height, estilos) => `[Script Info]\nScriptType: v4.00+\nPlayResX: ${width}\nPlayResY: ${height}\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n${estilos.join('\n')}\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n`;
 
-/** Nombre del canal arriba a la derecha durante todo el vídeo (Bebas Neue). */
+/** Channel name top-right for the whole video (Bebas Neue). */
 function assNombre({ nombre, width = 1920, height = 1080 }) {
   const k = width / 1920;
   return cabeceraAss(width, height, [`Style: Nombre,Bebas Neue,${Math.round(58 * k)},&H14FFFFFF,&H14FFFFFF,&H00000000,&H8C000000,0,0,0,0,100,100,1,0,1,0,2,9,0,${Math.round(40 * k)},${Math.round(26 * k)},1`])
     + `Dialogue: 0,0:00:00.00,9:59:59.00,Nombre,,0,0,0,,${assTexto(nombre)}\n`;
 }
 
-/** Las tres tarjetas de la intro (Cinzel), con fundido de entrada y salida. */
+/** The intro's three cards (Cinzel), with fade in and fade out. */
 function assIntro({ lineas, width = 1920, height = 1080 }) {
   const k = height / 1080;
   const [l1, l2, l3] = lineas;
@@ -69,9 +70,9 @@ function assIntro({ lineas, width = 1920, height = 1080 }) {
 }
 
 /**
- * Pasada 3 del timeline: entradas 0 = vídeo, 1 = logo, 2… = una secuencia PNG por
- * animación (Elementos del vídeo, utils/extras-video.js), cada una a su hora.
- * Sin `animaciones`, la de suscribirse a `inicioSuscribir` como antes.
+ * Timeline pass 3: inputs 0 = video, 1 = logo, 2… = one PNG sequence per animation
+ * (Video elements, utils/extras-video.js), each at its time.
+ * Without `animaciones`, the subscribe one at `inicioSuscribir` as before.
  */
 function filtroCuerpo({ assPath, nombreAss, fontsDir, inicioSuscribir = SUSCRIBIR_EN, width = 1920, animaciones = null }) {
   const k = width / 1920;
@@ -95,10 +96,10 @@ function filtroCuerpo({ assPath, nombreAss, fontsDir, inicioSuscribir = SUSCRIBI
 }
 
 /**
- * Shorts (vertical, 03/10/2026): de la animación 1920x1080 solo interesan los
- * botones (me gusta · SUSCRÍBETE · campana, y = 300); se recortan y se amplían al
- * 85 % del ancho, arriba del todo, donde no tapan subtítulos. Entradas: 0 = vídeo,
- * 1… = una secuencia por animación.
+ * Shorts (vertical, 03/10/2026): from the 1920x1080 animation only the buttons matter
+ * (like · SUBSCRIBE · bell, y = 300); they're cropped and enlarged to 85 % of the
+ * width, at the very top, where they don't cover captions. Inputs: 0 = video, 1… =
+ * one sequence per animation.
  */
 function filtroShort({ assPath, animaciones = [], width = 1080, height = 1920 }) {
   const ancho = Math.round(width * 0.85);
@@ -115,19 +116,19 @@ function filtroShort({ assPath, animaciones = [], width = 1080, height = 1920 })
   return partes.join(';');
 }
 
-/** Lo que necesita la pasada 3 de un Short: la animación de suscribirse, si toca. */
+/** What a Short's pass 3 needs: the subscribe animation, if it applies. */
 async function marcaShort({ dataRoot, logger = console, extras = null, duracion = null }) {
   if (!marcaActiva() || !duracion) return null;
   try {
-    if (!(await tieneFiltro('subtitles'))) throw new Error('este ffmpeg no trae subtitles');
+    if (!(await tieneFiltro('subtitles'))) throw new Error('this ffmpeg has no subtitles filter');
     const { planDeExtras } = require('./extras-video');
     const plan = planDeExtras({ extras, duracion, formato: 'short' });
     if (!plan.length) return null;
     const dir = await animacionSuscribir(rutas(dataRoot).suscribir);
-    logger.info?.(`Short: suscribirse a los ${Math.round(plan[0].inicio)} s`);
+    logger.info?.(`Short: subscribe at ${Math.round(plan[0].inicio)} s`);
     return { short: true, animaciones: plan.map(p => ({ ...p, secuencia: path.join(dir, 'f%03d.png') })) };
   } catch (error) {
-    logger.warn?.(`Suscribirse en el Short no aplicado (${error.message})`);
+    logger.warn?.(`Subscribe on the Short not applied (${error.message})`);
     return null;
   }
 }
@@ -143,18 +144,18 @@ async function sondea(file) {
   const junto = getFFmpegPath().replace(/ffmpeg(\.exe)?$/i, 'ffprobe$1');
   const args = ['-v', 'error', '-show_entries', 'format=duration:stream=codec_type,time_base,sample_rate,channels', '-of', 'json', file];
   let out = null, ultimo = null;
-  // ffmpeg-static no trae ffprobe: se prueba el de al lado y luego el del sistema (como timeline-renderer).
+  // ffmpeg-static doesn't ship ffprobe: the one next to it is tried, then the system one (like timeline-renderer).
   for (const bin of [...new Set([process.env.FFPROBE_PATH, junto, 'ffprobe'].filter(Boolean))]) {
     try { out = await new Promise((resolve, reject) => execFile(bin, args, { maxBuffer: 4 * 1024 * 1024 }, (e, so) => (e ? reject(e) : resolve(so)))); break; } catch (e) { ultimo = e; }
   }
-  if (out === null) throw ultimo || new Error('sin ffprobe');
+  if (out === null) throw ultimo || new Error('no ffprobe');
   const j = JSON.parse(out);
   const v = j.streams.find(s => s.codec_type === 'video') || {};
   const a = j.streams.find(s => s.codec_type === 'audio') || null;
   return { duracion: Number(j.format?.duration) || 0, timescale: Number(String(v.time_base || '1/15360').split('/')[1]) || 15360, audio: a && { rate: Number(a.sample_rate) || 44100, canales: Number(a.channels) || 2 } };
 }
 
-/** 105 PNG con la animación (diseño propio); se generan una vez y quedan en assets. */
+/** 105 PNGs with the animation (in-house design); generated once and kept in assets. */
 async function animacionSuscribir(dir, sharp = require('./safe-sharp')) {
   if (await existe(path.join(dir, 'f104.png'))) return dir;
   await fs.mkdir(dir, { recursive: true });
@@ -165,10 +166,10 @@ async function animacionSuscribir(dir, sharp = require('./safe-sharp')) {
   return dir;
 }
 
-/** Intro codificada igual que el vídeo final (mismo x264, fps, timescale y audio) para unir sin recodificar. */
+/** Intro encoded the same as the final video (same x264, fps, timescale and audio) to join without re-encoding. */
 async function intro({ dataRoot, width, height, fps, momento, encode, timescale, audio }) {
   const r = rutas(dataRoot);
-  for (const p of [r.nubes, r.logo, r.musica, r.cinzel]) if (!(await existe(p))) throw new Error(`falta ${path.basename(p)}`);
+  for (const p of [r.nubes, r.logo, r.musica, r.cinzel]) if (!(await existe(p))) throw new Error(`missing ${path.basename(p)}`);
   await fs.mkdir(r.cache, { recursive: true });
   const salida = path.join(r.cache, `${claveIntro({ width, height, fps, momento })}-${timescale}-${audio.rate}-${audio.canales}.mp4`);
   if (await existe(salida)) return salida;
@@ -192,37 +193,37 @@ async function intro({ dataRoot, width, height, fps, momento, encode, timescale,
   return salida;
 }
 
-/** Pega la intro delante del vídeo final sin recodificar. Devuelve los segundos añadidos (0 si no). */
+/** Glues the intro in front of the final video without re-encoding. Returns the seconds added (0 if none). */
 async function pegaIntro({ dataRoot, finalPath, width, height, fps, momento, encode, logger = console }) {
   if (!marcaActiva()) return 0;
   const lista = `${finalPath}.intro.txt`;
   const unido = finalPath.replace(/\.mp4$/i, '_conintro.mp4');
   try {
     const cuerpo = await sondea(finalPath);
-    if (!cuerpo.audio) throw new Error('el vídeo no tiene audio');
+    if (!cuerpo.audio) throw new Error('the video has no audio');
     const introPath = await intro({ dataRoot, width, height, fps, momento, encode, timescale: cuerpo.timescale, audio: cuerpo.audio });
     const esc = p => `file '${p.replace(/'/g, "'\\''")}'`;
     await fs.writeFile(lista, `${esc(introPath)}\n${esc(finalPath)}\n`);
     await runFFmpeg(['-y', '-v', 'error', '-f', 'concat', '-safe', '0', '-i', lista, '-c', 'copy', '-movflags', '+faststart', unido]);
     const [i, u] = [await sondea(introPath), await sondea(unido)];
-    if (!concatCuadra(i.duracion, cuerpo.duracion, u.duracion) || !u.audio) throw new Error(`la unión no cuadra (${i.duracion.toFixed(1)} + ${cuerpo.duracion.toFixed(1)} ≠ ${u.duracion.toFixed(1)})`);
-    // La junta debe decodificar sin errores.
+    if (!concatCuadra(i.duracion, cuerpo.duracion, u.duracion) || !u.audio) throw new Error(`the join does not add up (${i.duracion.toFixed(1)} + ${cuerpo.duracion.toFixed(1)} ≠ ${u.duracion.toFixed(1)})`);
+    // The joint must decode without errors.
     const { stderr } = await runFFmpeg(['-v', 'error', '-ss', String(INTRO_SEG - 2), '-t', '4', '-i', unido, '-f', 'null', '-']);
-    if (String(stderr || '').trim()) throw new Error(`la junta da errores: ${String(stderr).slice(0, 120)}`);
+    if (String(stderr || '').trim()) throw new Error(`the joint gives errors: ${String(stderr).slice(0, 120)}`);
     await fs.rename(unido, finalPath);
     logger.info?.(`Intro de marca pegada (${saludoDe(momento)}, +${i.duracion.toFixed(1)} s)`);
     return i.duracion;
   } catch (error) {
-    logger.warn?.(`Intro de marca no aplicada (${error.message}); el vídeo sale sin intro`);
+    logger.warn?.(`Brand intro not applied (${error.message}); the video goes out without an intro`);
     return 0;
   } finally {
     await Promise.all([fs.unlink(lista).catch(() => {}), fs.unlink(unido).catch(() => {})]);
   }
 }
 
-/** Lo que necesita la pasada 3 del timeline, o null si la marca está apagada o falta algo. */
+/** What timeline pass 3 needs, or null if branding is off or something is missing. */
 let filtrosFfmpeg = null;
-/** El ffmpeg-static del contenedor no trae drawtext (02/10/2026): los textos van por libass. */
+/** The container's ffmpeg-static doesn't have drawtext (02/10/2026): the texts go through libass. */
 async function tieneFiltro(nombre) {
   if (!filtrosFfmpeg) {
     const { stdout } = await runFFmpeg(['-hide_banner', '-filters']);
@@ -231,7 +232,7 @@ async function tieneFiltro(nombre) {
   return new RegExp(`\\s${nombre}\\s`).test(filtrosFfmpeg);
 }
 
-/** Secuencia PNG de una tarjeta de «Elementos del vídeo»; se genera una vez y queda en assets. */
+/** PNG sequence of a «Video elements» card; generated once and kept in assets. */
 async function secuenciaSvg(dir, segundos, svgDe, sharp = require('./safe-sharp')) {
   const n = Math.round(segundos * 30);
   if (await existe(path.join(dir, `f${String(n - 1).padStart(3, '0')}.png`))) return dir;
@@ -243,8 +244,8 @@ async function secuenciaSvg(dir, segundos, svgDe, sharp = require('./safe-sharp'
 }
 
 /**
- * Las animaciones del cuerpo según «Elementos del vídeo» (ajuste `video_extras`).
- * Sin duración (o sin ajuste) queda como antes: suscribirse a los 3 s.
+ * The body's animations per «Video elements» (the `video_extras` setting).
+ * Without a duration (or without the setting) it stays as before: subscribe at 3 s.
  */
 async function animacionesDelCuerpo({ r, extras, duracion }) {
   const { planDeExtras, normalizaExtras, DURACION } = require('./extras-video');
@@ -271,17 +272,17 @@ async function animacionesDelCuerpo({ r, extras, duracion }) {
 async function marcaCuerpo({ dataRoot, logger = console, extras = null, duracion = null }) {
   if (!marcaActiva()) return null;
   try {
-    if (!(await tieneFiltro('subtitles'))) throw new Error('este ffmpeg no trae subtitles');
+    if (!(await tieneFiltro('subtitles'))) throw new Error('this ffmpeg has no subtitles filter');
     const r = rutas(dataRoot);
-    for (const p of [r.logo, r.bebas]) if (!(await existe(p))) throw new Error(`falta ${path.basename(p)}`);
+    for (const p of [r.logo, r.bebas]) if (!(await existe(p))) throw new Error(`missing ${path.basename(p)}`);
     await fs.mkdir(r.cache, { recursive: true });
     const nombreAss = path.join(r.cache, `nombre-${VERSION}.ass`);
     await fs.writeFile(nombreAss, assNombre({ nombre: nombreCanal() }));
     const animaciones = await animacionesDelCuerpo({ r, extras, duracion });
-    if (animaciones.length) logger.info?.(`Elementos del vídeo: ${animaciones.map(a => `${a.tipo}@${Math.round(a.inicio)}s`).join(', ')}`);
+    if (animaciones.length) logger.info?.(`Video elements: ${animaciones.map(a => `${a.tipo}@${Math.round(a.inicio)}s`).join(', ')}`);
     return { logo: r.logo, nombreAss, fontsDir: path.dirname(r.bebas), animaciones };
   } catch (error) {
-    logger.warn?.(`Marca del cuerpo no aplicada (${error.message})`);
+    logger.warn?.(`Body branding not applied (${error.message})`);
     return null;
   }
 }

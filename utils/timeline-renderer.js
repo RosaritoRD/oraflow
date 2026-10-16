@@ -73,13 +73,13 @@ const TONO = {
 };
 
 /**
- * Filtro de un clip de VÍDEO reutilizado (utils/biblioteca-stock.js elegirVariante):
- * velocidad, espejo, tono y un movimiento suave de cámara. Sin variante, el clip
- * va tal cual, como siempre.
+ * Filter for a reused VIDEO clip (utils/biblioteca-stock.js elegirVariante): speed,
+ * mirror, tone and a soft camera move. Without a variant, the clip goes as is, as
+ * always.
  */
 function filtroVariante(v, { width, height, fps, frames, fuenteFps = null }) {
-  // 06/10/2026: un clip de 24/25 fps pasado a 30 con fps= repite fotogramas y el
-  // movimiento da tirones; framerate= los mezcla y queda fluido (solo cuando hace falta).
+  // 06/10/2026: a 24/25 fps clip converted to 30 with fps= repeats frames and the motion
+  // stutters; framerate= blends them and it stays smooth (only when needed).
   const cadencia = fuenteFps && fuenteFps < fps - 1 && fps / fuenteFps < 1.6
     ? `framerate=fps=${fps}:interp_start=0:interp_end=255:scene=100`
     : `fps=${fps}`;
@@ -91,7 +91,7 @@ function filtroVariante(v, { width, height, fps, frames, fuenteFps = null }) {
   if (v.espejo) partes.push('hflip');
   if (TONO[v.tono]) partes.push(TONO[v.tono]);
   if (v.movimiento && v.movimiento !== 'none') {
-    // Mismo Ken Burns que las fotos, pero sin la sobre-escala x1.5 (el vídeo ya se mueve).
+    // Same Ken Burns as the photos, but without the x1.5 over-scale (the video already moves).
     const z = 1.08;
     const avance = `on/${Math.max(1, frames)}`;
     const cx = 'iw/2-(iw/zoom/2)', cy = 'ih/2-(ih/zoom/2)';
@@ -117,10 +117,9 @@ async function placeholderStill(index, outPath, width, height) {
 }
 
 /**
- * Caché de planos: la clave es todo lo que afecta al píxel (archivo de origen,
- * duración, movimiento, tamaño). Cambiar UNA escena rehacía los 31 planos —
- * 20 minutos de CPU para recrear clips idénticos. Con esto, solo se renderiza
- * lo que cambió.
+ * Shot cache: the key is everything that affects the pixels (source file,
+ * duration, motion, size). Changing ONE scene redid all 31 shots — 20 minutes of
+ * CPU to recreate identical clips. With this, only what changed gets rendered.
  */
 function claveDePlano(shot, index, { width, height, fps }, nextTransition) {
   const asset = shot.selectedAsset?.localPath || `placeholder_${index}`;
@@ -145,7 +144,7 @@ async function renderShotClip(shot, index, { width, height, fps }, workDir, next
   let filter;
   const v = shot.variante || null;
   if (isVideo) {
-    // Reutilizado: empieza en otra parte del clip (inicio = fracción de lo que sobra).
+    // Reused: starts at another part of the clip (start = a fraction of what's left over).
     const sobra = Math.max(0, (Number(shot.selectedAsset?.durationSec) || 0) - length * (v?.velocidad || 1));
     const desde = v?.inicio ? v.inicio * sobra : 0;
     if (desde > 0.5) args.push('-ss', desde.toFixed(2));
@@ -178,7 +177,7 @@ function titleCards(storyboard, seconds = 2.5) {
     .map(scene => ({ start: scene.shots[0].start, end: Math.min(scene.shots[0].start + seconds, scene.audioEnd), title: scene.sectionTitle }));
 }
 
-/** La caché no puede crecer sin freno: 400 planos o 7 días, lo que llegue antes. */
+/** The cache can't grow unchecked: 400 shots or 7 days, whichever comes first. */
 async function podaCache(cacheDir, logger = console, maximo = 400, dias = 7) {
   try {
     const nombres = await fs.readdir(cacheDir);
@@ -192,8 +191,8 @@ async function podaCache(cacheDir, logger = console, maximo = 400, dias = 7) {
     fichas.sort((a, b) => b.usado - a.usado);
     const sobran = fichas.filter((f, i) => i >= maximo || f.usado < limite);
     for (const f of sobran) await fs.unlink(f.ruta).catch(() => {});
-    if (sobran.length) logger.info?.(`Caché de planos: ${sobran.length} clips viejos borrados`);
-  } catch { /* la caché es un extra: si falla, no rompe el render */ }
+    if (sobran.length) logger.info?.(`Shot cache: ${sobran.length} old clips deleted`);
+  } catch { /* the cache is an extra: if it fails, it doesn't break the render */ }
 }
 
 async function withConcurrency(items, limit, worker) {
@@ -235,7 +234,7 @@ async function renderTimeline(storyboard, { outputPath, captionsAssPath = null, 
     await fs.copyFile(salida, cacheado).catch(() => {});
     return salida;
   });
-  logger.info?.(`Rendering ${shots.length} shots (${width}x${height}@${fps})... ${reutilizados} reutilizados de la caché, ${shots.length - reutilizados} nuevos`);
+  logger.info?.(`Rendering ${shots.length} shots (${width}x${height}@${fps})... ${reutilizados} reused from the cache, ${shots.length - reutilizados} new`);
   await podaCache(cacheDir, logger);
 
   // Pass 2: chain in batches. One xfade chain over 100+ inputs opens 100+
@@ -284,15 +283,15 @@ async function renderTimeline(storyboard, { outputPath, captionsAssPath = null, 
   const cards = titleCards(storyboard);
   const finalArgs = ['-y', '-f', 'concat', '-safe', '0', '-i', listPath];
   if (marca && marca.short) {
-    // Short (03/10/2026): solo la animación de suscribirse, recortada y en vertical.
+    // Short (03/10/2026): only the subscribe animation, cropped and vertical.
     const { filtroShort } = require('./marca-video');
     for (const a of marca.animaciones) finalArgs.push('-framerate', String(fps), '-i', a.secuencia);
     finalArgs.push('-filter_complex', filtroShort({ assPath: captionsAssPath, animaciones: marca.animaciones, width, height }), '-map', '[vout]');
   } else if (marca) {
-    // Marca del canal (utils/marca-video.js): nombre, logo y animación de suscribirse,
-    // quemados junto con los subtítulos en esta misma pasada.
+    // Channel branding (utils/marca-video.js): name, logo and subscribe animation,
+    // burned together with the captions in this same pass.
     const { filtroCuerpo } = require('./marca-video');
-    // Una entrada por animación de «Elementos del vídeo» (utils/extras-video.js).
+    // One input per «Video elements» animation (utils/extras-video.js).
     const animaciones = Array.isArray(marca.animaciones) ? marca.animaciones
       : [{ secuencia: marca.secuencia, inicio: marca.inicioSuscribir }];
     finalArgs.push('-i', marca.logo);

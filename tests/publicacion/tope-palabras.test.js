@@ -2,37 +2,37 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { topePalabras, recortaSecciones, cuentaPalabras } = require('../../utils/longitud');
 
-// 29/09: con "14-16 minutes" la IA escribió ~3.000 palabras (≈20 min, 17.894
-// caracteres de ElevenLabs). El largo pasa a 6-8 min con tope DURO de palabras.
+// 29/09: with "14-16 minutes" the AI wrote ~3,000 words (≈20 min, 17,894 ElevenLabs
+// characters). Long videos move to 6-8 min with a HARD word cap.
 
-test('el tope sale del máximo de minutos a 130 palabras/min', () => {
+test('the cap comes from the maximum minutes at 130 words/min', () => {
   assert.equal(topePalabras('6-8 minutes'), 1040);
   assert.equal(topePalabras('10 minutes'), 1300);
 });
 
-test('sin minutos (Shorts en segundos) no hay tope', () => {
+test('without minutes (Shorts in seconds) there\'s no cap', () => {
   assert.equal(topePalabras('60-90 seconds (about 150-190 spoken words in total)'), null);
   assert.equal(topePalabras(''), null);
 });
 
 const seccion = (n) => ({ title: `S${n}`, content: [Array(300).fill('palabra').join(' ')] });
 
-test('recorta secciones del final hasta caber en el tope', () => {
+test('trims sections from the end until it fits the cap', () => {
   const out = recortaSecciones([seccion(1), seccion(2), seccion(3), seccion(4), seccion(5)], 1040, 60);
   assert.equal(out.length, 3); // 3×300 + 60 = 960 ≤ 1040
   assert.deepEqual(out.map(s => s.title), ['S1', 'S2', 'S3']);
 });
 
-test('nunca deja el guion sin secciones', () => {
+test('never leaves the script without sections', () => {
   assert.equal(recortaSecciones([seccion(1)], 100, 0).length, 1);
 });
 
-test('sin tope no toca nada', () => {
+test('without a cap it touches nothing', () => {
   const s = [seccion(1), seccion(2)];
   assert.equal(recortaSecciones(s, null, 0), s);
 });
 
-test('cuenta palabras de texto y listas', () => {
+test('counts words in text and lists', () => {
   assert.equal(cuentaPalabras('Señor, dame paz.'), 3);
   assert.equal(cuentaPalabras(['uno dos', 'tres']), 3);
   assert.equal(cuentaPalabras(null), 0);

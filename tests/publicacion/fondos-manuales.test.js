@@ -1,4 +1,4 @@
-// 29/09/2026: fondos de miniatura hechos a mano (ChatGPT Plus) en vez de la API.
+// 29/09/2026: hand-made thumbnail backgrounds (ChatGPT Plus) instead of the API.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const os = require('os');
@@ -17,11 +17,11 @@ function raiz() {
   return r;
 }
 
-test('carpeta vacía → null (sigue el banco de imágenes)', async () => {
+test('empty folder → null (the image bank follows)', async () => {
   assert.equal(await fondoManual({ cuando: MANANA, logger: silencio, raiz: raiz() }), null);
 });
 
-test('usa el más antiguo de su franja y lo mueve a usados/', async () => {
+test('uses the oldest for its time of day and moves it to usados/', async () => {
   const r = raiz();
   const viejo = path.join(r, 'noche', 'b.png');
   fs.writeFileSync(viejo, 'x');
@@ -39,14 +39,14 @@ test('usa el más antiguo de su franja y lo mueve a usados/', async () => {
   assert.ok(fs.existsSync(path.join(r, 'manana', 'm.jpg')), 'la mañana no se toca');
 });
 
-test('la hora de mañana toma de manana/', async () => {
+test('morning time takes from manana/', async () => {
   const r = raiz();
   fs.writeFileSync(path.join(r, 'manana', 'm.webp'), 'x');
   const f = await fondoManual({ cuando: MANANA, logger: silencio, raiz: r });
   assert.equal(f.momento, 'manana');
 });
 
-test('sin fondos manuales ni IA, la miniatura usa el banco de fotos (no sale sin fondo)', async () => {
+test('without manual or AI backgrounds, the thumbnail uses the photo bank (never goes out without a background)', async () => {
   const { fondoDeMiniatura } = require('../../utils/background-picker');
   const r = raiz();
   const prev = { dir: process.env.FONDOS_MANUALES_DIR, ia: process.env.THUMBNAIL_AI };

@@ -51,7 +51,7 @@ function rangosDeClip(t) {
 
 function visualTiming(overrides = {}) {
   const merged = JSON.parse(JSON.stringify(PACE_PRESETS[visualPace()]));
-  // Single knob: VISUAL_SHOT_SECONDS=15 → every clip ~15 s (02/10/2026, el autor:
+  // Single knob: VISUAL_SHOT_SECONDS=15 → every clip ~15 s (02/10/2026, the owner:
   // «clips de 15 segundos cada uno»). Before, videos ran +15 % and heroes +40 %
   // (up to 27 s). The margin lets a cut land on the end of a sentence.
   const knob = Number(process.env.VISUAL_SHOT_SECONDS);

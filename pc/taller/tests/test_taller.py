@@ -1,4 +1,4 @@
-"""Pruebas del taller. Corren con ffmpeg de verdad (el del PC).
+"""Workshop tests. They run with real ffmpeg (the PC's).
 
     C:\\taller\\.venv\\Scripts\\python -m pytest -q C:\\taller\\tests
 """
@@ -39,7 +39,7 @@ def espera(c, id_, limite=60):
         if r["estado"] in ("listo", "error"):
             return r
         time.sleep(0.2)
-    raise AssertionError("el trabajo no terminó")
+    raise AssertionError("the job did not finish")
 
 
 def test_solo_ips_permitidas(tmp_path, monkeypatch):
@@ -47,7 +47,7 @@ def test_solo_ips_permitidas(tmp_path, monkeypatch):
     import taller
     from fastapi.testclient import TestClient
 
-    c = TestClient(taller.crear_app({"IP_DE_TU_PC"}))
+    c = TestClient(taller.crear_app({"YOUR_VPS_IP"}))
     assert c.get("/api/salud").status_code == 403
 
 
@@ -98,7 +98,7 @@ def test_trabajo_real_con_ffmpeg(cliente):
     sal = fin["salidas"]["s/tono.wav"]
     datos = c.get(f"/api/archivos/{sal['sha']}").content
     assert len(datos) == sal["bytes"] > 1000
-    # Y esa salida sirve de entrada para el siguiente paso sin volver a subirla.
+    # And that output serves as input for the next step without uploading it again.
     r2 = c.post("/api/trabajos", json={"args": ["-y", "-v", "error", "-i", "e/0.wav", "-c:a", "libmp3lame", "s/0.mp3"],
                                        "entradas": {"e/0.wav": sal["sha"]}, "salidas": ["s/0.mp3"]})
     assert espera(c, r2.json()["id"])["estado"] == "listo"

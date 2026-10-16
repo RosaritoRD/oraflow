@@ -210,10 +210,10 @@ test('calm pace uses longer shots', () => {
   assert.ok(shots.length <= 4 && shots.every(s => s.duration >= 8));
 });
 
-// 02/10/2026 (el autor): «clips de 15 segundos cada uno». La perilla ya no estira
-// los vídeos (+15 %) ni los hero (+40 %): todo clip ronda el valor pedido, con
-// margen para cortar en el final de una frase.
-test('VISUAL_SHOT_SECONDS: todo clip ronda ese valor (imagen, vídeo y hero)', () => {
+// 02/10/2026: «clips of 15 seconds each». The knob no longer stretches videos (+15
+// %) or heroes (+40 %): every clip lands around the requested value, with room to
+// cut at the end of a sentence.
+test('VISUAL_SHOT_SECONDS: every clip is around that value (image, video and hero)', () => {
   process.env.VISUAL_SHOT_SECONDS = '15';
   const vt = visualTiming();
   delete process.env.VISUAL_SHOT_SECONDS;
@@ -223,7 +223,7 @@ test('VISUAL_SHOT_SECONDS: todo clip ronda ese valor (imagen, vídeo y hero)', (
   }
 });
 
-test('Shorts: SHORT_SHOT_SECONDS da su propio largo de clip; sin ella, los 5 s de siempre', () => {
+test('Shorts: SHORT_SHOT_SECONDS gives its own clip length; without it, the usual 5 s', () => {
   const { shortShots } = require('../../utils/storyboard-pipeline');
   assert.equal(shortShots({}).image.target, 5);
   const s = shortShots({ SHORT_SHOT_SECONDS: '15' });
@@ -278,53 +278,53 @@ test('bible references are shown with digits', () => {
     'Señor, hoy te entrego mis temores y mi cansancio.');                      // no reference → untouched
 });
 
-test('la caché de planos solo invalida lo que cambia', () => {
+test('the shot cache only invalidates what changes', () => {
   const { claveDePlano } = require('../../utils/timeline-renderer');
   const dim = { width: 1920, height: 1080, fps: 30 };
   const base = { duration: 12, visualMotion: { type: 'zoom-in' }, selectedAsset: { localPath: '/no/existe.mp4' } };
   const k = s => claveDePlano(s, 0, dim, { duration: 0.5 });
 
   assert.equal(k(base), k({ ...base }));                                            // igual → misma clave
-  assert.notEqual(k(base), k({ ...base, duration: 13 }));                           // otra duración → rehacer
+  assert.notEqual(k(base), k({ ...base, duration: 13 }));                           // different duration → redo
   assert.notEqual(k(base), k({ ...base, visualMotion: { type: 'pan-left' } }));     // otro movimiento → rehacer
   assert.notEqual(k(base), k({ ...base, selectedAsset: { localPath: '/otro.mp4' } })); // otro clip → rehacer
-  assert.notEqual(k(base), claveDePlano(base, 0, { ...dim, height: 720 }, { duration: 0.5 })); // otra resolución
-  assert.notEqual(k(base), claveDePlano(base, 0, dim, { duration: 0.8 }));          // otra transición → rehacer
+  assert.notEqual(k(base), claveDePlano(base, 0, { ...dim, height: 720 }, { duration: 0.5 })); // different resolution
+  assert.notEqual(k(base), claveDePlano(base, 0, dim, { duration: 0.8 }));          // different transition → redo
 });
 
-test('la descripción se arma por capas y respeta el orden', () => {
+test('the description is built in layers and keeps the order', () => {
   const { componeDescripcion } = require('../../agents/seo-optimizer-agent');
   process.env.DESCRIPTION_INTRO = '¡Bienvenido!\\nSegunda línea.';
   process.env.DESCRIPTION_FOOTER = 'Música: X\\nLicencia: Y';
   const d = componeDescripcion('Cuerpo de la oración.\n\nEscribe "Amén".', ['oracion', '#salmo121', 'fe']);
   const bloques = d.split('\n\n');
-  assert.equal(bloques[0], '¡Bienvenido!');                        // \\n del .env → párrafo propio
+  assert.equal(bloques[0], '¡Bienvenido!');                        // \n from .env → its own paragraph
   assert.equal(bloques[1], 'Segunda línea.');
   assert.equal(bloques[2], 'Cuerpo de la oración.');
-  assert.match(d, /Licencia: Y\n\n#oracion #salmo121 #fe$/);        // hashtags al final, # añadido donde falta
+  assert.match(d, /Licencia: Y\n\n#oracion #salmo121 #fe$/);        // hashtags at the end, # added where missing
   delete process.env.DESCRIPTION_INTRO; delete process.env.DESCRIPTION_FOOTER;
   assert.equal(componeDescripcion('Solo cuerpo.', []), 'Solo cuerpo.');
 });
 
-test('la miniatura ruidosa parte el título y pone la fecha', () => {
+test('the loud thumbnail splits the title and adds the date', () => {
   const t = require('../../utils/prayer-theme');
   const svg = t.thumbnailLoudSvg('Cubre a mi familia hoy, Señor | Oración de Protección',
     { date: 'miércoles 23 de septiembre' });
-  assert.match(svg, /ORACIÓN DE PROTECCIÓN/);         // la cabecera sale del lado derecho del |
-  assert.match(svg, /CUBRE A MI FAMILIA/);            // el cuerpo, en mayúsculas
+  assert.match(svg, /ORACIÓN DE PROTECCIÓN/);         // the header comes from the right side of the |
+  assert.match(svg, /CUBRE A MI FAMILIA/);            // the body, in capitals
   assert.match(svg, /MIÉRCOLES 23 DE SEPTIEMBRE/);
   assert.match(svg, /url\(#oro\)/);                   // relleno dorado
   assert.match(svg, /stroke: #12080b/);               // borde negro
-  assert.ok(!/MIÉRCOLES/.test(t.thumbnailLoudSvg('Título', {})));   // sin fecha si no se pide
+  assert.ok(!/MIÉRCOLES/.test(t.thumbnailLoudSvg('Título', {})));   // no date unless requested
   const largo = t.thumbnailLoudSvg('Una oración muy larga para pedir protección sobre toda la familia y el hogar entero', {});
-  assert.ok((largo.match(/class="gordo"/g) || []).length <= 3);     // máximo 3 líneas
+  assert.ok((largo.match(/class="gordo"/g) || []).length <= 3);     // at most 3 lines
   assert.match(t.fechaEnEspanol(new Date('2026-09-23T15:00:00Z')), /^miércoles 23 de septiembre$/);
 });
 
-test('la fecha del título sale en español y en la zona del canal', () => {
+test('the title date comes out in Spanish and in the channel\'s time zone', () => {
   const { fechaDeHoy } = require('../../agents/seo-optimizer-agent');
   process.env.CONTENT_LANGUAGE = 'es'; process.env.CHANNEL_TIMEZONE = 'America/New_York';
-  // 04:00 UTC del día 24 es todavía el 23 por la noche en Nueva York.
+  // 04:00 UTC on the 24th is still the night of the 23rd in New York.
   assert.equal(fechaDeHoy(new Date('2026-09-24T02:00:00Z')), 'MIÉRCOLES 23 DE SEPTIEMBRE');
   assert.equal(fechaDeHoy(new Date('2026-09-23T15:00:00Z')), 'MIÉRCOLES 23 DE SEPTIEMBRE');
   process.env.CONTENT_LANGUAGE = 'en';
@@ -332,12 +332,12 @@ test('la fecha del título sale en español y en la zona del canal', () => {
   process.env.CONTENT_LANGUAGE = 'es';
 });
 
-test('el fondo de la miniatura depende de la hora y solo es naturaleza', () => {
+test('the thumbnail background depends on the time and is nature only', () => {
   const bg = require('../../utils/background-picker');
   process.env.CHANNEL_TIMEZONE = 'America/New_York';
-  // 13:00 UTC = 9:00 en Nueva York → mañana
+  // 13:00 UTC = 9:00 in New York → morning
   assert.equal(bg.franja(new Date('2026-09-23T13:00:00Z')), 'manana');
-  // 02:00 UTC = 22:00 del día anterior en Nueva York → noche
+  // 02:00 UTC = 22:00 the previous day in New York → night
   assert.equal(bg.franja(new Date('2026-09-24T02:00:00Z')), 'noche');
 
   const manana = bg.consultas(new Date('2026-09-23T13:00:00Z'));
@@ -347,7 +347,7 @@ test('el fondo de la miniatura depende de la hora y solo es naturaleza', () => {
   assert.match(noche.queries[0], /night|moonlight|starry|dusk/i);
   assert.equal(manana.queries.length, 3);                       // uno principal + dos de respaldo
 
-  // el lugar rota con el día del año
+  // the place rotates with the day of the year
   const a = bg.lugarDelDia(new Date('2026-09-23T13:00:00Z')).nombre;
   const b = bg.lugarDelDia(new Date('2026-09-24T13:00:00Z')).nombre;
   assert.notEqual(a, b);
@@ -357,7 +357,7 @@ test('el fondo de la miniatura depende de la hora y solo es naturaleza', () => {
   assert.equal(bg.esNatural({ title: 'Morning light', keywords: ['desk', 'laptop'] }), false);
 });
 
-test('el B-roll del vídeo también descarta oficinas cuando ONLY_NATURE está activo', () => {
+test('the video\'s B-roll also drops offices when ONLY_NATURE is on', () => {
   const { blocklist, isBlocked } = require('../../utils/storyboard-pipeline');
   process.env.ONLY_NATURE = 'on';
   const terminos = blocklist();
@@ -369,35 +369,35 @@ test('el B-roll del vídeo también descarta oficinas cuando ONLY_NATURE está a
   delete process.env.ONLY_NATURE;
 });
 
-test('el logo del canal solo se usa si existe de verdad', async () => {
+test('the channel logo is only used if it really exists', async () => {
   const { logoDelCanal } = require('../../utils/background-picker');
   delete process.env.CHANNEL_LOGO;
   const sinLogo = await logoDelCanal();
-  assert.ok(sinLogo === null || typeof sinLogo === 'string');   // según haya archivo o no
-  // Una CHANNEL_LOGO que no existe no rompe: cae al logo por defecto del canal,
-  // y solo devuelve null cuando tampoco hay ninguno.
+  assert.ok(sinLogo === null || typeof sinLogo === 'string');   // depending on whether the file exists
+  // A CHANNEL_LOGO that doesn't exist doesn't break anything: it falls back to the
+  // channel's default logo, and only returns null when there isn't one either.
   process.env.CHANNEL_LOGO = '/no/existe/logo.png';
   const conRutaMala = await logoDelCanal();
   assert.ok(conRutaMala === null || conRutaMala.endsWith('marca/logo.png'));
   delete process.env.CHANNEL_LOGO;
 });
 
-test('el fondo por IA se apaga sin clave y cae al banco de imágenes', async () => {
+test('the AI background turns off without a key and falls back to the image bank', async () => {
   const bg = require('../../utils/background-picker');
   const clave = process.env.OPENAI_API_KEY;
   delete process.env.OPENAI_API_KEY;
-  assert.equal(await bg.generaFondoIA({ titulo: 'x' }), null);          // sin clave → null
+  assert.equal(await bg.generaFondoIA({ titulo: 'x' }), null);          // no key → null
   process.env.OPENAI_API_KEY = 'sk-test';
   process.env.THUMBNAIL_AI = 'off';
   assert.equal(await bg.generaFondoIA({ titulo: 'x' }), null);          // apagado → null
   delete process.env.THUMBNAIL_AI;
-  // con clave pero API que falla → null, nunca lanza
+  // key but a failing API → null, never throws
   const roto = { images: { generate: async () => { throw new Error('402 sin saldo'); } } };
   assert.equal(await bg.generaFondoIA({ titulo: 'x', openai: roto, logger: { warn() {} } }), null);
   if (clave) process.env.OPENAI_API_KEY = clave; else delete process.env.OPENAI_API_KEY;
 });
 
-test('no se manda temperature a los modelos que la rechazan', async () => {
+test('temperature isn\'t sent to models that reject it', async () => {
   const { AITextService } = require('../../utils/ai-text-service');
   const vistos = [];
   const fake = { chat: { completions: { create: async (p) => { vistos.push(p); return { choices: [{ message: { content: 'ok' } }] }; } } } };
@@ -413,7 +413,7 @@ test('no se manda temperature a los modelos que la rechazan', async () => {
   await s.generateText('hola', { temperature: 0.4 });
   assert.equal(vistos[1].temperature, 0.4, 'los modelos antiguos sí la admiten');
 
-  // Si el proveedor se queja igualmente, se reintenta sin temperature.
+  // If the provider complains anyway, it retries without temperature.
   let primera = true;
   s.model = 'modelo-raro';
   s.client = { chat: { completions: { create: async (p) => {
@@ -424,9 +424,9 @@ test('no se manda temperature a los modelos que la rechazan', async () => {
   assert.equal(vistos[2].temperature, undefined, 'el reintento va sin temperature');
 });
 
-// 03/10/2026: las citas bíblicas se dicen enteras en la voz (y por tanto en los
-// subtítulos y en los tiempos, que salen del mismo plan) solo en español.
-test('el plan de narración lee las citas bíblicas en español', () => {
+// 03/10/2026: Bible references are read in full by the voice (and therefore in the
+// captions and timings, which come from the same plan) only in Spanish.
+test('the narration plan reads Bible references in Spanish', () => {
   const es = { hook: { text: 'Tu Palabra dice en el Salmo 5:3: «Oh Jehová, de mañana oirás mi voz».' }, mainContent: { sections: [] } };
   assert.equal(buildNarrationPlan(es, { language: 'es' })[0].text,
     'Tu Palabra dice en el Salmo cinco, versículo tres: «Oh Jehová, de mañana oirás mi voz».');

@@ -1,17 +1,16 @@
 /**
- * Carrusel de oraciones para Instagram (pedido del autor, 04/10/2026).
+ * Prayer carousel for Instagram (requested 04/10/2026).
  *
- * Formato copiado de las cuentas de oración que más guardan y comparten
- * (@pastoragildamaldonado, @wileska.zambrano, @oracionesdiariass):
- *   1. Portada con gancho que nombra el momento ("Para cuando el corazón no
- *      encuentra paz al llegar la noche"). ⚠ Nunca "no sabes orar" (el autor).
- *   2-5. Una oración por diapositiva + su versículo.
- *   6. Cierre: envíala / guárdala / amor / comenta un Amén.
- * 1080×1350 (4:5): el formato que más pantalla ocupa en el feed.
+ * A format copied from the prayer accounts that get the most saves and shares:
+ *   1. Cover with a hook that names the moment ("Para cuando el corazón no
+ *      encuentra paz al llegar la noche"). ⚠ Never "no sabes orar".
+ *   2-5. One prayer per slide + its verse.
+ *   6. Closing: send it / save it / love / comment an Amén.
+ * 1080×1350 (4:5): the format that takes up the most screen in the feed.
  *
- * ⚠ La IA escribe las oraciones y ELIGE la cita, pero el texto del versículo
- * sale de la Reina-Valera 1909 (dominio público, /shorts/biblia/rv1909.json).
- * Una cita que no existe se descarta: nunca se pinta un versículo inventado.
+ * ⚠ The AI writes the prayers and PICKS the reference, but the verse text comes
+ * from the Reina-Valera 1909 (public domain, /shorts/biblia/rv1909.json). A
+ * reference that doesn't exist is discarded: an invented verse is never drawn.
  */
 const fs = require('fs');
 const os = require('os');
@@ -21,13 +20,13 @@ const { lineaLibro } = require('./libro');
 
 const ANCHO = 1080;
 const ALTO = 1350;        // carrusel: 4:5
-const ALTO_VIDEO = 1920;  // versión en vídeo (Reel con música): 9:16
+const ALTO_VIDEO = 1920;  // video version (Reel with music): 9:16
 const MARCA = 'Oraciones en Presencia de Yeshua';
-const USUARIO = '@tu_cuenta';
-const BIBLIA_RUTAS = ['/shorts/biblia/rv1909.json', '/ruta/a/shorts/biblia/rv1909.json'];
+const USUARIO = '@your_account';
+const BIBLIA_RUTAS = ['/shorts/biblia/rv1909.json', '/path/to/shorts/biblia/rv1909.json'];
 const FUENTES = path.join(__dirname, '..', 'assets', 'fonts');
 
-// Momentos y necesidades que la gente busca. Rotan para no repetir tema.
+// Moments and needs people search for. They rotate so the topic doesn't repeat.
 const TEMAS = [
   'antes de dormir', 'al despertar', 'cuando tienes ansiedad', 'por tu familia',
   'cuando te sientes solo', 'para pedir protección', 'cuando estás cansado',
@@ -47,10 +46,10 @@ function cargaBiblia(rutas = BIBLIA_RUTAS) {
       return bibliaCache;
     }
   }
-  throw new Error('No se encontró la Biblia RV1909 (rv1909.json)');
+  throw new Error('RV1909 Bible not found (rv1909.json)');
 }
 
-/** "Salmo 4:8", "salmos 91:1-2", "1 Pedro 5:7" → { cita, texto } o null. Máx. 3 versículos. */
+/** "Salmo 4:8", "salmos 91:1-2", "1 Pedro 5:7" → { cita, texto } or null. Max 3 verses. */
 function buscaVersiculo(cita, biblia) {
   const m = String(cita || '').trim().match(/^((?:[123]\s*)?[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:\s+de\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)?)\s+(\d{1,3})\s*[:.,]\s*(\d{1,3})(?:\s*[-–]\s*(\d{1,3}))?$/);
   if (!m) return null;
@@ -68,12 +67,12 @@ function buscaVersiculo(cita, biblia) {
     if (!capitulo[String(v)]) return null;
     partes.push(capitulo[String(v)]);
   }
-  // Un versículo que termina a media frase (",", ";", ":") se cierra con "…".
+  // A verse that ends mid-sentence (",", ";", ":") is closed with "…".
   const texto = partes.join(' ').trim().replace(/[,;:]$/, '…');
   return { cita: `${libro} ${m[2]}:${desde}${hasta > desde ? `-${hasta}` : ''}`, texto };
 }
 
-// Temas que solo tienen sentido un día concreto (07/10/2026: salió un miércoles).
+// Topics that only make sense on a specific day (07/10/2026: one came out on a Wednesday).
 const SOLO_LUNES = 'para empezar la semana';
 
 function temaDelDia(fecha = new Date(), usados = []) {
@@ -113,20 +112,20 @@ function extraeJson(texto) {
   const limpio = String(texto || '').replace(/```(?:json)?/gi, '').trim();
   const inicio = limpio.indexOf('{');
   const fin = limpio.lastIndexOf('}');
-  if (inicio < 0 || fin <= inicio) throw new Error('La IA no devolvió JSON');
+  if (inicio < 0 || fin <= inicio) throw new Error('The AI returned no JSON');
   return JSON.parse(limpio.slice(inicio, fin + 1));
 }
 
-// el autor (04/10/2026): no le gusta que la portada diga que la gente "no sabe orar".
+// The owner (04/10/2026): doesn't like the cover saying people "no saben orar".
 const TONO_PROHIBIDO = /no\s+sabes?\s+(c[oó]mo\s+)?orar|no\s+sabes?\s+qu[eé]\s+decir|c[oó]mo\s+orar|aprende\s+a\s+orar|no\s+sabes?\s+c[oó]mo\s+(hablar|dirigirte)/i;
 
-/** Limpia lo que devuelve la IA y pega el versículo verificado. Mínimo 3 oraciones válidas. */
+/** Cleans what the AI returns and attaches the verified verse. At least 3 valid prayers. */
 function validaContenido(crudo, biblia, tema) {
   const portada = String(crudo?.portada || '').trim();
-  if (portada.length < 10 || portada.length > 110) throw new Error('Portada vacía o demasiado larga');
+  if (portada.length < 10 || portada.length > 110) throw new Error('Cover empty or too long');
   const subtituloCrudo = String(crudo?.subtitulo || '');
   if (TONO_PROHIBIDO.test(portada) || TONO_PROHIBIDO.test(subtituloCrudo)) {
-    throw new Error('La portada da a entender que la persona no sabe orar');
+    throw new Error('The cover implies the person does not know how to pray');
   }
   const oraciones = [];
   for (const o of Array.isArray(crudo?.oraciones) ? crudo.oraciones : []) {
@@ -134,9 +133,9 @@ function validaContenido(crudo, biblia, tema) {
     const palabras = crudoTexto.split(' ').length;
     const versiculo = buscaVersiculo(o?.cita, biblia);
     if (!versiculo || palabras < 25 || palabras > 85) continue;
-    oraciones.push({ texto: conAmen(crudoTexto), versiculo }); // regla de fe: Jesús Rey + Amén
+    oraciones.push({ texto: conAmen(crudoTexto), versiculo }); // faith rule: Jesus as King + Amén
   }
-  if (oraciones.length < 3) throw new Error(`Solo ${oraciones.length} oraciones con versículo verificable`);
+  if (oraciones.length < 3) throw new Error(`Only ${oraciones.length} prayers with a verifiable verse`);
   const destacado = String(crudo?.destacado || '').trim();
   return {
     tema,
@@ -158,7 +157,7 @@ async function generaContenido({ ai, tema, biblia = cargaBiblia(), intentos = 3 
       ultimo = error;
     }
   }
-  throw new Error(`No se pudo escribir el carrusel: ${ultimo?.message}`);
+  throw new Error(`Could not write the carousel: ${ultimo?.message}`);
 }
 
 const HASHTAGS = {
@@ -166,7 +165,7 @@ const HASHTAGS = {
   'por tu familia': '#familia', 'por tus hijos': '#hijos', 'para pedir protección': '#proteccion', 'por tu salud': '#sanidad'
 };
 
-/** Texto de la publicación: gancho, invitación a guardar/enviar y 5 hashtags (tope de Instagram). */
+/** Post text: hook, an invitation to save/send and 5 hashtags (Instagram's cap). */
 function textoCarrusel(datos) {
   const tags = ['#oracion', '#fe', '#versiculosbiblicos', HASHTAGS[datos.tema] || '#oraciondiaria', '#Dios'];
   return [
@@ -179,7 +178,7 @@ function textoCarrusel(datos) {
   ].filter(Boolean).join('\n\n');
 }
 
-// ---------- Diseño ----------
+// ---------- Design ----------
 
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -217,7 +216,7 @@ function estilos(alto = ALTO) {
 }
 
 const grano = (alto = ALTO) => `<svg class="grano" xmlns="http://www.w3.org/2000/svg" width="${ANCHO}" height="${alto}"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 .45  0 0 0 0 .38  0 0 0 0 .3  0 0 0 .55 0"/></filter><rect width="100%" height="100%" filter="url(#n)"/></svg>`;
-// Sombra de rama sobre la pared, como en las cuentas de referencia.
+// A branch's shadow on the wall, like on the reference accounts.
 const SOMBRA = `<svg class="sombra" viewBox="0 0 760 980" xmlns="http://www.w3.org/2000/svg" fill="#3b3128">
   <path d="M520 980 C 470 720 430 520 360 300" stroke="#3b3128" stroke-width="10" fill="none"/>
   <ellipse cx="300" cy="250" rx="70" ry="190" transform="rotate(-28 300 250)"/>
@@ -241,7 +240,7 @@ function pagina(cuerpo, { pie = 'Guarda y comparte', indice = '', alto = ALTO } 
   ${cuerpo}
   <div class="pie"><span>${esc(pie)}</span><span>${esc(indice)}</span></div>
   <script>
-    // Si el texto no cabe, se reduce la letra hasta que quepa.
+    // If the text doesn't fit, the font shrinks until it does.
     document.fonts.ready.then(() => {
       const c = document.querySelector('.centro');
       let guard = 40;
@@ -256,8 +255,8 @@ function pagina(cuerpo, { pie = 'Guarda y comparte', indice = '', alto = ALTO } 
 }
 
 /**
- * HTML de cada diapositiva. `video: true` = versión Reel (9:16, sin "Desliza"
- * ni numeración, que en un vídeo no tienen sentido).
+ * HTML for each slide. `video: true` = Reel version (9:16, without "Desliza" or numbering, which
+ * make no sense in a video).
  */
 function diapositivas(datos, { video = false } = {}) {
   const alto = video ? ALTO_VIDEO : ALTO;
@@ -283,7 +282,7 @@ function diapositivas(datos, { video = false } = {}) {
   return html;
 }
 
-/** Dibuja cada diapositiva con Chromium y devuelve las rutas de los JPG. */
+/** Draws each slide with Chromium and returns the JPG paths. */
 async function renderiza(datos, dir, { chromium = require('playwright').chromium, video = false } = {}) {
   await fs.promises.mkdir(dir, { recursive: true });
   const tmp = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'carrusel-'));

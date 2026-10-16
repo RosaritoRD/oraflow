@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 /**
- * Vigilante de Oraflow (05/10/2026): imprime en JSON lo que está fallando.
- * Lo llama cada 15 min el cron del host (/ruta/a/scripts/vigilante-oraflow.mjs),
- * que solo manda correo cuando un problema APARECE o se RESUELVE (no en cada vuelta).
+ * Oraflow watchdog (05/10/2026): prints what's failing as JSON.
+ * The host cron calls it every 15 min (a separate script), which only sends an email when a
+ * problem APPEARS or is RESOLVED (not on every round).
  *
- * Nació del 05/10: la clave de OpenRouter llegó a su tope de madrugada y se
- * perdieron 4 vídeos sin que nadie se enterara hasta horas después.
- * Nada aquí gasta IA: el saldo se mira en /api/v1/key (gratis).
+ * Born on 05/10: the OpenRouter key hit its cap in the early hours and 4 videos were lost without
+ * anyone noticing until hours later.
+ * Nothing here spends AI: the balance is read from /api/v1/key (free).
  */
 const { Database } = require('../database/db');
 const { estadoRedes } = require('../utils/redes-estado');
 
-const SALDO_MINIMO = 0.5; // dólares que le quedan a la clave antes de avisar
+const SALDO_MINIMO = 0.5; // dollars left on the key before warning
 
 async function miraIA(env = process.env, fetchImpl = fetch) {
   if (String(env.AI_TEXT_PROVIDER || '').toLowerCase() !== 'openrouter' || !env.OPENROUTER_API_KEY) return [];
@@ -48,7 +48,7 @@ async function miraRedes(db, hoy) {
   return problemas;
 }
 
-// Oración por privado (07/10/2026): el último intento falló y no ha salido ninguno desde entonces.
+// Prayer by private message (07/10/2026): the last attempt failed and none has gone out since.
 async function miraPrivado(db, now = new Date()) {
   if (await db.getSetting('dm_amen_enabled') !== 'true') return [];
   let e = {};
@@ -59,7 +59,7 @@ async function miraPrivado(db, now = new Date()) {
   return [{ clave: 'privado', mensaje: `La oración por mensaje privado de Instagram no sale: ${String(err.mensaje).slice(0, 160)}. Si habla de permisos, la app de Meta sigue sin permiso de mensajes o en modo desarrollo.` }];
 }
 
-// El acceso de Instagram dura 60 días y se renueva cada semana: más de 14 sin renovarse = la renovación falla.
+// Instagram access lasts 60 days and is renewed every week: more than 14 without renewal = the renewal is failing.
 async function miraTokenInstagram(db, now = new Date()) {
   const t = Date.parse(await db.getSetting('instagram_token_refreshed_at') || '');
   if (!Number.isFinite(t)) return [];
@@ -83,7 +83,7 @@ async function main() {
 }
 
 if (require.main === module) {
-  // El logger de la base escribe en stdout: se silencia para dejar solo el JSON.
+  // The database logger writes to stdout: it's silenced to leave only the JSON.
   const escribe = process.stdout.write.bind(process.stdout);
   console.log = () => {};
   console.info = () => {};

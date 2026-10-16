@@ -1,12 +1,12 @@
 /**
- * Miniatura del canal de oración (referencia del autor, 24/09/2026):
- *   logo redondo arriba a la izquierda
- *   titular a la izquierda en 2-3 líneas: blanco / DORADO / blanco,
- *     con una barra dorada bajo la línea dorada
- *   pasaje ("SALMO 121") en dorado pequeño
- *   etiqueta de formato espaciada abajo ("ORACIÓN DE LA MAÑANA")
- *   fondo IA con el sujeto a la derecha, oscurecido por la izquierda
- * El texto lo pone el código (la IA escribe mal las letras).
+ * Prayer channel thumbnail (the owner's reference, 24/09/2026):
+ *   round logo top-left
+ *   headline on the left in 2-3 lines: white / GOLD / white,
+ *     with a gold bar under the gold line
+ *   passage ("SALMO 121") in small gold
+ *   spaced format label at the bottom ("ORACIÓN DE LA MAÑANA")
+ *   AI background with the subject on the right, darkened from the left
+ * The text is set by the code (the AI writes letters badly).
  */
 const fs = require('fs').promises;
 const path = require('path');
@@ -19,18 +19,19 @@ function escapa(texto) {
   return String(texto ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-/** Frase corta para la miniatura: el tema antes de "|", o el título sin la cabecera. */
-// "Oración de la mañana: …", "Oración de la noche para …": la etiqueta de abajo ya lo dice.
-// «Oración (corta|poderosa) (de la mañana|…) (: — para por de)» se quita: el
-// titular es la NECESIDAD («PROTECCIÓN PARA TU FAMILIA»), no la palabra «oración».
+/** Short phrase for the thumbnail: the topic before "|", or the title without the header. */
+// "Oración de la mañana: …", "Oración de la noche para …": the label at the bottom already says
+// it.
+// «Oración (corta|poderosa) (de la mañana|…) (: — para por de)» is removed: the headline is the
+// NEED («PROTECCIÓN PARA TU FAMILIA»), not the word «oración».
 const CABECERA = /^\s*oraci[oó]n\s+((corta|poderosa)\s+)?(de\s+la\s+(mañana|noche|tarde)|matutina|nocturna)?\s*([:—-]|\b(para|por|de)\b)?\s*/i;
-// Emojis y citas entre paréntesis no van en letra gigante (02/10/2026).
+// Emojis and references in parentheses don't go in giant letters (02/10/2026).
 const limpiaTitulo = t => String(t || '')
   .replace(/\p{Extended_Pictographic}|\uFE0F|\u200D/gu, '')
   .replace(/\s*\((?:[^()]*\d+:\d+[^()]*)\)/g, '')
   .replace(/\s+/g, ' ').trim();
 
-/** Franja del día que dice un texto, o null si no dice ninguna. */
+/** Time of day a text mentions, or null if it doesn't mention any. */
 function franjaDe(texto = '') {
   const t = String(texto || '');
   if (/noche|dormir|nocturn/i.test(t)) return 'NOCHE';
@@ -39,9 +40,9 @@ function franjaDe(texto = '') {
   return null;
 }
 
-/** El gancho del título: lo que va tras el último "|" ("… | RECIBE PAZ AL ENTREGAR TUS CARGAS"). */
-// 03/10/2026: el título de los largos acaba en la cita («… | Salmo 27»): esa
-// parte no es un gancho, se salta.
+/** The title's hook: what follows the last "|" ("… | RECIBE PAZ AL ENTREGAR TUS CARGAS"). */
+// 03/10/2026: long-video titles end in the reference («… | Salmo 27»): that part isn't a hook,
+// it's skipped.
 const ES_CITA = /^(?:[1-3]\s*)?\p{L}[\p{L}\s]{1,24}?\s+\d{1,3}(?::\d{1,3}(?:\s*[-–]\s*\d{1,3})?)?$/u;
 function ganchoDelTitulo(title = '') {
   const partes = String(title || '').split('|').map(p => p.trim());
@@ -52,9 +53,9 @@ function ganchoDelTitulo(title = '') {
 function titular({ topic = '', title = '' } = {}) {
   topic = limpiaTitulo(topic);
   title = limpiaTitulo(title);
-  // 27/09/2026: una idea "antes de dormir" publicada como ORACIÓN DE LA MAÑANA
-  // sacaba "…ANTES DE DORMIR" en la miniatura. Lo publicado es el título: si el
-  // tema dice otra franja, manda el gancho del título.
+  // 27/09/2026: a "before sleep" idea published as ORACIÓN DE LA MAÑANA put "…ANTES DE DORMIR" on
+  // the thumbnail. What's published is the title: if the topic says another time of day, the
+  // title's hook rules.
   const ft = franjaDe(title.split('|')[0]);
   const fp = franjaDe(topic);
   const gancho = ganchoDelTitulo(title);
@@ -76,19 +77,21 @@ function aLineas(palabras) {
   return lineas;
 }
 
-/** Hasta 3 líneas de ≤14 caracteres; si no cabe, se queda con lo anterior a la coma. */
-// Palabras con las que una línea del titular nunca puede terminar.
+/** Up to 3 lines of ≤14 characters; if it doesn't fit, keeps what comes before the comma. */
+// Words a headline line can never end with.
 const COLGANTES = new Set(['DE', 'DEL', 'EN', 'A', 'AL', 'CON', 'POR', 'PARA', 'SIN', 'SOBRE', 'Y', 'O',
   'EL', 'LA', 'LOS', 'LAS', 'UN', 'UNA', 'TU', 'TUS', 'MI', 'MIS', 'SU', 'SUS', 'QUE']);
 const PREPOSICIONES = new Set(['DE', 'DEL', 'EN', 'A', 'AL', 'CON', 'POR', 'PARA', 'SIN', 'SOBRE']);
 
-/* No cabe en 3 líneas (02/10/2026: «…LAS MANOS DE» se comía «DIOS»): se quita
-   la coletilla desde la primera preposición que deje una frase con sentido
-   («SOLTAR LA ANSIEDAD | EN LAS MANOS DE DIOS»). Si no hay ninguna, se corta
-   por palabras pero sin dejar la frase colgando en «DE», «LA»… */
+/*
+ * Doesn't fit in 3 lines (02/10/2026: «…LAS MANOS DE» swallowed «DIOS»): the tail is removed
+ * from the first preposition that leaves a meaningful phrase («SOLTAR LA ANSIEDAD | EN LAS MANOS
+ * DE DIOS»). If there's none, it's cut by words but without leaving the phrase hanging on «DE»,
+ * «LA»…
+ */
 function recortaColetilla(palabras) {
-  // El corte más temprano que deje al menos 3 palabras: «SOLTAR LA ANSIEDAD» y no
-  // «SOLTAR LA ANSIEDAD EN LAS MANOS», que cabe pero se queda sin sentido.
+  // The earliest cut that leaves at least 3 words: «SOLTAR LA ANSIEDAD» and not «SOLTAR LA
+  // ANSIEDAD EN LAS MANOS», which fits but makes no sense.
   for (let i = 3; i < palabras.length; i += 1) {
     if (!PREPOSICIONES.has(palabras[i])) continue;
     const resto = aLineas(palabras.slice(0, i));
@@ -103,17 +106,17 @@ function recortaColetilla(palabras) {
 
 function reparteTitular(texto) {
   const limpio = String(texto || '').trim();
-  // La coma corta primero; si aun así no cabe, también " Y " ("USAR BIEN TUS PALABRAS Y HABLAR…").
+  // The comma cuts first; if it still doesn't fit, " Y " too ("USAR BIEN TUS PALABRAS Y HABLAR…").
   let partes = limpio.split(/,\s*/);
   const noCabe = partes.flatMap(p => aLineas(p.split(/\s+/).filter(Boolean))).length > 3;
   if (noCabe) partes = partes.flatMap(p => p.split(/\s+Y\s+/i));
-  // La coma marca un corte natural: "CUBRE A MI FAMILIA HOY, SEÑOR" → "SEÑOR" en su línea.
+  // The comma marks a natural break: "CUBRE A MI FAMILIA HOY, SEÑOR" → "SEÑOR" on its own line.
   let lineas = partes.flatMap(p => aLineas(p.split(/\s+/).filter(Boolean)));
   if (lineas.length > 3) {
-    // No cabe entero: la parte con más contenido que quepa en 3 líneas
-    // ("SEÑOR, VE DELANTE DE MÍ…" → "VE DELANTE DE MÍ…", no "SEÑOR").
-    // Cada trozo, recortado si no cabe; gana el que más dice (antes ganaba el
-    // primero que cupiera, y salía «DIFÍCIL» solo).
+    // Doesn't fit whole: the part with the most content that fits in 3 lines ("SEÑOR, VE DELANTE
+    // DE MÍ…" → "VE DELANTE DE MÍ…", not "SEÑOR").
+    // Each piece, trimmed if it doesn't fit; the one that says the most wins (before, the first
+    // that fit won, and «DIFÍCIL» came out alone).
     const opciones = partes
       .map(p => p.split(/\s+/).filter(Boolean))
       .map(palabras => { const l = aLineas(palabras); return l.length <= 3 ? l : recortaColetilla(palabras); })
@@ -125,7 +128,7 @@ function reparteTitular(texto) {
   return { lineas, dorada };
 }
 
-/** La franja la manda el título (lo que se publica); si no dice ninguna, el tema. */
+/** The title sets the time of day (it's what gets published); if it says none, the topic. */
 function etiquetaFormato(topic = '', title = '') {
   const franja = franjaDe(String(title || '').split('|')[0]) || franjaDe(topic) || 'MAÑANA';
   return `ORACIÓN DE LA ${franja}`;
@@ -137,15 +140,17 @@ function pasajeCorto(escrituras = []) {
   return String(ref).replace(/:\S*$/, '').trim().toUpperCase();
 }
 
-/** Tamaño que cabe en `ancho` px (Liberation Sans Bold en mayúsculas ≈ 0,68 em por letra). */
+/** Size that fits in `ancho` px (Liberation Sans Bold in capitals ≈ 0.68 em per letter). */
 function cuerpoQueCabe(texto, maximo, ancho = 700) {
   return Math.min(maximo, Math.floor(ancho / (Math.max(1, texto.length) * 0.68)));
 }
 
-/* 03/10/2026 (el autor, con miniaturas de la competencia de referencia): el
-   titular ocupa casi toda la altura, en letra CONDENSADA (Oswald Bold,
-   instalada por fuentes-sistema.js) y con borde negro, para que se lea en un
-   móvil y a una audiencia mayor. Oswald Bold en mayúsculas ≈ 0,52 em por letra. */
+/*
+ * 03/10/2026 (the owner, with thumbnails from the reference competitors): the headline takes
+ * almost the full height, in a CONDENSED font (Oswald Bold, installed by fuentes-sistema.js)
+ * with a black outline, so it reads on a phone and for an older audience. Oswald Bold in
+ * capitals ≈ 0.52 em per letter.
+ */
 const ANCHO_TITULAR = 800;
 const ALTO_TITULAR = 430;
 const tamañoLinea = (linea, maximo) => Math.min(maximo, Math.floor(ANCHO_TITULAR / (Math.max(1, linea.length) * 0.52)));
@@ -198,8 +203,8 @@ function miniaturaSvg({ lineas, dorada, pasaje = null, etiqueta = 'ORACIÓN DE L
 }
 
 /**
- * Compone la miniatura final (1280×720 JPG) sobre `fondo`.
- * @returns {Promise<string>} ruta del JPG
+ * Composes the final thumbnail (1280×720 JPG) over `fondo`.
+ * @returns {Promise<string>} the JPG's path
  */
 async function componeMiniatura({ sharp, fondo, logoPath = null, topic, title, escrituras, salida }) {
   const { lineas, dorada } = reparteTitular(titular({ topic, title }));

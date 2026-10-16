@@ -1,14 +1,13 @@
 /**
- * Petición de borrado por mensaje privado de Instagram (07/10/2026).
+ * Deletion request by Instagram private message (07/10/2026).
  *
- * La página https://tu-dominio.com/oraciones-data-deletion (requisito de Meta
- * para la app) promete: quien mande «BORRAR» o «DELETE» por privado a
- * @tu_cuenta deja de estar en nuestras listas. Aquí se cumple:
- *  - se quita su usuario de dm_amen_usuarios (lo único que guardamos de él),
- *  - pasa a dm_no_contactar para que la oración por privado no le vuelva a llegar,
- *  - se le confirma por privado (está dentro de la ventana de 24 h: nos acaba de escribir),
- *  - queda en borrado_solicitudes para que el autor lo vea en el panel.
- * Settings: borrado_msg_ids (mensajes ya vistos), borrado_solicitudes, borrado_estado.
+ * The data-deletion page (a Meta requirement for the app) promises: whoever sends «BORRAR» or
+ * «DELETE» privately to the account is removed from our lists. This is where it's fulfilled:
+ *  - their user is removed from dm_amen_usuarios (the only thing we keep about them),
+ *  - it goes into dm_no_contactar so the private-message prayer never reaches them again,
+ *  - it's confirmed to them privately (it's inside the 24 h window: they just wrote to us),
+ *  - it stays in borrado_solicitudes so the owner sees it in the panel.
+ * Settings: borrado_msg_ids (messages already seen), borrado_solicitudes, borrado_estado.
  */
 const GRAPH = 'https://graph.instagram.com/v25.0';
 const MAX_IDS = 2000;
@@ -17,7 +16,7 @@ const CONFIRMACION = 'Listo: borramos tus datos de nuestras listas y no te volve
 
 const normaliza = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim();
 
-/** Solo el pedido claro: «BORRAR», «borrar mis datos», «DELETE», «delete my data», «eliminar mis datos». */
+/** Only the clear request: «BORRAR», «borrar mis datos», «DELETE», «delete my data», «eliminar mis datos». */
 function esPeticionDeBorrado(texto) {
   return /^(borrar|eliminar|delete|remove)( (mis|my) (datos|data))?$/.test(normaliza(texto));
 }
@@ -74,12 +73,12 @@ async function procesaBorrados({ db, token, fetchImpl = fetch, now = new Date(),
         }));
         confirmado = true;
       } catch (error) {
-        logger?.warn?.(`Borrado de datos: no se pudo confirmar a @${p.usuario}: ${error.message}`);
+        logger?.warn?.(`Data deletion: could not confirm to @${p.usuario}: ${error.message}`);
       }
       solicitudes.unshift({ usuario: p.usuario, at: now.toISOString(), mensajeAt: p.mensajeAt, confirmado });
     }
     await db.setSetting('borrado_solicitudes', JSON.stringify(solicitudes.slice(0, 200)));
-    logger?.info?.(`Borrado de datos: ${unicas.length} petición(es) atendida(s) por privado`);
+    logger?.info?.(`Data deletion: ${unicas.length} request(s) handled by private message`);
   }
   if (nuevosIds.length) await db.setSetting('borrado_msg_ids', JSON.stringify([...nuevosIds, ...vistos].slice(0, MAX_IDS)));
   await db.setSetting('borrado_estado', JSON.stringify({ at: now.toISOString(), error: null }));

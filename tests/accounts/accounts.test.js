@@ -23,7 +23,7 @@ const credentials = (dir, creds = {}, tokens = {}) => ({
 
 const SECRETO = 'fake-openrouter-key-for-tests-1234';
 
-test('estado: dice qué está configurado y de dónde, sin enseñar ninguna clave', async () => {
+test('status: says what\'s configured and where from, without showing any key', async () => {
   const creds = { youtube: { client_id: 'abc.apps.googleusercontent.com', client_secret: 'GOCSPX-secreto', redirect_uris: ['urn:ietf:wg:oauth:2.0:oob'] } };
   const tokens = { youtube: { refresh_token: '1//refresh-secreto', scope: 'https://www.googleapis.com/auth/youtube.upload' } };
   const dir = config({ creds, tokens });
@@ -44,7 +44,7 @@ test('estado: dice qué está configurado y de dónde, sin enseñar ninguna clav
   assert.ok(por.youtube.warnings.some(w => /oob/i.test(w)), 'avisa del redirect retirado por Google');
 });
 
-test('probar una clave: llamada real (simulada) y el mensaje nunca lleva la clave', async () => {
+test('testing a key: real (simulated) call and the message never carries the key', async () => {
   const dir = config();
   const llamadas = [];
   const fetchFn = async (url, opts) => {
@@ -66,13 +66,13 @@ test('probar Pexels ok', async () => {
   assert.equal(r.ok, true);
 });
 
-test('probar algo sin configurar o desconocido', async () => {
+test('testing something unconfigured or unknown', async () => {
   const s = new AccountsService({ credentials: credentials(config()), env: {} });
   assert.equal((await s.test('pexels')).ok, false);
   await assert.rejects(s.test('nada'), { status: 400 });
 });
 
-test('YouTube: invalid_client se explica en cristiano', async () => {
+test('YouTube: invalid_client is explained in plain words', async () => {
   const creds = { youtube: { client_id: 'x', client_secret: 'y', redirect_uris: ['https://a/cb'] } };
   const tokens = { youtube: { refresh_token: 'r' } };
   const youtubeFactory = () => ({ channels: { list: async () => { const e = new Error('invalid_client'); e.response = { data: { error: 'invalid_client' } }; throw e; } } });
@@ -82,7 +82,7 @@ test('YouTube: invalid_client se explica en cristiano', async () => {
   assert.match(r.message, /client ID|cliente/i);
 });
 
-test('YouTube ok devuelve el canal conectado', async () => {
+test('YouTube ok returns the connected channel', async () => {
   const creds = { youtube: { client_id: 'x', client_secret: 'y', redirect_uris: ['https://a/cb'] } };
   const tokens = { youtube: { refresh_token: 'r' } };
   const youtubeFactory = () => ({ channels: { list: async () => ({ data: { items: [{ id: 'UC123', snippet: { title: 'Oración de Hoy' } }] } }) } });
@@ -93,7 +93,7 @@ test('YouTube ok devuelve el canal conectado', async () => {
   assert.equal(r.channel.id, 'UC123');
 });
 
-test('guardar el cliente OAuth: valida, hace copia y no devuelve el secreto', async () => {
+test('saving the OAuth client: validates, makes a backup and doesn\'t return the secret', async () => {
   const creds = { youtube: { client_id: 'viejo', client_secret: 'viejo-secreto', redirect_uris: ['urn:ietf:wg:oauth:2.0:oob'] }, channel: { channelName: 'X' } };
   const dir = config({ creds });
   const cred = credentials(dir, creds);
@@ -110,7 +110,7 @@ test('guardar el cliente OAuth: valida, hace copia y no devuelve el secreto', as
   assert.equal(cred.credentials.youtube.client_id, '123-abc.apps.googleusercontent.com', 'recarga en caliente');
 });
 
-test('conectar YouTube: URL de Google con state, y el callback exige ese state', async () => {
+test('connecting YouTube: Google URL with state, and the callback requires that state', async () => {
   const creds = { youtube: { client_id: '1-a.apps.googleusercontent.com', client_secret: 's', redirect_uris: ['x'] } };
   const dir = config({ creds, tokens: { otro: 1 } });
   const cred = credentials(dir, creds, { otro: 1 });
@@ -133,12 +133,12 @@ test('conectar YouTube: URL de Google con state, y el callback exige ese state',
   await assert.rejects(s.finishConnect({ code: 'c', state }), { status: 400 }, 'el state es de un solo uso');
 });
 
-test('conectar sin cliente OAuth configurado es un error claro', () => {
+test('connecting without a configured OAuth client is a clear error', () => {
   const s = new AccountsService({ credentials: credentials(config()), env: {} });
   assert.throws(() => s.connectUrl(), { status: 409 });
 });
 
-test('ElevenLabs con clave restringida: válida, pero avisa de que no deja ver el consumo', async () => {
+test('ElevenLabs with a restricted key: valid, but warns that it can\'t show usage', async () => {
   const fetchFn = async () => ({ ok: false, status: 401, json: async () => ({ detail: { status: 'missing_permissions', message: 'The API key you used is missing the permission user_read to execute this operation.' } }) });
   const s = new AccountsService({ credentials: credentials(config()), env: { ELEVENLABS_API_KEY: 'k'.repeat(20) }, fetchFn });
   const r = await s.test('elevenlabs');
@@ -146,7 +146,7 @@ test('ElevenLabs con clave restringida: válida, pero avisa de que no deja ver e
   assert.match(r.message, /limitad/i);
 });
 
-test('Gemini rechazada con una clave de formato raro: lo dice', async () => {
+test('Gemini rejected with an oddly formatted key: it says so', async () => {
   const fetchFn = async () => ({ ok: false, status: 401, json: async () => ({ error: { message: 'Request had invalid authentication credentials.' } }) });
   const s = new AccountsService({ credentials: credentials(config()), env: { GEMINI_API_KEY: 'AQ.' + 'x'.repeat(100) }, fetchFn });
   const r = await s.test('gemini');

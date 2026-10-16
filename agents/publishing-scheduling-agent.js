@@ -12,10 +12,10 @@ const { textoParaRed } = require('../utils/texto-social');
 const { enlacePublicoConfig, publicaCopia, borraCopia, limpiaCopiasViejas } = require('../utils/enlace-publico');
 
 const MAX_INTENTOS_RED = 3;
-// Un intento fallido se repite en las vueltas siguientes de la cola (cada 15 min).
+// A failed attempt is repeated on the queue's next rounds (every 15 min).
 const tocaSubir = estado => !estado || (estado.status === 'failed' && !estado.permanent && (estado.attempts || 0) < MAX_INTENTOS_RED);
 
-// Shorts de oración (29/09/2026): mañana y noche, separados de los largos (04:00 y 18:30).
+// Prayer Shorts (29/09/2026): morning and evening, separate from the long videos (04:00 and 18:30).
 const DEFAULT_SHORT_CLOCKS = '07:00,21:00';
 
 class PublishingSchedulingAgent {
@@ -280,12 +280,12 @@ class PublishingSchedulingAgent {
     scheduleEntry.error = null;
     await this.db.updateScheduleEntry(scheduleEntry);
     
-    // Miniatura y subtítulos: si fallan (p. ej. cuota agotada) quedan apuntados y
-    // reintentaPendientes() los vuelve a subir en las siguientes vueltas (06/10/2026).
+    // Thumbnail and captions: if they fail (e.g. quota used up) they're noted down and
+    // reintentaPendientes() uploads them again on the next rounds (06/10/2026).
     const pendientes = {};
-    /* Short (11/10/2026): su portada vertical como miniatura, SIN pegarla dentro
-       del vídeo (eso bajaba las vistas). YouTube la acepta por la API: probado
-       ese día con un Short del canal. */
+    /* Short (11/10/2026): its vertical cover as the thumbnail, WITHOUT gluing it
+       inside the video (that lowered views). YouTube accepts it through the API:
+       tested that day with one of the channel's Shorts. */
     const miniatura = metadata.thumbnail?.path || await this.portadaDelShort(scheduleEntry);
     if (miniatura && !await this.uploadThumbnail(videoId, miniatura)) pendientes.thumbnail = true;
     if (metadata.captions && metadata.captions.path && !await this.uploadCaptions(videoId, metadata.captions.path)) pendientes.captions = true;
@@ -298,13 +298,14 @@ class PublishingSchedulingAgent {
   }
 
   /**
-   * Copia el vídeo a Facebook e Instagram. YouTube ya está hecho: nada de aquí
-   * lo deshace, y el estado de cada red queda en metadata.facebook / .instagram.
-   * - Short → Reel en Facebook (programado a la hora de YouTube) y Reel en
-   *   Instagram (se sube ahora y se publica a su hora en syncRecentSocial(),
-   *   porque la API de Instagram no programa).
-   * - Largo → vídeo de la Página de Facebook, con miniatura y programado.
-   *   A Instagram no va: un horizontal de 7 min no funciona como Reel.
+   * Copies the video to Facebook and Instagram. YouTube is already done: nothing
+   * here undoes it, and each network's state is stored in metadata.facebook /
+   * .instagram.
+   * - Short → Reel on Facebook (scheduled at the YouTube time) and Reel on
+   *   Instagram (uploaded now and published at its time in syncRecentSocial(),
+   *   because the Instagram API doesn't schedule).
+   * - Long → a Facebook Page video, with thumbnail and scheduled. It doesn't go to
+   *   Instagram: a 7-minute horizontal video doesn't work as a Reel.
    */
   async syncSocial(scheduleEntry, opts = {}) {
     const deps = { ...this.socialDeps, ...opts };
@@ -337,9 +338,9 @@ class PublishingSchedulingAgent {
               description: textoParaRed(metadata.seo, 'facebook', env), publishAt, now
             });
           } catch (error) {
-            // Un Short de más de ~100 s no cabe como Reel (07/10/2026): sale como vídeo de la Página.
+            // A Short over ~100 s doesn't fit as a Reel (07/10/2026): it goes out as a Page video.
             if (error.code !== 'reel_demasiado_largo') throw error;
-            this.logger.info(`Facebook: ${error.message}; se publica como vídeo normal de la Página`);
+            this.logger.info(`Facebook: ${error.message}; publishing as a normal Page video`);
             comoReel = false;
             subido = await comoVideo();
           }
@@ -361,7 +362,7 @@ class PublishingSchedulingAgent {
       }
     }
 
-    // Instagram necesita un enlace público al vídeo (ver utils/enlace-publico.js).
+    // Instagram needs a public link to the video (see utils/enlace-publico.js).
     const enlace = deps.enlace || enlacePublicoConfig(env);
     const igToken = esCorto && enlace ? await tokenInstagram(this.db, env) : null;
     const ig = { prepara: preparaReelIG, estado: estadoIG, publica: publicaIG, ...deps.ig };
@@ -373,12 +374,13 @@ class PublishingSchedulingAgent {
       let copiaPortada = null;
       try {
         copia = await copias.publica(metadata.video.path, enlace);
-        /* La portada (11/10/2026) solo se puede poner al crear el contenedor.
-           Si no hay o falla su copia, el Reel sale igual, sin portada. */
+        /* The cover (11/10/2026) can only be set when creating the container.
+           If there's none or its copy fails, the Reel goes out anyway,
+           without a cover. */
         const portada = await this.portadaDelShort(scheduleEntry);
         if (portada) {
           copiaPortada = await copias.publica(portada, enlace).catch((error) => {
-            this.logger.warn(`Portada del Reel no disponible (${error.message}); sale sin portada`);
+            this.logger.warn(`Reel cover unavailable (${error.message}); going out without a cover`);
             return null;
           });
         }
@@ -391,7 +393,7 @@ class PublishingSchedulingAgent {
           ...(copiaPortada ? { copiaPortada: copiaPortada.nombre } : {}),
           publishAt, attempts, at: now.toISOString()
         };
-        this.logger.info(`Instagram Reel subido${copiaPortada ? ' con portada' : ''}; se publica a las ${publishAt}`);
+        this.logger.info(`Instagram Reel uploaded${copiaPortada ? ' with cover' : ''}; publishes at ${publishAt}`);
       } catch (error) {
         if (copia) await copias.borra(copia.nombre, enlace);
         if (copiaPortada) await copias.borra(copiaPortada.nombre, enlace);
@@ -401,7 +403,7 @@ class PublishingSchedulingAgent {
     } else if (igToken && metadata.instagram?.status === 'uploaded' && Date.parse(metadata.instagram.publishAt) <= now.getTime()) {
       const pendiente = metadata.instagram;
       const { status, detail } = await ig.estado({ token: igToken, containerId: pendiente.containerId });
-      // FINISHED/PUBLISHED/ERROR/EXPIRED: Instagram ya no necesita la copia pública.
+      // FINISHED/PUBLISHED/ERROR/EXPIRED: Instagram no longer needs the public copy.
       if (status !== 'IN_PROGRESS') {
         if (pendiente.copia) await copias.borra(pendiente.copia, enlace);
         if (pendiente.copiaPortada) await copias.borra(pendiente.copiaPortada, enlace);
@@ -415,7 +417,7 @@ class PublishingSchedulingAgent {
         metadata.instagram = { ...pendiente, status: 'published', publishedAt: now.toISOString() };
         cambio = true;
       } else if (status === 'ERROR' || status === 'EXPIRED') {
-        // El siguiente intento vuelve a crear el contenedor desde cero.
+        // The next attempt creates the container from scratch again.
         metadata.instagram = { ...pendiente, status: 'failed', error: `Instagram: contenedor ${status}${detail ? ` (${detail})` : ''}` };
         this.logger.warn(metadata.instagram.error);
         cambio = true;
@@ -430,10 +432,10 @@ class PublishingSchedulingAgent {
   }
 
   /**
-   * Cada vuelta de la cola: renueva el token de Instagram y repasa lo subido a
-   * YouTube en las últimas 24 h (reintentos, Instagram a su hora). Lo que ya era
-   * público antes de conectar las redes y nunca se tocó se queda fuera: no se
-   * vuelca de golpe el contenido viejo en la Página.
+   * On every queue round: renews the Instagram token and goes over what was
+   * uploaded to YouTube in the last 24 h (retries, Instagram at its time). Whatever
+   * was already public before the networks were connected and was never touched is
+   * left out: old content isn't dumped onto the Page all at once.
    */
   async syncRecentSocial() {
     const deps = this.socialDeps || {};
@@ -442,10 +444,10 @@ class PublishingSchedulingAgent {
     if (!facebookConfig(env) && !await tokenInstagram(this.db, env)) return 0;
     try {
       if (await renuevaTokenSiToca({ db: this.db, env, now, ...(deps.fetchImpl ? { fetchImpl: deps.fetchImpl } : {}) })) {
-        this.logger.info('Instagram token renovado (vale 60 días más)');
+        this.logger.info('Instagram token renewed (valid for 60 more days)');
       }
     } catch (error) {
-      this.logger.warn(`No se pudo renovar el token de Instagram: ${error.message}`);
+      this.logger.warn(`Could not renew the Instagram token: ${error.message}`);
     }
     await limpiaCopiasViejas(deps.enlace || enlacePublicoConfig(env), now.getTime()).catch(() => {});
     const since = new Date(now.getTime() - 24 * 3600000).toISOString();
@@ -527,10 +529,10 @@ class PublishingSchedulingAgent {
     }
   }
   /**
-   * La portada vertical de un Short (storyboard-pipeline la compone en
-   * production.assets.shortCover). Las entradas programadas antes del
-   * 11/10/2026 no la llevan en metadata: se lee de la producción. Si el
-   * archivo no existe, null: reintentarlo no lo va a crear.
+   * A Short's vertical cover (storyboard-pipeline composes it in
+   * production.assets.shortCover). Entries scheduled before 11/10/2026
+   * don't carry it in metadata: it's read from the production. If the file
+   * doesn't exist, null: retrying won't create it.
    */
   async portadaDelShort(entrada = {}) {
     const m = entrada.metadata || {};
@@ -644,8 +646,8 @@ class PublishingSchedulingAgent {
   }
 
   /**
-   * Reintenta la miniatura y los subtítulos que no se pudieron subir (06/10/2026),
-   * en vídeos de los últimos 3 días, cuando hay cuota. Máximo 5 intentos por vídeo.
+   * Retries the thumbnail and captions that couldn't be uploaded (06/10/2026), on
+   * videos from the last 3 days, when there's quota. At most 5 attempts per video.
    */
   async reintentaPendientes({ now = new Date() } = {}) {
     if (!this.youtube || await require('../utils/cuota-youtube').agotada(this.db, now)) return 0;
@@ -676,7 +678,7 @@ class PublishingSchedulingAgent {
 
   async processPublishQueue() {
     await this.syncRecentSocial().catch(error => this.logger.warn(`Reels (Facebook/Instagram): ${error.message}`));
-    await this.reintentaPendientes().catch(error => this.logger.warn(`Reintento de miniatura/subtítulos: ${error.message}`));
+    await this.reintentaPendientes().catch(error => this.logger.warn(`Thumbnail/captions retry: ${error.message}`));
     const now = new Date();
     const scheduled = this.publishQueue
       .filter(entry => entry.status === 'scheduled')
@@ -684,8 +686,9 @@ class PublishingSchedulingAgent {
     const leadMs = (await this.dailySlotConfig())?.uploadLeadMs || 0;
     const readyToPublish = scheduled.filter(entry => {
       const due = new Date(entry.publishTime).getTime();
-      // Los huecos diarios se suben antes, privados con publishAt: YouTube los
-      // publica a la hora exacta aunque la VPS esté caída en ese momento.
+      // Daily slots are uploaded early, private with publishAt: YouTube
+      // publishes them at the exact time even if the VPS is down at that
+      // moment.
       return due <= now.getTime() + (entry.metadata?.dailySlot ? leadMs : 0);
     });
 
@@ -722,7 +725,7 @@ class PublishingSchedulingAgent {
     return readyToPublish.length;
   }
 
-  /** null si el modo diario está apagado (`daily_publish_enabled=false`). */
+  /** null if daily mode is off (`daily_publish_enabled=false`). */
   async dailySlotConfig() {
     const setting = async (key) => (this.db.getSetting ? await this.db.getSetting(key) : null);
     if (await setting('daily_publish_enabled') === 'false') return null;
@@ -733,7 +736,7 @@ class PublishingSchedulingAgent {
       timeZone: await setting('channel_timezone') || DEFAULT_TZ,
       clock: clocks[0],
       clocks,
-      // daily_shorts_time vacío o "off" = sin Shorts diarios.
+      // daily_shorts_time empty or "off" = no daily Shorts.
       shortClocks: await this.shortClocksSetting(setting),
       uploadLeadMs: (Number.isFinite(leadHours) && leadHours >= 0 ? leadHours : 12) * 3600000
     };
@@ -746,8 +749,8 @@ class PublishingSchedulingAgent {
   }
 
   /**
-   * Hueco de un encargo: el que le asignó el programador si sigue libre y en
-   * el futuro; si no, el próximo libre de su formato.
+   * A job's slot: the one the scheduler assigned if it's still free and in the
+   * future; otherwise, the next free one for its format.
    */
   async slotFor(requested, formato, daily) {
     const clocks = formato === 'short' ? daily.shortClocks : daily.clocks;
@@ -759,7 +762,7 @@ class PublishingSchedulingAgent {
     return nextFreeSlot({ timeZone: daily.timeZone, clocks: clocks.length ? clocks : daily.clocks, taken }).publishTime;
   }
 
-  /** Horas futuras que ya tienen un vídeo de ese formato (en cola o ya subido con publishAt). */
+  /** Future times that already have a video of that format (queued or already uploaded with publishAt). */
   async takenDailySlots(formato = 'long') {
     const rows = this.db.getAllRows
       ? await this.db.getAllRows(
@@ -771,7 +774,7 @@ class PublishingSchedulingAgent {
       .filter(row => {
         let meta = row.metadata;
         if (typeof meta === 'string') { try { meta = JSON.parse(meta); } catch { meta = {}; } }
-        // Las entradas anteriores al 29/09 no llevan formato: todas eran largos.
+        // Entries before 29/09 don't carry a format: they were all long videos.
         return meta?.dailySlot === true && (meta?.contentFormat || 'long') === formato;
       })
       .map(row => row.publish_time);

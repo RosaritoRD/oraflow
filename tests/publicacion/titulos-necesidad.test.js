@@ -2,18 +2,18 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { SEOOptimizerAgent, cortaTitulo } = require('../../agents/seo-optimizer-agent');
 
-// 30/09: los títulos por fecha y en mayúsculas ("ORACIÓN DE LA MAÑANA — MIÉRCOLES
-// 30 DE SEPTIEMBRE | SALMO 5:3 … PARA TODO EL D") pasan a títulos por NECESIDAD,
-// como los canales grandes: "Oración para los días de cargas | Oración de la noche 🙏".
+// 30/09: titles by date and in capitals ("ORACIÓN DE LA MAÑANA — MIÉRCOLES 30 DE
+// SEPTIEMBRE | SALMO 5:3 … PARA TODO EL D") become titles by NEED, like the big channels:
+// "Oración para los días de cargas | Oración de la noche 🙏".
 
-test('el título nunca se corta a mitad de palabra', () => {
+test('the title is never cut mid-word', () => {
   const largo = 'ORACIÓN DE LA MAÑANA — MIÉRCOLES 30 DE SEPTIEMBRE | SALMO 5:3 RECIBE PAZ Y PROTECCIÓN PARA TODO EL DÍA';
   const t = cortaTitulo(largo, 100);
   assert.ok(t.length <= 100);
   assert.ok(largo.startsWith(t));
   assert.match(t, /PARA TODO EL$/);
   assert.equal(cortaTitulo('Corto 🙏', 100), 'Corto 🙏');
-  assert.equal(cortaTitulo('Oración para dormir en paz |', 100), 'Oración para dormir en paz');   // sin separador colgando
+  assert.equal(cortaTitulo('Oración para dormir en paz |', 100), 'Oración para dormir en paz');   // no dangling separator
 });
 
 async function promptDeLargo(extraEnv = {}) {
@@ -31,15 +31,15 @@ async function promptDeLargo(extraEnv = {}) {
   return { visto, r };
 }
 
-test('la plantilla de los largos pide el formato de los canales grandes, sin fecha (03/10/2026)', async () => {
+test('the long-video template asks for the big channels\' format, without a date (03/10/2026)', async () => {
   const { visto } = await promptDeLargo();
-  assert.match(visto, /ORACIÓN DE LA NOCHE \|/);                     // la cabecera con la franja del contenido
-  assert.match(visto, /EL SEÑOR ES MI LUZ Y MI SALVACIÓN: NO TEMAS LO QUE TRAIGA ESTE DÍA/); // los ejemplos del autor
-  assert.match(visto, /Mateo 11:28/);                                  // la cita del guion
+  assert.match(visto, /ORACIÓN DE LA NOCHE \|/);                     // the header with the content's time of day
+  assert.match(visto, /EL SEÑOR ES MI LUZ Y MI SALVACIÓN: NO TEMAS LO QUE TRAIGA ESTE DÍA/); // the owner's examples
+  assert.match(visto, /Mateo 11:28/);                                  // the script's reference
   assert.doesNotMatch(visto, /Today's date for the title/);            // la fecha sigue fuera
 });
 
-test('optimize publica el largo en el formato nuevo aunque la IA lo devuelva en minúsculas', async () => {
+test('optimize publishes the long video in the new format even if the AI returns it in lower case', async () => {
   const prev = { ...process.env };
   Object.assign(process.env, { CONTENT_LANGUAGE: 'es', CHANNEL_THEME: 'prayer' });
   const agente = new SEOOptimizerAgent({ saveSEOData: async () => {} }, {});

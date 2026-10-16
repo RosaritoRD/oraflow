@@ -240,9 +240,9 @@ class ThumbnailDesignerAgent {
         const buffer = await sharp(photo).resize(width, height, { fit: 'cover' }).jpeg({ quality: 88 }).toBuffer();
         imageHref = `data:image/jpeg;base64,${buffer.toString('base64')}`;
       }
-      // THUMBNAIL_STYLE=loud (por defecto en este canal): amarillo enorme con
-      // borde negro y la fecha, que es lo que usan los canales de oración que
-      // funcionan. 'calm' deja el serif sobrio de antes.
+      // THUMBNAIL_STYLE=loud (the default on this channel): huge yellow with a
+      // black outline and the date, which is what working prayer channels use.
+      // 'calm' keeps the sober serif from before.
       const estilo = String(process.env.THUMBNAIL_STYLE || 'loud').toLowerCase();
       const opciones = { width, height, imageHref, paletteIndex: Date.now() % prayerTheme.PALETTES.length };
       const svg = estilo === 'calm'
@@ -436,10 +436,11 @@ class ThumbnailDesignerAgent {
   }
 
   /**
-   * Miniatura del canal de oración. Desde el 11/10/2026 con el diseño de la
-   * referencia del autor («Oración / PODEROSA / para hoy», utils/miniatura-yeshua.js)
-   * y en 3 variantes A/B/C para «Probar y comparar» de YouTube Studio; se sube la A.
-   * Si el diseño nuevo falla, sale el de antes (24/09) para no quedarse sin miniatura.
+   * The prayer channel's thumbnail. Since 11/10/2026 it uses the design from the owner's
+   * reference («Oración / PODEROSA / para hoy», utils/miniatura-yeshua.js), in 3 variants
+   * A/B/C for YouTube Studio's «Test and compare»; A is uploaded.
+   * If the new design fails, the previous one (24/09) is used so there's always a
+   * thumbnail.
    */
   async createPrayerThumbnail(script) {
     const { fondoDeMiniatura, logoDelCanal, carpetaFondosManuales } = require('../utils/background-picker');
@@ -449,7 +450,7 @@ class ThumbnailDesignerAgent {
     const dir = path.join(__dirname, '..', 'uploads', 'thumbnails');
     const topic = script.metadata?.strategy?.topic;
     let thumbnailData = null;
-    // 11/10/2026: primero las miniaturas que hace el autor (data/assets/miniaturas-propias).
+    // 11/10/2026: first the thumbnails the owner makes (data/assets/miniaturas-propias).
     try {
       const { eligeDeBiblioteca } = require('../utils/biblioteca-miniaturas');
       const elegida = await eligeDeBiblioteca({ title: script.title, topic, formato: 'largo', logger: this.logger });
@@ -464,7 +465,7 @@ class ThumbnailDesignerAgent {
           generatedWith: 'propio', createdAt: new Date().toISOString()
         };
       }
-    } catch (error) { this.logger.warn(`Biblioteca de miniaturas no disponible (${error.message})`); }
+    } catch (error) { this.logger.warn(`Thumbnail library unavailable (${error.message})`); }
     if (!thumbnailData) try {
       const { titularesMiniatura } = require('../utils/titular-miniatura');
       const { componeMiniaturaYeshua } = require('../utils/miniatura-yeshua');
@@ -474,7 +475,7 @@ class ThumbnailDesignerAgent {
         topic, title: script.title, guion: script.fullScript || script.summary || script.description || '',
         aiTextService: new AITextService(credentials), logger: this.logger
       });
-      // _centro.json en la colección: fondos con el cielo libre arriba → texto centrado.
+      // _centro.json in the collection: backgrounds with clear sky at the top → centered text.
       let centro = [];
       try { centro = JSON.parse(await fs.readFile(path.join(carpetaFondosManuales(), 'coleccion', '_centro.json'), 'utf8')); } catch { centro = []; }
       const layout = fondo?.nombre && centro.includes(fondo.nombre) ? 'centro' : 'izquierda';
@@ -500,12 +501,13 @@ class ThumbnailDesignerAgent {
         createdAt: new Date().toISOString()
       };
     } catch (error) {
-      this.logger.warn(`Miniatura nueva no disponible (${error.message}); sale la de antes`);
+      this.logger.warn(`New thumbnail unavailable (${error.message}); using the previous design`);
       const { componeMiniatura } = require('../utils/miniatura-oracion');
       const salida = path.join(dir, `oracion_${sello}.jpg`);
       await componeMiniatura({
-        // Los fondos con el logo ya dentro (coleccion/_con_logo.json) lo traen en el mismo
-        // sitio donde se pinta (x 32, y 28, 100 px): pintarlo encima lo deja nítido.
+        // Backgrounds with the logo already inside (coleccion/_con_logo.json) carry it
+        // in the same spot where it's drawn (x 32, y 28, 100 px): drawing it on top
+        // keeps it sharp.
         sharp, fondo: fondo?.ruta || null, logoPath: await logoDelCanal(),
         topic, title: script.title, escrituras: script.scriptures, salida
       });

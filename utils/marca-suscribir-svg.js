@@ -1,8 +1,8 @@
 /**
- * Un fotograma (SVG 1920x1080, fondo transparente) de la animación propia
- * «me gusta · SUSCRÍBETE → SUSCRITO · campana» con un cursor que los pulsa.
- * 3,5 s: aparece (0-0.35), clic en me gusta (0.85), en suscribirse (1.55),
- * en la campana (2.2), y se desvanece (3.0-3.5). Iconos dibujados aquí.
+ * One frame (SVG 1920x1080, transparent background) of the in-house «like ·
+ * SUBSCRIBE → SUBSCRIBED · bell» animation with a cursor that clicks them.
+ * 3.5 s: appears (0-0.35), click on like (0.85), on subscribe (1.55), on the
+ * bell (2.2), and fades out (3.0-3.5). Icons drawn here.
  */
 const W = 1920, H = 1080, CY = 300;
 const THUMB = { x: 745, y: CY }, BTN = { x: 1000, y: CY, w: 360, h: 96 }, BELL = { x: 1250, y: CY };

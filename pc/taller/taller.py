@@ -1,19 +1,19 @@
-"""Taller: el ffmpeg de Oraflow corre en este PC (07/10/2026).
+"""Workshop: Oraflow's ffmpeg runs on this PC (07/10/2026).
 
-La VPS (keizac-vps) sigue siendo la "oficina": agenda, base de datos, subir a
-YouTube. Cada vez que Oraflow necesita ffmpeg, se lo pide a este taller; si el
-taller no responde o falla, la VPS lo hace ella misma (utils/ffmpeg-remoto.js).
+The VPS (keizac-vps) is still the "office": schedule, database, uploading to
+YouTube. Whenever Oraflow needs ffmpeg, it asks this workshop; if the
+workshop doesn't answer or fails, the VPS does it itself (utils/ffmpeg-remoto.js).
 
-  GET  /api/salud                     estado, núcleos, trabajos
-  HEAD /api/archivos/<sha256>         ¿ya tengo este archivo?
-  PUT  /api/archivos/<sha256>         subir un archivo (se comprueba el sha256)
-  GET  /api/archivos/<sha256>         bajar un archivo (las salidas)
+  GET  /api/salud                     status, cores, jobs
+  HEAD /api/archivos/<sha256>         do I already have this file?
+  PUT  /api/archivos/<sha256>         upload a file (the sha256 is checked)
+  GET  /api/archivos/<sha256>         download a file (the outputs)
   POST /api/trabajos                  {args, entradas: {ruta_relativa: sha}, salidas: [ruta_relativa], limite_s}
-  GET  /api/trabajos/<id>             estado y, al terminar, {salidas: {ruta: {sha, bytes}}, stdout, stderr}
+  GET  /api/trabajos/<id>             status and, when done, {salidas: {ruta: {sha, bytes}}, stdout, stderr}
 
-Seguridad: solo atiende a la VPS por Tailscale y a este PC; las rutas de los
-trabajos son relativas a una carpeta propia, sin rutas absolutas ni URLs.
-Los archivos se guardan por su sha256 en cache/ y se borran a los 3 días sin uso.
+Security: it only serves the VPS over Tailscale and this PC; job paths are
+relative to a folder of its own, with no absolute paths or URLs.
+Files are stored by their sha256 in cache/ and deleted after 3 days unused.
 """
 from __future__ import annotations
 
@@ -40,8 +40,8 @@ FFMPEG = os.environ.get("TALLER_FFMPEG") or shutil.which("ffmpeg") or "ffmpeg"
 MAX_PARALELO = int(os.environ.get("TALLER_PARALELO", "3"))
 CACHE_DIAS = float(os.environ.get("TALLER_CACHE_DIAS", "3"))
 CACHE_MAX_BYTES = int(float(os.environ.get("TALLER_CACHE_GB", "40")) * 1e9)
-IPS_POR_DEFECTO = {"127.0.0.1", "::1", "IP_DE_TU_PC"}  # este PC y keizac-vps por Tailscale
-SALIDA_MAX = 8 * 1024 * 1024  # stdout/stderr que se devuelven
+IPS_POR_DEFECTO = {"127.0.0.1", "::1", "YOUR_VPS_IP"}  # este PC y keizac-vps por Tailscale
+SALIDA_MAX = 8 * 1024 * 1024  # stdout/stderr returned
 
 SHA = re.compile(r"^[0-9a-f]{64}$")
 REL = re.compile(r"^[es]/[A-Za-z0-9_.-]{1,100}(/[A-Za-z0-9_.%-]{1,100})?$")
@@ -69,7 +69,7 @@ def sha256_de(ruta: Path) -> str:
 
 
 def despierto(activo: bool) -> None:
-    """Mientras hay trabajo, Windows no suspende el PC (no hace nada en otros sistemas)."""
+    """While there is work, Windows doesn't suspend the PC (does nothing on other systems)."""
     if sys.platform != "win32":
         return
     ES_CONTINUOUS, ES_SYSTEM_REQUIRED = 0x80000000, 0x00000001
@@ -77,7 +77,7 @@ def despierto(activo: bool) -> None:
 
 
 def limpia_cache(ahora: float | None = None) -> int:
-    """Borra lo que lleva CACHE_DIAS sin usarse y, si aún pasa del tope, lo más viejo."""
+    """Deletes what has gone CACHE_DIAS unused and, if still over the cap, the oldest."""
     ahora = ahora or time.time()
     archivos = sorted((p for p in CACHE.glob("*") if p.is_file()), key=lambda p: p.stat().st_mtime)
     borrados, total = 0, sum(p.stat().st_size for p in archivos)
@@ -94,7 +94,7 @@ MOTIVO = re.compile(r"error|impossible|invalid|no such|cannot|could not|unable|n
 
 
 def resumen_error(stderr: str, maximo: int = 3) -> str:
-    """Las líneas de ffmpeg que dicen POR QUÉ falló (no el banner ni los avisos de fuentes)."""
+    """The ffmpeg lines that say WHY it failed (not the banner or the font warnings)."""
     lineas = [l.strip() for l in (stderr or "").splitlines() if l.strip()]
     motivos = [l for l in lineas if MOTIVO.search(l)] or lineas[-2:]
     return " | ".join(motivos[-maximo:])[:600]
@@ -144,25 +144,25 @@ class Taller:
                     destino = carpeta / rel
                     destino.parent.mkdir(parents=True, exist_ok=True)
                     origen = CACHE / sha
-                    os.utime(origen)  # usado: no se borra en la limpieza
+                    os.utime(origen)  # used: not deleted by the cleanup
                     try:
                         os.link(origen, destino)
                     except OSError:
                         shutil.copyfile(origen, destino)
                 for rel in t["salidas_pedidas"]:
                     (carpeta / rel).parent.mkdir(parents=True, exist_ok=True)
-                prioridad = 0x00004000 if sys.platform == "win32" else 0  # BELOW_NORMAL: el PC sigue usable
+                prioridad = 0x00004000 if sys.platform == "win32" else 0  # BELOW_NORMAL: the PC stays usable
                 p = subprocess.run([FFMPEG, "-nostdin", *t["args"]], cwd=carpeta, capture_output=True,
                                    timeout=t["limite_s"], creationflags=prioridad)
                 t["stdout"] = p.stdout[-SALIDA_MAX:].decode("utf-8", "replace")
                 t["stderr"] = p.stderr[-SALIDA_MAX:].decode("utf-8", "replace")
                 if p.returncode != 0:
-                    raise RuntimeError(f"ffmpeg salió con {p.returncode}: {resumen_error(t['stderr'])}")
+                    raise RuntimeError(f"ffmpeg exited with {p.returncode}: {resumen_error(t['stderr'])}")
                 salidas = {}
                 for rel in t["salidas_pedidas"]:
                     ruta = carpeta / rel
                     if not ruta.is_file():
-                        raise RuntimeError(f"ffmpeg no creó {rel}")
+                        raise RuntimeError(f"ffmpeg did not create {rel}")
                     sha = sha256_de(ruta)
                     final = CACHE / sha
                     if final.exists():
@@ -172,8 +172,8 @@ class Taller:
                     salidas[rel] = {"sha": sha, "bytes": final.stat().st_size}
                 t["salidas"], t["estado"] = salidas, "listo"
             except subprocess.TimeoutExpired:
-                t["estado"], t["error"] = "error", f"ffmpeg pasó de {t['limite_s']} s"
-            except Exception as e:  # noqa: BLE001 — el error vuelve a la VPS, que lo hace ella
+                t["estado"], t["error"] = "error", f"ffmpeg went over {t['limite_s']} s"
+            except Exception as e:  # noqa: BLE001 — the error goes back to the VPS, which does it itself
                 t["estado"], t["error"] = "error", str(e)
             finally:
                 with self.cerrojo:
@@ -208,7 +208,7 @@ def crear_app(permitidas: set[str] | None = None) -> FastAPI:
 
     def ruta_cache(sha: str) -> Path:
         if not SHA.fullmatch(sha):
-            raise HTTPException(400, "sha256 no válido")
+            raise HTTPException(400, "invalid sha256")
         return CACHE / sha
 
     @app.head("/api/archivos/{sha}")
@@ -219,7 +219,7 @@ def crear_app(permitidas: set[str] | None = None) -> FastAPI:
     def baja(sha: str):
         ruta = ruta_cache(sha)
         if not ruta.is_file():
-            raise HTTPException(404, "no existe")
+            raise HTTPException(404, "not found")
         return FileResponse(ruta, media_type="application/octet-stream")
 
     @app.put("/api/archivos/{sha}")
@@ -236,7 +236,7 @@ def crear_app(permitidas: set[str] | None = None) -> FastAPI:
                     h.update(bloque)
                     f.write(bloque)
             if h.hexdigest() != sha:
-                raise HTTPException(400, "el contenido no coincide con su sha256")
+                raise HTTPException(400, "the content does not match its sha256")
             os.replace(tmp, final)
         finally:
             tmp.unlink(missing_ok=True)
@@ -246,12 +246,12 @@ def crear_app(permitidas: set[str] | None = None) -> FastAPI:
     def crea(datos: dict):
         args, entradas, salidas = datos.get("args"), datos.get("entradas") or {}, datos.get("salidas") or []
         if not args_seguros(args):
-            raise HTTPException(400, "args no válidos (rutas absolutas, URLs o '..')")
+            raise HTTPException(400, "invalid args (absolute paths, URLs or '..')")
         if not isinstance(entradas, dict) or not isinstance(salidas, list) or not salidas:
             raise HTTPException(400, "faltan entradas o salidas")
         for rel in [*entradas.keys(), *salidas]:
             if not isinstance(rel, str) or not REL.fullmatch(rel):
-                raise HTTPException(400, f"ruta no válida: {rel!r}")
+                raise HTTPException(400, f"invalid path: {rel!r}")
         faltan = [sha for sha in entradas.values() if not ruta_cache(sha).is_file()]
         if faltan:
             raise HTTPException(409, {"faltan": faltan})
@@ -263,7 +263,7 @@ def crear_app(permitidas: set[str] | None = None) -> FastAPI:
     def estado(id_: str):
         t = taller.trabajos.get(id_)
         if not t:
-            raise HTTPException(404, "no existe")
+            raise HTTPException(404, "not found")
         visible = {k: t.get(k) for k in ("id", "estado", "error", "salidas", "stdout", "stderr")}
         if t.get("inicio"):
             visible["segundos"] = round((t.get("fin") or time.time()) - t["inicio"], 2)

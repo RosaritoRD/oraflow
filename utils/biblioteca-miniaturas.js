@@ -1,11 +1,12 @@
 /**
- * Biblioteca de miniaturas hechas por el autor (11/10/2026). Él diseña las
- * miniaturas terminadas (texto incluido) y el sistema elige la que encaja con
- * el tema del vídeo:
- *   data/assets/miniaturas-propias/  16:9, vídeos largos (se suben a YouTube)
- *   data/assets/portadas-propias/    9:16, Shorts (se ponen a mano desde /portadas)
- * Cada carpeta lleva _textos.json ({archivo: texto}) y _uso.json (rotación).
- * Si ningún tema encaja o falta la imagen, devuelve null y sale la generada.
+ * Library of thumbnails made by the owner (11/10/2026). The owner designs finished
+ * thumbnails (text included) and the system picks the one that fits the video's
+ * topic:
+ *   data/assets/miniaturas-propias/  16:9, long videos (uploaded to YouTube)
+ *   data/assets/portadas-propias/    9:16, Shorts (set by hand from /portadas)
+ * Each folder carries _textos.json ({file: text}) and _uso.json (rotation).
+ * If no topic fits or the image is missing, it returns null and the generated one is
+ * used.
  */
 const fs = require('fs').promises;
 const path = require('path');
@@ -13,8 +14,9 @@ const path = require('path');
 const RAIZ = path.join(__dirname, '..', 'data', 'assets');
 const CARPETA = { largo: 'miniaturas-propias', short: 'portadas-propias' };
 
-// Del más concreto al más general. [regex, largos, shorts]. «milagro» y «sanidad»
-// solo salen si el vídeo habla de eso: ponerlas en otro sería engañar.
+// From the most specific to the most general. [regex, long, shorts]. «milagro» and
+// «sanidad» only come out if the video talks about that: putting them on another one
+// would be misleading.
 const TEMAS = [
   [/milagro/i, ['milagro-urgente'], ['necesito-un-milagro']],
   [/salud|sanidad|sanar|enferm/i, ['oracion-de-sanidad', 'jesus-sana-hoy', 'sanidad-poderosa'], ['sana-mi-corazon']],
@@ -48,12 +50,12 @@ const POR_DEFECTO = { largo: ['mira-a-jesus', 'fe-en-jesus', 'oracion-de-la-mana
 
 const leeJson = async (ruta, defecto) => { try { return JSON.parse(await fs.readFile(ruta, 'utf8')); } catch { return defecto; } };
 
-/** Candidatos en orden de preferencia para este vídeo (solo los que existen). */
+/** Candidates in order of preference for this video (only the ones that exist). */
 async function candidatos({ title = '', topic = '', formato = 'largo', raiz = RAIZ } = {}) {
   const dir = path.join(raiz, CARPETA[formato] || CARPETA.largo);
   const hay = new Set((await fs.readdir(dir).catch(() => [])).filter((n) => /\.(jpe?g|png)$/i.test(n)).map((n) => n.replace(/\.\w+$/, '')));
   if (!hay.size) return { dir, lista: [], tema: [] };
-  // El título manda (es lo publicado); el tema ayuda si el título no dice nada.
+  // The title rules (it's what gets published); the topic helps if the title says nothing.
   const textos = [String(title).split('|').slice(1).join(' ') || String(title), String(title), String(topic)];
   const idx = formato === 'short' ? 2 : 1;
   let lista = [];
@@ -67,15 +69,15 @@ async function candidatos({ title = '', topic = '', formato = 'largo', raiz = RA
 }
 
 /**
- * Elige la imagen (la menos usada del tema, sin repetir la última) y la apunta
- * en _uso.json. Devuelve { ruta, slug, texto, alternativas } o null.
+ * Picks the image (the least used for the topic, without repeating the last one)
+ * and notes it in _uso.json. Returns { ruta, slug, texto, alternativas } or null.
  */
 async function eligeDeBiblioteca({ title = '', topic = '', formato = 'largo', raiz = RAIZ, logger = console } = {}) {
   const { dir, lista, tema } = await candidatos({ title, topic, formato, raiz });
   if (!lista.length) return null;
   const uso = await leeJson(path.join(dir, '_uso.json'), {});
   const textos = await leeJson(path.join(dir, '_textos.json'), {});
-  // Se rota dentro del tema (sin repetir la última); el respaldo solo si el tema no tiene imagen.
+  // It rotates within the topic (without repeating the last one); the fallback only if the topic has no image.
   const base = tema.length ? tema : lista;
   const pool = base.length > 1 ? base.filter((s) => s !== uso._ultimo) : base;
   pool.sort((a, b) => (uso[a]?.usos || 0) - (uso[b]?.usos || 0) || String(uso[a]?.en || '').localeCompare(String(uso[b]?.en || '')));
@@ -84,7 +86,7 @@ async function eligeDeBiblioteca({ title = '', topic = '', formato = 'largo', ra
   uso[slug] = { usos: (uso[slug]?.usos || 0) + 1, en: new Date().toISOString() };
   uso._ultimo = slug;
   await fs.writeFile(path.join(dir, '_uso.json'), JSON.stringify(uso, null, 1)).catch(() => {});
-  logger.info?.(`Miniatura de la biblioteca del autor (${formato}): ${slug}`);
+  logger.info?.(`Thumbnail from the owner's library (${formato}): ${slug}`);
   return {
     ruta: path.join(dir, archivo), slug, texto: textos[archivo] || slug,
     alternativas: lista.filter((s) => s !== slug).map((s) => path.join(dir, `${s}.jpg`))

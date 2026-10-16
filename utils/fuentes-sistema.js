@@ -1,10 +1,12 @@
 /**
- * Instala las fuentes de data/assets/fuentes/ en ~/.local/share/fonts al
- * arrancar (03/10/2026). Las miniaturas y portadas se pintan con SVG vía
- * sharp/librsvg, que solo ve las fuentes de fontconfig: sin esto, «Oswald»
- * caía en silencio a Liberation Sans y el titular salía ancho y pequeño.
- * Tiene que correr ANTES del primer texto renderizado (fontconfig lee los
- * directorios al iniciarse). Nunca lanza: sin fuentes, se usa el respaldo.
+ * Installs the fonts in data/assets/fuentes/ into ~/.local/share/fonts at
+ * startup (03/10/2026). Thumbnails and covers are drawn with SVG via
+ * sharp/librsvg, which only sees fontconfig's fonts: without this, «Oswald»
+ * silently fell back to Liberation Sans and the headline came out wide and
+ * small.
+ * It has to run BEFORE the first rendered text (fontconfig reads the
+ * directories when it starts). Never throws: without fonts, the fallback is
+ * used.
  */
 const fs = require('fs');
 const os = require('os');

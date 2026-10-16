@@ -16,7 +16,7 @@ function raiz() {
   return dir;
 }
 
-// Proceso falso: registra cómo se lanzó y termina cuando el test lo pide.
+// Fake process: records how it was launched and finishes when the test asks.
 function spawnFalso() {
   const llamadas = [];
   const fn = (cmd, args, opts) => {
@@ -31,7 +31,7 @@ function spawnFalso() {
   return fn;
 }
 
-test('estado: lote, archivos por carpeta y atribución de la música', async () => {
+test('status: batch, files per folder and music attribution', async () => {
   const dir = raiz();
   fs.writeFileSync(path.join(dir, 'entrada/fondos/playa.mp4'), 'x');
   fs.writeFileSync(path.join(dir, 'entrada/musica/piano.mp3'), 'xx');
@@ -45,13 +45,13 @@ test('estado: lote, archivos por carpeta y atribución de la música', async () 
   assert.deepEqual(st.files.musica, [{ name: 'piano.mp3', size: 2, attribution: 'Música: Piano (CC BY)' }]);
 });
 
-test('estado sin la carpeta del proyecto: available=false, sin romper', async () => {
+test('status without the project folder: available=false, without breaking', async () => {
   const s = new ShortsStudioService({ root: path.join(os.tmpdir(), 'no-existe-' + Date.now()) });
   const st = await s.state();
   assert.equal(st.available, false);
 });
 
-test('salidas: cada short trae su ficha (título y descripción)', async () => {
+test('outputs: each short comes with its sheet (title and description)', async () => {
   const dir = raiz();
   fs.writeFileSync(path.join(dir, 'salida/juan-3-16.mp4'), 'v');
   fs.writeFileSync(path.join(dir, 'salida/juan-3-16.txt'),
@@ -66,11 +66,16 @@ test('salidas: cada short trae su ficha (título y descripción)', async () => {
   assert.deepEqual(st.outputs.clips.map(c => c.name), ['predica.mp4']);
 });
 
-test('leerFicha tolera un txt sin el formato esperado', () => {
+test('leerFicha reads the English labels of new sheets', () => {
+  assert.deepEqual(leerFicha('TITLE: Porque de tal manera | Juan 3:16\n\nDESCRIPTION:\nPorque de tal manera amó Dios\n\n#shorts\n'),
+    { title: 'Porque de tal manera | Juan 3:16', description: 'Porque de tal manera amó Dios\n\n#shorts' });
+});
+
+test('leerFicha tolerates a txt without the expected format', () => {
   assert.deepEqual(leerFicha('cualquier cosa'), { title: '', description: 'cualquier cosa' });
 });
 
-test('guardar lote: texto y tope de tamaño', async () => {
+test('saving the batch: text and size cap', async () => {
   const dir = raiz();
   const s = new ShortsStudioService({ root: dir });
   await s.saveLote('Juan 3:16\n');
@@ -79,7 +84,7 @@ test('guardar lote: texto y tope de tamaño', async () => {
   await assert.rejects(s.saveLote(42), { status: 400 });
 });
 
-test('nombres de archivo: sin rutas, sin caracteres raros, extensión permitida', () => {
+test('file names: no paths, no odd characters, allowed extension', () => {
   const s = new ShortsStudioService({ root: '/x' });
   assert.equal(s.safeName('fondos', '../../etc/Playa Bonita.MP4'), 'Playa Bonita.mp4');
   assert.equal(s.safeName('musica', 'Canción ñ (1).mp3'), 'Canción ñ (1).mp3');
@@ -89,7 +94,7 @@ test('nombres de archivo: sin rutas, sin caracteres raros, extensión permitida'
   assert.throws(() => s.safeName('fondos', '.mp4'), { status: 400 });
 });
 
-test('subida por stream: se guarda entera; pasarse del tope no deja basura', async () => {
+test('streamed upload: stored whole; going over the cap leaves no garbage', async () => {
   const dir = raiz();
   const s = new ShortsStudioService({ root: dir, limits: { fondos: 10 } });
   const r = await s.saveUpload('fondos', 'a.mp4', Readable.from([Buffer.from('12345')]));
@@ -99,7 +104,7 @@ test('subida por stream: se guarda entera; pasarse del tope no deja basura', asy
   assert.deepEqual(fs.readdirSync(path.join(dir, 'entrada/fondos')).sort(), ['a.mp4']);
 });
 
-test('borrar: un short se lleva su ficha; una pista su atribución', async () => {
+test('deleting: a short takes its sheet; a track its attribution', async () => {
   const dir = raiz();
   for (const f of ['salida/x.mp4', 'salida/x.txt', 'entrada/musica/p.mp3', 'entrada/musica/p.txt']) {
     fs.writeFileSync(path.join(dir, f), '1');
@@ -113,7 +118,7 @@ test('borrar: un short se lleva su ficha; una pista su atribución', async () =>
   await assert.rejects(s.remove('shorts', 'no-esta.mp4'), { status: 404 });
 });
 
-test('atribución: se guarda junto a la pista y vacía la borra', async () => {
+test('attribution: stored next to the track, and empty deletes it', async () => {
   const dir = raiz();
   fs.writeFileSync(path.join(dir, 'entrada/musica/p.mp3'), '1');
   const s = new ShortsStudioService({ root: dir });
@@ -124,7 +129,7 @@ test('atribución: se guarda junto a la pista y vacía la borra', async () => {
   await assert.rejects(s.saveAttribution('falta.mp3', 'x'), { status: 404 });
 });
 
-test('mediaPath solo resuelve dentro de las carpetas permitidas', async () => {
+test('mediaPath only resolves inside the allowed folders', async () => {
   const dir = raiz();
   fs.writeFileSync(path.join(dir, 'salida/x.mp4'), '1');
   const s = new ShortsStudioService({ root: dir });
@@ -133,7 +138,7 @@ test('mediaPath solo resuelve dentro de las carpetas permitidas', async () => {
   await assert.rejects(s.mediaPath('raiz', 'x.mp4'), { status: 400 });
 });
 
-test('versículos: lanza el script sin shell y guarda el progreso', async () => {
+test('verses: launches the script without a shell and stores progress', async () => {
   const dir = raiz();
   const spawnFn = spawnFalso();
   const s = new ShortsStudioService({ root: dir, spawnFn, python: 'py' });
@@ -152,13 +157,13 @@ test('versículos: lanza el script sin shell y guarda el progreso', async () => 
   assert.deepEqual(fin.log.slice(-2), ['[1/1] juan-3-16', '      ✓ salida/juan-3-16.mp4 (15 s)']);
 });
 
-test('un trabajo a la vez', async () => {
+test('one job at a time', async () => {
   const s = new ShortsStudioService({ root: raiz(), spawnFn: spawnFalso() });
   await s.start('versiculos');
   await assert.rejects(s.start('versiculos'), { status: 409 });
 });
 
-test('clipping: opciones validadas y pasadas como argumentos', async () => {
+test('clipping: options validated and passed as arguments', async () => {
   const dir = raiz();
   fs.writeFileSync(path.join(dir, 'entrada/clipping/predica.mp4'), '1');
   const spawnFn = spawnFalso();
@@ -172,7 +177,7 @@ test('clipping: opciones validadas y pasadas como argumentos', async () => {
   assert.equal(s.job().status, 'failed');
 });
 
-test('clipping rechaza opciones raras antes de lanzar nada', async () => {
+test('clipping rejects odd options before launching anything', async () => {
   const dir = raiz();
   fs.writeFileSync(path.join(dir, 'entrada/clipping/a.mp4'), '1');
   const spawnFn = spawnFalso();
@@ -186,7 +191,7 @@ test('clipping rechaza opciones raras antes de lanzar nada', async () => {
   assert.equal(spawnFn.llamadas.length, 0);
 });
 
-test('cancelar detiene el proceso y el trabajo queda cancelado', async () => {
+test('cancelling stops the process and the job ends cancelled', async () => {
   const spawnFn = spawnFalso();
   const s = new ShortsStudioService({ root: raiz(), spawnFn });
   await s.start('versiculos');
@@ -196,7 +201,7 @@ test('cancelar detiene el proceso y el trabajo queda cancelado', async () => {
   assert.equal(s.job().status, 'cancelled');
 });
 
-test('el registro guarda como mucho las últimas 300 líneas', async () => {
+test('the log keeps at most the last 300 lines', async () => {
   const spawnFn = spawnFalso();
   const s = new ShortsStudioService({ root: raiz(), spawnFn });
   await s.start('versiculos');

@@ -13,19 +13,19 @@ function automation({ running = 0, attempts = 0, taken = [] } = {}) {
   return new DailyAutomation({ publishing }, db);
 }
 
-test('genera si el próximo hueco está vacío', async () => {
+test('generates if the next slot is empty', async () => {
   assert.equal(await automation().shouldGenerateContentToday(), true);
 });
 
-test('no genera si el próximo hueco ya tiene vídeo', async () => {
+test('doesn\'t generate if the next slot already has a video', async () => {
   const taken = [nextDailySlot(daily)];
   assert.equal(await automation({ taken }).shouldGenerateContentToday(), false);
 });
 
-test('no lanza otra generación si hay una en marcha', async () => {
+test('doesn\'t start another generation if one is running', async () => {
   assert.equal(await automation({ running: 1 }).shouldGenerateContentToday(), false);
 });
 
-test('tope de 3 intentos del programador al día', async () => {
+test('cap of 3 scheduler attempts per day', async () => {
   assert.equal(await automation({ attempts: 3 }).shouldGenerateContentToday(), false);
 });

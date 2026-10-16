@@ -34,6 +34,7 @@ const { ResearchInboxClient } = require('./utils/research-inbox-client');
 const { NicheEngineClient } = require('./utils/niche-engine-client');
 const { StockMediaService } = require('./utils/stock-media-service');
 const { ShortsStudioService } = require('./utils/shorts-studio-service');
+const { OutliersService } = require('./utils/outliers-service');
 const { AccountsService } = require('./utils/accounts-service');
 const { version } = require('./package.json');
 const chalk = require('chalk');
@@ -62,12 +63,14 @@ class YouTubeAutomationAgent {
     this.researchInbox = new ResearchInboxClient();
     this.nicheEngine = new NicheEngineClient();
     this.stockMedia = new StockMediaService({ logger: this.logger });
-    // Shorts de versículos y clipping: proyecto Python montado aparte (SHORTS_DIR).
+    // Verse Shorts and clipping: a Python project mounted separately (SHORTS_DIR).
     this.shortsStudio = new ShortsStudioService({
       root: process.env.SHORTS_DIR || path.join(__dirname, '..', 'shorts-versiculos'),
       python: process.env.SHORTS_PYTHON || 'python3',
       logger: this.logger
     });
+    // Outliers tab: videos that break their channel's average (public YouTube API).
+    this.outliers = new OutliersService({ logger: this.logger });
     this.setupRequired = false;
   }
 
@@ -80,7 +83,7 @@ class YouTubeAutomationAgent {
       this.logger.info('Initializing database...');
       this.db = new Database();
       await this.db.initialize();
-      await require('./utils/textos-canal').carga(this.db).catch(() => {}); // textos editables del panel
+      await require('./utils/textos-canal').carga(this.db).catch(() => {}); // editable panel texts
       await this.db.markInterruptedJobs();
       this.recovery = new GenerationRecoveryService(this.db, {
         logger: this.logger,
@@ -314,7 +317,7 @@ class YouTubeAutomationAgent {
         }
         value.strategyContext[key] = body.strategyContext[key].trim();
       }
-      // Formato y hueco diario (los pone el programador; también sirven a mano).
+      // Format and daily slot (set by the scheduler; also usable by hand).
       const { format, franja, publishSlot } = body.strategyContext;
       if (format !== undefined && format !== null) {
         if (!['short', 'long'].includes(format)) return { valid: false, status: 400, error: 'strategyContext.format must be short or long' };
@@ -406,7 +409,8 @@ class YouTubeAutomationAgent {
   }
   setupAPI() {
     this.app.use(require('./utils/dashboard-safety').dashboardBoundary);
-    this.app.use(express.json({ limit: '1mb' }));
+    // The WhatsApp webhook signs the EXACT body: it's kept raw only for that route.
+    this.app.use(express.json({ limit: '1mb', verify: (req, _res, buf) => { if (req.url.startsWith('/webhooks/')) req.rawBody = buf; } }));
     this.app.use(express.static(path.join(__dirname, 'dashboard')));
 
     if (!process.env.API_KEY) {
@@ -418,8 +422,8 @@ class YouTubeAutomationAgent {
       res.sendFile(path.join(__dirname, 'dashboard', 'index.html'));
     });
     
-    // Enlace fijo para la bio y las historias (05/10/2026): siempre abre el vídeo largo
-    // más reciente que ya es público. Público sin login (OAUTH2_PROXY_SKIP_AUTH_ROUTES).
+    // Fixed link for the bio and stories (05/10/2026): it always opens the most recent long
+    // video that's already public. Public, no login (OAUTH2_PROXY_SKIP_AUTH_ROUTES).
     this.app.get('/hoy', async (req, res) => {
       try {
         const desde = new Date(Date.now() - 7 * 86400000).toISOString();
@@ -435,7 +439,7 @@ class YouTubeAutomationAgent {
       }
     });
 
-    // Página de venta del ebook (utils/pagina-libro.js). Pública: SKIP_AUTH_ROUTES en compose.
+    // The ebook sales page (utils/pagina-libro.js). Public: SKIP_AUTH_ROUTES in compose.
     const FUENTES_LIBRO = ['CormorantGaramond-VF.ttf', 'CormorantGaramond-Italic-VF.ttf', 'Jost-VF.ttf'];
     this.app.get('/libro', async (req, res) => {
       try {
@@ -447,7 +451,7 @@ class YouTubeAutomationAgent {
         return res.status(500).send('Página no disponible');
       }
     });
-    // Botón «Comprar»: cuenta el clic y lleva al pago de Hotmart.
+    // «Buy» button: counts the click and goes to the Hotmart checkout.
     this.app.get('/libro/comprar', async (req, res) => {
       const url = String(await this.db.getSetting('ebook_checkout_url') || '').trim();
       if (!/^https:\/\//.test(url)) return res.redirect(302, '/libro');
@@ -462,11 +466,11 @@ class YouTubeAutomationAgent {
       return res.sendFile(path.join(__dirname, 'assets', 'fonts', req.params.fuente));
     });
 
-    // Privacidad y eliminación de datos (utils/pagina-legal.js): las pide Meta para el modo en vivo.
+    // Privacy and data deletion (utils/pagina-legal.js): Meta requires them for live mode.
     this.app.get('/privacidad', (req, res) => res.type('html').send(require('./utils/pagina-legal').privacidad()));
     this.app.get('/eliminar-datos', (req, res) => res.type('html').send(require('./utils/pagina-legal').eliminar()));
 
-    // Página de enlaces para la bio (utils/pagina-enlaces.js), sin anuncios. Pública.
+    // Links page for the bio (utils/pagina-enlaces.js), with no ads. Public.
     this.app.get('/enlaces', (req, res) => {
       res.set('Cache-Control', 'no-store');
       return res.type('html').send(require('./utils/pagina-enlaces').paginaEnlaces());
@@ -481,8 +485,8 @@ class YouTubeAutomationAgent {
       return res.redirect(302, url);
     });
 
-    // Historia de hoy para subirla a Instagram con el enlace escondido (utils/historia-diaria.js).
-    // Detrás del login de Google (oauth2-proxy): no está en SKIP_AUTH_ROUTES.
+    // Today's story, to upload to Instagram with the hidden link (utils/historia-diaria.js).
+    // Behind the Google login (oauth2-proxy): it's not in SKIP_AUTH_ROUTES.
     const dirHistorias = path.join(__dirname, 'data', 'historias');
     this.app.get('/historia/hoy.:ext(jpg)', (req, res) => {
       res.set('Cache-Control', 'no-store');
@@ -515,7 +519,8 @@ ${info ? `<p>${esc(info.titulo)}</p>
 <script>
 const enlace = ${JSON.stringify(info.enlace)}; const ok = document.getElementById('ok');
 document.getElementById('copiar').onclick = () => navigator.clipboard.writeText(enlace).then(() => ok.textContent = 'Enlace copiado ✓');
-// La imagen se baja al abrir la página: iPhone solo deja compartir si se hace en el mismo toque.
+// The image is downloaded when the page opens: iPhone only allows sharing if it happens in the
+// same tap.
 let file = null;
 fetch('/historia/hoy.jpg').then(r => r.blob()).then(b => { file = new File([b], 'oracion-de-hoy.jpg', { type: 'image/jpeg' }); });
 document.getElementById('compartir').onclick = () => {
@@ -529,7 +534,7 @@ document.getElementById('compartir').onclick = () => {
 </body></html>`);
     });
 
-    // Portadas para ponerlas a mano en IG/FB/YouTube (utils/portadas-panel.js). Con login.
+    // Covers to set by hand on IG/FB/YouTube (utils/portadas-panel.js). With login.
     const portadas = require('./utils/portadas-panel');
     this.app.get('/portadas/img/:id.jpg', async (req, res) => {
       try {
@@ -633,7 +638,7 @@ document.getElementById('compartir').onclick = () => {
   }
 
   setupAccountsAPI(protect) {
-    // Se crea al usarse: this.credentials se inicializa después del constructor.
+    // Created on use: this.credentials is initialized after the constructor.
     const cuentas = () => {
       if (!this.accounts) this.accounts = new AccountsService({ credentials: this.credentials, logger: this.logger });
       return this.accounts;
@@ -644,15 +649,15 @@ document.getElementById('compartir').onclick = () => {
     this.app.get('/api/accounts', async (_req, res) => {
       try { return res.json({ success: true, result: await cuentas().status() }); } catch (error) { return responder(res, error); }
     });
-    // Probar gasta cuota de cada servicio: pasa por la API key como el resto de acciones.
+    // Testing spends each service's quota: it goes through the API key like the other actions.
     this.app.post('/api/accounts/:id/test', protect, async (req, res) => {
       try { return res.json({ success: true, result: await cuentas().test(req.params.id) }); } catch (error) { return responder(res, error); }
     });
     this.app.put('/api/accounts/youtube/client', protect, async (req, res) => {
       try { return res.json({ success: true, result: await cuentas().saveYouTubeClient(req.body || {}) }); } catch (error) { return responder(res, error); }
     });
-    // Navegación del navegador (no puede llevar cabeceras): la protege el login de
-    // Google del proxy y el "state" de un solo uso del flujo OAuth.
+    // Browser navigation (it can't carry headers): protected by the proxy's Google login and the
+    // OAuth flow's single-use "state".
     this.app.get('/api/accounts/youtube/connect', (_req, res) => {
       try { return res.redirect(cuentas().connectUrl()); } catch (error) {
         return res.redirect(`/?cuentas=${encodeURIComponent(error.message)}#accounts`);
@@ -669,6 +674,17 @@ document.getElementById('compartir').onclick = () => {
     });
   }
 
+  // GET but protected: every search spends YouTube API quota.
+  setupOutliersAPI(protect) {
+    this.app.get('/api/outliers', protect, async (req, res) => {
+      try {
+        return res.json({ success: true, result: await this.outliers.search(req.query) });
+      } catch (error) {
+        return res.status(error.status || 500).json({ success: false, error: error.status ? error.message : 'Outliers no disponible' });
+      }
+    });
+  }
+
   setupShortsAPI(protect) {
     const studio = this.shortsStudio;
     const responder = (res, error) => res.status(error.status || 500)
@@ -681,7 +697,7 @@ document.getElementById('compartir').onclick = () => {
     this.app.put('/api/shorts/lote', protect, async (req, res) => {
       try { return res.json({ success: true, result: await studio.saveLote(req.body?.lote) }); } catch (error) { return responder(res, error); }
     });
-    // Subida en streaming (no en memoria): un video de clipping puede pesar cientos de MB.
+    // Streaming upload (not in memory): a clipping video can weigh hundreds of MB.
     this.app.put('/api/shorts/files/:area', protect, async (req, res) => {
       try {
         const nombre = decodeURIComponent(req.get('x-file-name') || '');
@@ -760,6 +776,7 @@ document.getElementById('compartir').onclick = () => {
     });
 
     this.setupShortsAPI(protect);
+    this.setupOutliersAPI(protect);
     this.setupAccountsAPI(protect);
 
     this.app.get('/api/dashboard', async (_req, res) => {
@@ -1287,7 +1304,7 @@ document.getElementById('compartir').onclick = () => {
       }
     });
 
-    // Área "Redes" del panel (utils/redes-estado.js).
+    // The panel's "Social" area (utils/redes-estado.js).
     this.app.get('/api/redes', protect, async (req, res) => {
       try {
         return res.json({ success: true, piezas: await require('./utils/redes-estado').estadoRedes(this.db) });
@@ -1295,8 +1312,8 @@ document.getElementById('compartir').onclick = () => {
         return res.status(500).json({ success: false, error: error.message });
       }
     });
-    // Perfil y preferencias de cada usuario (utils/preferencias.js). Sin API key: el
-    // usuario lo identifica oauth2-proxy y cada uno solo toca lo suyo.
+    // Each user's profile and preferences (utils/preferencias.js). No API key: oauth2-proxy
+    // identifies the user and each one only touches their own.
     this.app.get('/api/me', async (req, res) => {
       try { return res.json({ success: true, ...(await require('./utils/preferencias').perfil(this.db, req)) }); } catch (error) { return res.status(500).json({ success: false, error: error.message }); }
     });
@@ -1307,7 +1324,7 @@ document.getElementById('compartir').onclick = () => {
       } catch (error) { return res.status(500).json({ success: false, error: error.message }); }
     });
 
-    // Conexiones (qué funciona y qué falta) y métricas del libro y los enlaces.
+    // Connections (what works and what's missing) and the book and links metrics.
     const { creaMonitor, estadoConexiones } = require('./utils/conexiones');
     const conexiones = creaMonitor({ check: () => estadoConexiones({ db: this.db, researchInbox: this.researchInbox, nicheEngine: this.nicheEngine, youtube: this.agents.publishing?.youtube || null }) });
     this.app.get('/api/conexiones', protect, async (req, res) => {
@@ -1334,6 +1351,83 @@ document.getElementById('compartir').onclick = () => {
         return r.error ? res.status(400).json({ success: false, error: r.error }) : res.json({ success: true });
       } catch (error) {
         return res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
+    // Messages section (utils/mensajes/): several IG, FB and WhatsApp accounts, inbox, per-post
+    // rules and their run log (15/10/2026).
+    const msj = {
+      cuentas: require('./utils/mensajes/cuentas'),
+      reglas: require('./utils/mensajes/reglas'),
+      motor: require('./utils/mensajes/motor'),
+      bandeja: require('./utils/mensajes/bandeja'),
+      clientes: require('./utils/mensajes/clientes'),
+      conectores: require('./utils/mensajes/conectores')
+    };
+    const yt = () => this.agents.publishing?.youtube || null; // canal de YouTube ya conectado (Sistema → Cuentas)
+    // Errors with a status (400/404/502) are for the user; the rest, generic (never tokens).
+    const msjRuta = fn => async (req, res) => {
+      res.set('Cache-Control', 'no-store');
+      try {
+        return res.json({ success: true, ...(await fn(req)) });
+      } catch (error) {
+        if (!error.status) this.logger.warn(`Mensajes: ${error.message}`);
+        return res.status(error.status || 500).json({ success: false, error: error.status ? error.message : 'No se pudo completar. Mira los logs.' });
+      }
+    };
+    this.app.get('/api/mensajes/conectores', protect, msjRuta(async () => ({ conectores: msj.conectores.CONECTORES })));
+    this.app.get('/api/mensajes/resumen', protect, msjRuta(async () => msj.bandeja.resumen({ db: this.db, youtube: yt() })));
+    this.app.get('/api/mensajes/cuentas', protect, msjRuta(async () => ({ cuentas: await msj.cuentas.lista(this.db, { youtube: yt() }) })));
+    this.app.post('/api/mensajes/cuentas', protect, msjRuta(async req => ({ cuenta: await msj.cuentas.agrega(this.db, req.body || {}) })));
+    this.app.put('/api/mensajes/cuentas/:id', protect, msjRuta(async req => { await msj.cuentas.cambia(this.db, req.params.id, req.body || {}); return {}; }));
+    this.app.delete('/api/mensajes/cuentas/:id', protect, msjRuta(async req => { await msj.cuentas.quita(this.db, req.params.id); return {}; }));
+    this.app.get('/api/mensajes/cuentas/:id/publicaciones', protect, msjRuta(async req => {
+      const cuenta = await msj.cuentas.una(this.db, req.params.id, { youtube: yt() });
+      if (!cuenta?.token) throw Object.assign(new Error('Account not found'), { status: 404 });
+      try {
+        return { publicaciones: await msj.clientes.cliente(cuenta, { db: this.db, youtube: yt() }).publicaciones(25) };
+      } catch (error) { throw Object.assign(error, { status: 502 }); }
+    }));
+    this.app.get('/api/mensajes/reglas', protect, msjRuta(async () => ({ reglas: await msj.reglas.lista(this.db) })));
+    const cuentasValidas = async () => new Map((await msj.cuentas.lista(this.db, { youtube: yt() })).map(c => [c.id, c.red]));
+    this.app.post('/api/mensajes/reglas', protect, msjRuta(async req => msj.reglas.guarda(this.db, req.body || {}, { cuentas: await cuentasValidas() })));
+    this.app.put('/api/mensajes/reglas/:id', protect, msjRuta(async req => {
+      const b = req.body || {};
+      if (Object.keys(b).length === 1 && 'activa' in b) { await msj.reglas.activa(this.db, req.params.id, Boolean(b.activa)); return {}; }
+      return msj.reglas.guarda(this.db, b, { id: req.params.id, cuentas: await cuentasValidas() });
+    }));
+    this.app.delete('/api/mensajes/reglas/:id', protect, msjRuta(async req => { await msj.reglas.borra(this.db, req.params.id); return {}; }));
+    this.app.get('/api/mensajes/ejecuciones', protect, msjRuta(async req => ({
+      ejecuciones: await msj.motor.ejecuciones(this.db, { cuentaId: req.query.cuenta, reglaId: req.query.regla, estado: req.query.estado, limite: req.query.limite })
+    })));
+    this.app.get('/api/mensajes/bandeja', protect, msjRuta(async req => msj.bandeja.conversaciones({ db: this.db, cuentaId: req.query.cuenta || null })));
+    this.app.get('/api/mensajes/bandeja/:cuenta/:conv', protect, msjRuta(async req => ({
+      mensajes: await msj.bandeja.mensajes({ db: this.db, cuentaId: req.params.cuenta, convId: req.params.conv }).catch(e => { throw Object.assign(e, { status: e.status || 502 }); })
+    })));
+    this.app.post('/api/mensajes/bandeja/:cuenta', protect, msjRuta(async req => {
+      await msj.bandeja.responde({ db: this.db, cuentaId: req.params.cuenta, destinoId: req.body?.destinoId, texto: req.body?.texto });
+      return {};
+    }));
+    // WhatsApp webhook: public (Meta calls it), protected by the verify token and HMAC signature.
+    this.app.get('/webhooks/whatsapp/:cuenta', async (req, res) => {
+      try {
+        const reto = await msj.bandeja.verificaWebhook(this.db, req.params.cuenta, req.query || {});
+        return reto === null ? res.sendStatus(403) : res.type('text/plain').send(reto);
+      } catch (_error) { return res.sendStatus(500); }
+    });
+    this.app.post('/webhooks/whatsapp/:cuenta', async (req, res) => {
+      try {
+        const r = await msj.bandeja.recibeWebhook(this.db, req.params.cuenta, { rawBody: req.rawBody, firma: req.get('x-hub-signature-256'), body: req.body });
+        res.sendStatus(r.status);
+        // Meta wants the 200 right away: the automatic replies come after.
+        if (r.nuevos?.length) {
+          msj.motor.ejecutaChat({ db: this.db, cuenta: r.cuenta, cliente: r.cliente, mensajes: r.nuevos, logger: this.logger })
+            .catch(error => this.logger.warn(`WhatsApp (automatic reply): ${error.message}`));
+        }
+        return undefined;
+      } catch (error) {
+        this.logger.warn(`Webhook WhatsApp: ${error.message}`);
+        return res.sendStatus(500);
       }
     });
 
@@ -1690,7 +1784,7 @@ document.getElementById('compartir').onclick = () => {
       for (const key of allowed) {
         if (req.body?.[key] !== undefined) await this.db.setSetting(key, String(req.body[key]));
       }
-      // Horas diarias de publicación (largos y Shorts): validadas, "off" las apaga.
+      // Daily publishing times (long videos and Shorts): validated, "off" turns them off.
       for (const key of ['daily_publish_time', 'daily_shorts_time']) {
         if (req.body?.[key] === undefined) continue;
         try {
@@ -1917,7 +2011,7 @@ document.getElementById('compartir').onclick = () => {
     const profile = await this.db.getChannelProfile() || {};
     const lengthLabels = { short: '2-4 minutes', medium: process.env.DEFAULT_VIDEO_LENGTH || '8-12 minutes', long: process.env.LONG_VIDEO_LENGTH || '20-30 minutes' };
 
-    // Formato (largo/Short) y hueco de publicación viajan con el encargo (utils/formato.js).
+    // Format (long/Short) and publishing slot travel with the job (utils/formato.js).
     const formato = normalizaFormato(strategyContext.format);
     const franja = strategyContext.franja || null;
     const temaPedido = topic || (franja ? `Oración de la ${franja.toLowerCase()}` : null);
@@ -1951,7 +2045,8 @@ document.getElementById('compartir').onclick = () => {
       return generated;
     });
     this.logger.info(`Strategy generated: ${strategy.topic}`);
-    // 12/10/2026: el guionista de Shorts ve los Shorts del canal con más vistas a 7 días (la forma, no el texto).
+    // 12/10/2026: the Shorts scriptwriter sees the channel's most-viewed Shorts at 7 days (the
+    // shape, not the text).
     if (formato === SHORT) strategy.ejemplosQueFuncionan = await this.db.getBestShortTitles?.(5).catch(() => []) || [];
 
     // Step 2: Script Writing
@@ -1962,8 +2057,8 @@ document.getElementById('compartir').onclick = () => {
       () => this.agents.scriptWriter.generateScript(strategy)
     );
     this.logger.info(`Script generated: ${script.title}`);
-    // Sin IA el guion es la plantilla genérica: no gastar voz ni render en algo
-    // que el control de calidad va a bloquear igualmente.
+    // Without AI the script is the generic template: don't spend voice or render on something
+    // quality control is going to block anyway.
     if (String(process.env.ALLOW_TEMPLATE_CONTENT || '').toLowerCase() !== 'on' &&
         script?.metadata?.generationSource !== 'ai') {
       throw new Error('AI script generation failed (check the AI text provider credits); refusing to produce a template video');
@@ -1974,7 +2069,7 @@ document.getElementById('compartir').onclick = () => {
       jobId,
       'thumbnail',
       40,
-      // En Shorts YouTube enseña un fotograma, no la miniatura: no se paga una imagen para nada.
+      // On Shorts YouTube shows a frame, not the thumbnail: no point paying for an image.
       async () => (formato === SHORT
         ? { skipped: true, reason: 'short' }
         : this.agents.thumbnailDesigner.generateThumbnail(script))
@@ -1982,10 +2077,10 @@ document.getElementById('compartir').onclick = () => {
     this.logger.info('Thumbnail generated');
 
     // Step 4: SEO Optimization
-    // 05/10/2026: la IA repetía títulos («Oración de la noche para dormir en paz») y
-    // el duplicado solo se detectaba DESPUÉS de pagar voz y montaje (9 vídeos sin
-    // publicar). Ahora se le pasan los títulos ya usados y se comprueba aquí, antes
-    // de la voz: si sale repetido se reintenta una vez y, si sigue, se para gratis.
+    // 05/10/2026: the AI repeated titles («Oración de la noche para dormir en paz») and the
+    // duplicate was only caught AFTER paying for voice and editing (9 videos unpublished). Now
+    // it's given the titles already used and it's checked here, before the voice: if it comes out
+    // repeated it retries once and, if it still does, it stops for free.
     strategy.titulosUsados = await this.db.getRecentPublicationTitles?.(40).catch(() => []) || [];
     const seoData = await this.runGenerationStage(
       jobId,
@@ -1995,12 +2090,12 @@ document.getElementById('compartir').onclick = () => {
         let seo = await this.agents.seoOptimizer.optimize(script, strategy);
         let repetido = seo?.title ? await this.db.findDuplicatePublicationTitle(seo.title, null) : null;
         if (repetido) {
-          this.logger.warn(`Título repetido («${seo.title}»): se pide otro antes de gastar voz`);
+          this.logger.warn(`Repeated title («${seo.title}»): asking for another before spending on voice`);
           strategy.titulosUsados = [repetido.title, ...strategy.titulosUsados];
           seo = await this.agents.seoOptimizer.optimize(script, strategy);
           repetido = seo?.title ? await this.db.findDuplicatePublicationTitle(seo.title, null) : null;
         }
-        if (repetido) throw new Error(`El título «${seo.title}» ya existe; se para antes de la voz para no gastar`);
+        if (repetido) throw new Error(`The title «${seo.title}» already exists; stopping before the voice to avoid spending`);
         return seo;
       }
     );

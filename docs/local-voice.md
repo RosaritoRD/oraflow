@@ -1,26 +1,26 @@
-# Voz local (Kokoro / Piper)
+# Local voice (Kokoro / Piper)
 
-El cliente `utils/local-tts-client.js` genera narración en el estudio local y
-descarga el MP3. No llama a proveedores de pago ni los usa como respaldo. Los
-tests usan fixtures sin red: `node --test tests/voz/local-tts-client.test.js`.
-También están incluidos en `npm test`.
+The `utils/local-tts-client.js` client generates narration in the local studio and
+downloads the MP3. It doesn't call paid providers or use them as a fallback. The
+tests use network-free fixtures: `node --test tests/voz/local-tts-client.test.js`.
+They're also included in `npm test`.
 
-Validación de la entrega: 16/16 pruebas dedicadas, `FFMPEG_PATH=/usr/bin/ffmpeg
-npm test` con 55/55 comprobaciones y salida 0, `npm run lint` y
-`git diff --check` sin errores. La pantalla del estudio se comprobó también con
-una generación real de Piper, reproducción y descarga; eso no activa todavía
-este cliente en el pipeline.
+Delivery validation: 16/16 dedicated tests, `FFMPEG_PATH=/usr/bin/ffmpeg
+npm test` with 55/55 checks and exit 0, `npm run lint` and
+`git diff --check` without errors. The studio screen was also checked with
+a real Piper generation, playback and download; that doesn't yet enable
+this client in the pipeline.
 
-## Estado de la integración
+## Integration status
 
-Cliente y adaptador entregados por Codex el 2026-09-22. **La selección mediante
-`TTS_PROVIDER=local` todavía requiere el enganche de Claude descrito abajo**:
-`utils/ai-video-generator.js` pertenece a Claude y tenía cambios sin commit
-cuando se implementó el cliente. No se ha modificado ese archivo ni se ha
-reiniciado Oraflow. ElevenLabs y los demás proveedores conservan su selección
-actual hasta instalar el enganche y elegir `local`.
+Client and adapter delivered on 2026-09-22. **Selecting it with
+`TTS_PROVIDER=local` still needs the hook described below**:
+`utils/ai-video-generator.js` had uncommitted changes when the client was
+implemented, so that file wasn't modified and Oraflow wasn't restarted.
+ElevenLabs and the other providers keep their current selection until the hook
+is installed and `local` is chosen.
 
-En `AIVideoGenerator.generateTTSAudio(text, outputPath)`, al principio del método:
+In `AIVideoGenerator.generateTTSAudio(text, outputPath)`, at the start of the method:
 
 ```js
 if (process.env.TTS_PROVIDER === 'local') {
@@ -28,17 +28,17 @@ if (process.env.TTS_PROVIDER === 'local') {
 }
 ```
 
-El adaptador devuelve `outputPath` y mantiene la estructura de
-`lastNarrationResult`, incluidos `status`, `path`, `provider`, `model`,
-`externalTaskId`, `generatedAt`, `simulated` y `cost`. Añade `metadata` con los
-datos reales de la API. En fallo registra `status: 'failed'` y propaga el error;
-nunca cambia a ElevenLabs. Siempre limpia `lastAlignment`, para que el pipeline
-use sus tiempos estimados sin reutilizar timestamps de una narración anterior.
-El coste del proveedor local es `0`, con `invoiceRequired: false`.
+The adapter returns `outputPath` and keeps the shape of
+`lastNarrationResult`, including `status`, `path`, `provider`, `model`,
+`externalTaskId`, `generatedAt`, `simulated` and `cost`. It adds `metadata` with the
+real API data. On failure it records `status: 'failed'` and propagates the error;
+it never switches to ElevenLabs. It always clears `lastAlignment`, so the pipeline
+uses its estimated timings without reusing timestamps from a previous narration.
+The local provider's cost is `0`, with `invoiceRequired: false`.
 
-## Configuración para el responsable del despliegue
+## Configuration for whoever deploys it
 
-Después de instalar el enganche, configurar en Oraflow:
+After installing the hook, set in Oraflow:
 
 ```dotenv
 TTS_PROVIDER=local
@@ -46,41 +46,41 @@ LOCAL_TTS_URL=http://voz-studio:8090
 LOCAL_TTS_ENGINE=kokoro
 LOCAL_TTS_SPEED=0.92
 LOCAL_TTS_TIMEOUT_MS=1200000
-# Opcional: elegir un ID de GET /api/voces. Sin valor, decide el motor.
+# Optional: pick an ID from GET /api/voces. Without a value, the engine decides.
 # LOCAL_TTS_VOICE=em_alex
 ```
 
-`LOCAL_TTS_ENGINE` también admite `piper`. Las voces se consultan en el estudio;
-el cliente no mantiene un catálogo duplicado. No confundir el idioma ES/EN de la
-interfaz con los idiomas instalados para síntesis.
+`LOCAL_TTS_ENGINE` also accepts `piper`. Voices are looked up in the studio;
+the client doesn't keep a duplicate catalog. Don't confuse the interface's ES/EN
+language with the languages installed for synthesis.
 
-El contenedor Oraflow necesita acceso a `voz_default`. El responsable del
-compose del lab debe añadir una red externa con `name: voz_default` y añadirla
-a las redes del servicio Oraflow **conservando sus redes actuales**. No hay
-que abrir puertos públicos ni pasar por Google OAuth para esta llamada interna.
-Una conexión manual con `docker network connect` no sustituye esta configuración
-duradera del compose. `.env` y compose del lab no se modificaron en esta entrega.
+The Oraflow container needs access to `voz_default`. Whoever owns the lab's
+compose must add an external network with `name: voz_default` and add it
+to the Oraflow service's networks **keeping its current networks**. No
+public ports need to be opened and this internal call doesn't go through Google OAuth.
+A manual `docker network connect` doesn't replace this durable compose
+configuration. The lab's `.env` and compose weren't modified in this delivery.
 
-## Comportamiento y límites
+## Behavior and limits
 
-- `POST /api/generar`: envía `{texto, motor, voz, velocidad, formato: 'mp3'}`.
-- Descarga exclusivamente la ruta `/api/audio/*.mp3` devuelta, en el mismo
-  servidor. Ignora `ruta`, que es una ruta del contenedor, y rechaza redirects.
-- Texto de 1–40.000 caracteres; velocidad entre 0,5 y 1,5. No reescribe el guion:
-  el motor se encarga de sus marcas y pausas.
-- Timeout total de 20 minutos, configurable. Sin reintentos automáticos: una
-  petición interrumpida puede seguir ejecutándose. Revisar el historial antes
-  de volver a generar.
-- Descarga en streaming, máximo 128 MB; comprueba tipo y cabecera MP3. Escribe
-  en un temporal y renombra al terminar, conservando el archivo previo ante
-  fallos de transferencia. El adaptador además usa `isUsableAudioFile` del
-  pipeline para verificar que el audio puede decodificarse.
-- El motor usa nombres de archivo con precisión de un segundo. El cliente no
-  envía peticiones simultáneas por sí mismo, pero distintos consumidores pueden
-  coincidir: el responsable del backend debe valorar IDs únicos y serialización
-  antes de activar generación concurrente. No se modificó el motor en este bloque.
+- `POST /api/generar`: sends `{texto, motor, voz, velocidad, formato: 'mp3'}`.
+- Only downloads the returned `/api/audio/*.mp3` path, on the same
+  server. It ignores `ruta`, which is a container path, and rejects redirects.
+- Text of 1–40,000 characters; speed between 0.5 and 1.5. It doesn't rewrite the script:
+  the engine handles its marks and pauses.
+- 20-minute total timeout, configurable. No automatic retries: an
+  interrupted request may still be running. Check the history before
+  generating again.
+- Streaming download, 128 MB max; checks the MP3 type and header. Writes
+  to a temporary file and renames when done, keeping the previous file on
+  transfer failures. The adapter also uses the pipeline's `isUsableAudioFile`
+  to verify the audio can be decoded.
+- The engine uses file names with one-second precision. The client doesn't
+  send simultaneous requests by itself, but different consumers may
+  overlap: the backend owner should consider unique IDs and serialization
+  before enabling concurrent generation. The engine wasn't modified in this block.
 
-Uso directo para una comprobación interna, sin tocar el pipeline:
+Direct use for an internal check, without touching the pipeline:
 
 ```js
 const { LocalTTSClient } = require('./utils/local-tts-client');

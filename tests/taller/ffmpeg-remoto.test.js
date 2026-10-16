@@ -1,8 +1,8 @@
-// 07/10/2026: el autor quiere que los vídeos se hagan en su PC y que la VPS solo
-// trabaje si el PC falla. Todo el ffmpeg de Oraflow pasa por runFFmpeg: el
-// cliente remoto sube las entradas (por sha256, una sola vez), el taller del PC
-// ejecuta y la salida vuelve al mismo sitio. Aquí el taller es uno falso con el
-// mismo contrato que C:\taller\taller.py y el ffmpeg de esta máquina.
+// 07/10/2026: the owner wants videos made on their PC, with the VPS only working if
+// the PC fails. All of Oraflow's ffmpeg goes through runFFmpeg: the remote client
+// uploads the inputs (by sha256, only once), the PC workshop runs it and the output
+// comes back to the same place. Here the workshop is a fake one with the same
+// contract as pc/taller/taller.py and this machine's ffmpeg.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
@@ -18,7 +18,7 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'taller-'));
 const sha = b => crypto.createHash('sha256').update(b).digest('hex');
 const tono = (ruta, seg = 1, f = 440) => execFileSync('ffmpeg', ['-y', '-v', 'error', '-f', 'lavfi', '-i', `sine=frequency=${f}:duration=${seg}`, ruta]);
 
-/** Taller falso: mismo contrato que taller.py, con el ffmpeg local. */
+/** Fake workshop: same contract as taller.py, with the local ffmpeg. */
 function tallerFalso({ falla = false, lento = 0 } = {}) {
   const cache = fs.mkdtempSync(path.join(os.tmpdir(), 'taller-cache-'));
   const trabajos = {};
@@ -59,7 +59,7 @@ function tallerFalso({ falla = false, lento = 0 } = {}) {
   return new Promise(r => server.listen(0, '127.0.0.1', () => r({ url: `http://127.0.0.1:${server.address().port}`, vistos, cierra: () => new Promise(c => server.close(c)) })));
 }
 
-test('prepara: rutas absolutas → relativas; la salida es la última', async () => {
+test('prepare: absolute paths → relative; the output is the last one', async () => {
   const a = path.join(tmp, 'a.wav'); tono(a);
   const p = await preparaTrabajo(['-y', '-i', a, '-af', 'volume=0.5', path.join(tmp, 'b.mp3')]);
   assert.deepEqual(p.args, ['-y', '-i', 'e/0.wav', '-af', 'volume=0.5', 's/0.mp3']);
@@ -67,7 +67,7 @@ test('prepara: rutas absolutas → relativas; la salida es la última', async ()
   assert.equal(p.salida.rel, 's/0.mp3');
 });
 
-test('prepara: se queda en la VPS lo que no se puede llevar (tuberías, null, patrones de salida, rutas que no existen)', async () => {
+test('prepare: what can\'t be carried over stays on the VPS (pipes, null, output patterns, paths that don\'t exist)', async () => {
   const a = path.join(tmp, 'a.wav'); tono(a);
   assert.equal(await preparaTrabajo(['-i', a, '-f', 'null', '-']), null);
   assert.equal(await preparaTrabajo(['-i', a, 'pipe:1']), null);
@@ -76,7 +76,7 @@ test('prepara: se queda en la VPS lo que no se puede llevar (tuberías, null, pa
   assert.equal(await preparaTrabajo(['-i', a, path.join(tmp, 'no-existe-dir', 'x.mp3')]), null);
 });
 
-test('prepara: rutas dentro de filtros, carpeta de fuentes y subtítulos sin fontsdir', async () => {
+test('prepare: paths inside filters, fonts folder and subtitles without fontsdir', async () => {
   const ass = path.join(tmp, 'sub.ass'); fs.writeFileSync(ass, '[Script Info]\n');
   const fuentes = path.join(tmp, 'fuentes'); fs.mkdirSync(fuentes, { recursive: true }); fs.writeFileSync(path.join(fuentes, 'Cinzel.ttf'), 'x');
   const a = path.join(tmp, 'a.wav'); tono(a);
@@ -87,7 +87,7 @@ test('prepara: rutas dentro de filtros, carpeta de fuentes y subtítulos sin fon
   assert.equal(q.args[3], "subtitles='e/1.ass':fontsdir='e/d0'");
 });
 
-test('prepara: secuencias de imágenes y listas de concatenación', async () => {
+test('prepare: image sequences and concat lists', async () => {
   const seq = path.join(tmp, 'seq'); fs.mkdirSync(seq, { recursive: true });
   for (let i = 1; i <= 3; i++) fs.writeFileSync(path.join(seq, `f_${String(i).padStart(3, '0')}.png`), `png${i}`);
   const a = path.join(tmp, 'a.wav'); tono(a);
@@ -99,7 +99,7 @@ test('prepara: secuencias de imágenes y listas de concatenación', async () => 
   assert.equal(p.args[3], 'e/q0/f_%03d.png');
   assert.deepEqual(p.entradas.filter(e => e.rel.startsWith('e/q0/')).map(e => e.rel), ['e/q0/f_001.png', 'e/q0/f_002.png', 'e/q0/f_003.png']);
   const lst = p.entradas.find(e => e.rel === p.args[9]);
-  // ffmpeg resuelve las rutas de una lista de concat RELATIVAS A LA LISTA (e/e/0.wav si pusiera e/0.wav)
+  // ffmpeg resolves a concat list's paths RELATIVE TO THE LIST (e/e/0.wav if it said e/0.wav)
   assert.match(lst.contenido.toString(), /^file '\d+\.wav'\nfile '\d+\.wav'\n$/);
   for (const linea of lst.contenido.toString().trim().split('\n')) {
     const nombre = linea.match(/'(.+)'/)[1];
@@ -107,7 +107,7 @@ test('prepara: secuencias de imágenes y listas de concatenación', async () => 
   }
 });
 
-test('de punta a punta: el taller hace el trabajo y la salida llega a su ruta', async () => {
+test('end to end: the workshop does the job and the output reaches its path', async () => {
   const t = await tallerFalso();
   const c = new ClienteTaller({ url: t.url, pausaSondeoMs: 20 });
   const a = path.join(tmp, 'e2e.wav'); tono(a, 1);
@@ -115,13 +115,13 @@ test('de punta a punta: el taller hace el trabajo y la salida llega a su ruta', 
   const r = await c.ejecuta(['-y', '-v', 'error', '-i', a, '-c:a', 'libmp3lame', salida]);
   assert.ok(r, 'se hizo en el taller');
   assert.ok(fs.statSync(salida).size > 1000);
-  // La segunda vez la entrada ya está allí: no se vuelve a subir.
+  // The second time the input is already there: it isn't uploaded again.
   await c.ejecuta(['-y', '-v', 'error', '-i', a, '-c:a', 'libmp3lame', salida]);
   assert.equal(t.vistos.subidas, 1);
   await t.cierra();
 });
 
-test('runFFmpeg: con el taller caído o fallando, lo hace la VPS', async () => {
+test('runFFmpeg: with the workshop down or failing, the VPS does it', async () => {
   const { runFFmpeg, _taller } = require('../../utils/ffmpeg');
   const a = path.join(tmp, 'f.wav'); tono(a, 1);
   const salida = path.join(tmp, 'f.mp3');
@@ -148,7 +148,7 @@ test('runFFmpeg: con el taller caído o fallando, lo hace la VPS', async () => {
   _taller.configura({ url: '' });
 });
 
-test('sin FFMPEG_REMOTO_URL todo sigue en local', async () => {
+test('without FFMPEG_REMOTO_URL everything stays local', async () => {
   const { _taller } = require('../../utils/ffmpeg');
   _taller.configura({ url: '' });
   assert.equal(_taller.activo(), false);

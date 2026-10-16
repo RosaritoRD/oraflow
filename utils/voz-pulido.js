@@ -1,11 +1,11 @@
 /**
- * Voz más cálida y con más calidad (pedido del autor, 02/10/2026): misma voz de
- * ElevenLabs, pedida a 192 kbps y pulida después con ffmpeg. El pulido no cambia
- * el volumen (se mide antes y después y se compensa con una ganancia fija), así
- * la mezcla con el piano queda como estaba. Tampoco cambia la duración, así que
- * los tiempos de los subtítulos siguen valiendo.
+ * A warmer, higher-quality voice (requested by the owner, 02/10/2026): the same
+ * ElevenLabs voice, requested at 192 kbps and polished afterwards with ffmpeg. The
+ * polish doesn't change the volume (it's measured before and after and compensated
+ * with a fixed gain), so the mix with the piano stays as it was. It doesn't change
+ * the duration either, so the caption timings still hold.
  *
- * Env: VOICE_OUTPUT_FORMAT (mp3_44100_192), VOICE_POLISH=0 lo apaga.
+ * Env: VOICE_OUTPUT_FORMAT (mp3_44100_192), VOICE_POLISH=0 turns it off.
  */
 const fs = require('fs').promises;
 const { runFFmpeg } = require('./ffmpeg');
@@ -19,7 +19,7 @@ function pulidoActivo(env = process.env) {
   return env.VOICE_POLISH !== '0';
 }
 
-/** Cuerpo en graves, menos «s» chillonas, compresión suave y una sala muy leve. */
+/** Body in the lows, fewer shrill «s» sounds, soft compression and a very light room. */
 function cadenaPulido() {
   return [
     'highpass=f=70',
@@ -43,7 +43,7 @@ async function sonoridad(ruta) {
   return m ? Number(m[1]) : NaN;
 }
 
-/** Pule el mp3 en su sitio. Si algo falla deja la voz original y avisa. */
+/** Polishes the mp3 in place. If anything fails it keeps the original voice and warns. */
 async function pulirVoz(ruta, logger) {
   if (!pulidoActivo()) return false;
   const tmp = `${ruta}.pulido.mp3`;
@@ -53,10 +53,10 @@ async function pulirVoz(ruta, logger) {
     const g = gananciaCompensada(await sonoridad(ruta), await sonoridad(tmp));
     await runFFmpeg(['-y', '-v', 'error', '-i', ruta, '-af', `${cadenaPulido()},volume=${g}dB,alimiter=limit=0.89`, '-b:a', '192k', fin]);
     await fs.rename(fin, ruta);
-    logger?.info?.(`Voz pulida (cálida, ganancia ${g} dB)`);
+    logger?.info?.(`Voice polished (warm, gain ${g} dB)`);
     return true;
   } catch (error) {
-    logger?.warn?.(`Pulido de voz no aplicado: ${error.message}`);
+    logger?.warn?.(`Voice polish not applied: ${error.message}`);
     return false;
   } finally {
     await Promise.all([fs.unlink(tmp).catch(() => {}), fs.unlink(fin).catch(() => {})]);

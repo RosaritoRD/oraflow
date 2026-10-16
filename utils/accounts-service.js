@@ -1,5 +1,5 @@
-// Cuentas y claves: qué está configurado (sin enseñar nunca una clave), probar
-// cada conexión de verdad y reconectar el canal de YouTube desde la web.
+// Accounts and keys: what's configured (without ever showing a key), testing each
+// connection for real and reconnecting the YouTube channel from the web.
 const fs = require('fs').promises;
 const crypto = require('crypto');
 
@@ -32,7 +32,7 @@ class AccountsService {
       const { google } = require('googleapis');
       return new google.auth.OAuth2(id, secret, redirect);
     });
-    this.publicUrl = String(publicUrl || env.PUBLIC_URL || 'https://panel.tu-dominio.com').replace(/\/+$/, '');
+    this.publicUrl = String(publicUrl || env.PUBLIC_URL || 'https://panel.your-domain.com').replace(/\/+$/, '');
     this.logger = logger;
     this.states = new Map();
   }
@@ -41,8 +41,8 @@ class AccountsService {
     return `${this.publicUrl}${CALLBACK_PATH}`;
   }
 
-  /* Cada clave: [valor, origen]. El archivo de credenciales manda sobre el entorno,
-     igual que en el resto de Oraflow. */
+  /* Each key: [value, source]. The credentials file wins over the environment, same
+     as in the rest of Oraflow. */
   claves() {
     const c = this.credentials.credentials || {};
     const e = this.env;
@@ -99,7 +99,7 @@ class AccountsService {
   async http(url, headers) {
     const res = await this.fetch(url, { headers, signal: AbortSignal.timeout(TIMEOUT_MS) });
     let body = {};
-    try { body = await res.json(); } catch (_) { /* cuerpo vacío o no JSON */ }
+    try { body = await res.json(); } catch (_) { /* empty or non-JSON body */ }
     return { res, body };
   }
 
@@ -119,8 +119,9 @@ class AccountsService {
     try {
       const [url, headers] = pruebas[id](clave);
       const { res, body } = await this.http(url, headers);
-      // Una clave restringida (ElevenLabs) responde 401 "missing the permission" a
-      // lo que no tiene permitido: la clave existe y es válida para lo suyo.
+      // A restricted key (ElevenLabs) answers 401 "missing the permission" to
+      // whatever it isn't allowed: the key exists and is valid for its own
+      // scope.
       const restringida = JSON.stringify(body || {}).match(/missing[_ ]the[_ ]permission|missing_permissions/i);
       if (!res.ok && res.status === 401 && restringida) {
         return { ok: true, message: 'Clave válida, con permisos limitados (no deja ver el consumo desde aquí).' };
@@ -128,8 +129,8 @@ class AccountsService {
       if (!res.ok) {
         const detalle = body?.error?.message || body?.error || body?.detail?.message || body?.message || '';
         const motivo = [401, 403].includes(res.status) ? 'El servicio rechazó la clave' : 'El servicio respondió con error';
-        // Las claves de Google AI Studio / Cloud empiezan por "AIza": si no, casi seguro
-        // se pegó otro tipo de credencial.
+        // Google AI Studio / Cloud keys start with "AIza": if not, almost certainly
+        // a different kind of credential was pasted.
         if (['gemini', 'youtube_api'].includes(id) && !clave.startsWith('AIza')) {
           return { ok: false, message: `${motivo} (HTTP ${res.status}). Las claves de API de Google suelen empezar por «AIza» y esta empieza distinto: revisa que sea una clave de API (aistudio.google.com para Gemini, Google Cloud para YouTube) y no otro tipo de credencial.` };
         }
@@ -193,8 +194,8 @@ class AccountsService {
     actual.youtube = { ...(actual.youtube || {}), client_id: id, client_secret: secret, redirect_uris: [this.redirectUri] };
     await this.escribirJson(ruta, actual);
     await this.credentials.loadCredentials();
-    this.logger?.info?.('Cliente OAuth de YouTube actualizado desde el panel');
-    // Un refresh token pertenece al cliente que lo emitió: con otro cliente hay que reconectar.
+    this.logger?.info?.('YouTube OAuth client updated from the panel');
+    // A refresh token belongs to the client that issued it: with another client you have to reconnect.
     return { ...this.youtubeStatus(), needsReconnect: true };
   }
 
@@ -224,7 +225,7 @@ class AccountsService {
     actual.youtube = tokens;
     await this.escribirJson(ruta, actual);
     await this.credentials.loadTokens();
-    this.logger?.info?.('Canal de YouTube reconectado desde el panel');
+    this.logger?.info?.('YouTube channel reconnected from the panel');
     return { connected: true };
   }
 }

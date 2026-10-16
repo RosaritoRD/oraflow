@@ -1,4 +1,4 @@
-/** Comprobaciones de lectura: no publican ni envían mensajes de prueba. */
+/** Read checks: they don't publish or send test messages. */
 const { requestJSON, ServiceRequestError } = require('./service-request');
 const PERMISOS_FB = {
   pages_manage_posts: 'publicar', pages_read_engagement: 'leer la Página',
@@ -17,7 +17,7 @@ async function instagram({ token, fetchImpl = fetch, timeoutMs = 4000, renovadoE
   if (typeof me.username !== 'string' || !me.username) return estado('Instagram', 'No se pudo verificar la cuenta.', 'unavailable');
   const titulo = `Instagram @${me.username}`;
   const base = await lecturaInstagram({ G, token, options, titulo, yo: me.username });
-  // Mensajes privados (07/10/2026): leer la bandeja usa el mismo permiso que la oración por privado.
+  // Private messages (07/10/2026): reading the inbox uses the same permission as the private-message prayer.
   let privados;
   try {
     const r = await consulta(`${G}/me/conversations?platform=instagram&limit=1`, token, options, 'Instagram');
@@ -26,7 +26,7 @@ async function instagram({ token, fetchImpl = fetch, timeoutMs = 4000, renovadoE
   } catch (error) {
     privados = { ok: false, texto: `No se pueden leer los mensajes privados (${error.message}). Revisa el permiso de mensajes de la app de Meta y «Permitir acceso a los mensajes» en Instagram.` };
   }
-  // El acceso dura 60 días y se renueva solo cada semana: si lleva más de 14 sin renovarse, algo falla (07/10/2026).
+  // Access lasts 60 days and renews itself every week: if it's gone more than 14 without renewing, something is failing (07/10/2026).
   const renovado = Date.parse(renovadoEl || '');
   const dias = Number.isFinite(renovado) ? Math.floor((now.getTime() - renovado) / 86400000) : null;
   const caduca = dias !== null && dias > 14
@@ -44,7 +44,7 @@ async function lecturaInstagram({ G, token, options, titulo, yo }) {
   const replies = await Promise.allSettled(candidates.map(m => consulta(`${G}/${encodeURIComponent(m.id)}/comments?fields=id,username&limit=10`, token, options, 'Instagram')));
   const visibles = replies.flatMap(r => (r.status === 'fulfilled' && Array.isArray(r.value.data) ? r.value.data : []));
   if (!visibles.length) return estado(titulo, 'Hay comentarios contados, pero la consulta no permite leerlos. Revisa permisos y el modo desarrollo de Meta; una lista vacía no confirma la causa.', 'partial');
-  // Los del propio canal (comentario fijo, respuestas) no cuentan como gente.
+  // The channel's own (pinned comment, replies) don't count as people.
   const otros = visibles.filter(c => c.username && c.username !== yo).length;
   const gente = otros
     ? `${otros} comentario${otros === 1 ? '' : 's'} de otras personas en las últimas publicaciones.`
@@ -56,7 +56,7 @@ async function lecturaInstagram({ G, token, options, titulo, yo }) {
 async function facebook({ config, fetchImpl = fetch, timeoutMs = 4000 }) {
   if (!config) return estado('Facebook', 'Sin conectar. Revisa la Página y su acceso en Cuentas.', 'not_configured');
   const options = { fetchImpl, timeoutMs };
-  // debug_token requiere input_token; la autenticación va en la cabecera.
+  // debug_token requires input_token; authentication goes in the header.
   const base = `https://graph.facebook.com/${encodeURIComponent(config.version)}`;
   const r = await consulta(`${base}/debug_token?input_token=${encodeURIComponent(config.token)}`, config.token, options, 'Facebook');
   if (!r.data?.is_valid) return estado('Facebook', 'El acceso no es válido. Vuelve a conectar la Página.', 'unavailable');
@@ -82,8 +82,9 @@ async function ia({ env = process.env, fetchImpl = fetch, timeoutMs = 4000 }) {
     : estado('IA (OpenRouter)', `Clave verificada. Quedan $${data.limit_remaining.toFixed(2)} del tope individual; saldo de cuenta sin comprobar.`);
 }
 
-// El PC del autor (07/10/2026): taller de ffmpeg, voz local e IA local. Si no
-// responde, la VPS hace el trabajo: se avisa, pero no es una caída del canal.
+// The owner's PC (07/10/2026): ffmpeg workshop, local voice and local AI. If it
+// doesn't answer, the VPS does the work: it's flagged, but it isn't a channel
+// outage.
 async function pc({ env = process.env, fetchImpl = fetch, timeoutMs = 4000, taller = null }) {
   const urlTaller = String(env.FFMPEG_REMOTO_URL || '').replace(/\/+$/, '');
   if (!urlTaller) return estado('PC (taller)', 'Sin configurar: todos los vídeos se hacen en la VPS.', 'not_configured');
@@ -105,7 +106,7 @@ async function pc({ env = process.env, fetchImpl = fetch, timeoutMs = 4000, tall
   return estado('PC (taller)', `Haciendo los vídeos con ${t.nucleos || '?'} núcleos${extras.length ? `; ${extras.join(', ')}` : ''}.${cuenta}`, (env.LOCAL_VOZ_URL && !voz) || (env.LOCAL_LLM_URL && !llm) ? 'partial' : 'verified');
 }
 
-// YouTube (07/10/2026): una consulta de 1 unidad; con la cuota agotada no se gasta nada.
+// YouTube (07/10/2026): a 1-unit query; with the quota used up nothing is spent.
 async function youtube({ youtube: cliente, db }) {
   if (!cliente) return estado('YouTube', 'Sin conectar. Autoriza el canal en Cuentas.', 'not_configured');
   const cuota = require('./cuota-youtube');

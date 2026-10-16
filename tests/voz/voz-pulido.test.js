@@ -1,26 +1,26 @@
-// 02/10/2026: el autor pidió la misma voz «más cálida, familiar y con más calidad».
-// La narración se pide a 192 kbps y se pule (cuerpo en graves, menos sibilancia,
-// compresión suave y sala muy leve) SIN cambiar su volumen: si subiera, el piano
-// quedaría proporcionalmente más bajo.
+// 02/10/2026: the owner asked for the same voice «warmer, more familiar and higher
+// quality». The narration is requested at 192 kbps and polished (body in the lows,
+// less sibilance, gentle compression and a very light room) WITHOUT changing its
+// volume: if it went up, the piano would end up proportionally quieter.
 const test = require('node:test');
 const assert = require('node:assert');
 const { formatoSalida, pulidoActivo, cadenaPulido, gananciaCompensada } = require('../../utils/voz-pulido');
 
-test('pide 192 kbps por defecto y respeta VOICE_OUTPUT_FORMAT', () => {
+test('requests 192 kbps by default and respects VOICE_OUTPUT_FORMAT', () => {
   assert.strictEqual(formatoSalida({}), 'mp3_44100_192');
   assert.strictEqual(formatoSalida({ VOICE_OUTPUT_FORMAT: 'mp3_44100_128' }), 'mp3_44100_128');
 });
 
-test('un formato raro no llega a la URL', () => {
+test('an odd format never reaches the URL', () => {
   assert.strictEqual(formatoSalida({ VOICE_OUTPUT_FORMAT: 'mp3&x=1' }), 'mp3_44100_192');
 });
 
-test('el pulido está activo salvo VOICE_POLISH=0', () => {
+test('polishing is on unless VOICE_POLISH=0', () => {
   assert.strictEqual(pulidoActivo({}), true);
   assert.strictEqual(pulidoActivo({ VOICE_POLISH: '0' }), false);
 });
 
-test('la cadena da cuerpo, quita sibilancia y no normaliza el volumen', () => {
+test('the chain adds body, removes sibilance and doesn\'t normalize volume', () => {
   const c = cadenaPulido();
   assert.match(c, /highpass/);
   assert.match(c, /equalizer=f=180/);
@@ -29,7 +29,7 @@ test('la cadena da cuerpo, quita sibilancia y no normaliza el volumen', () => {
   assert.doesNotMatch(c, /loudnorm/);
 });
 
-test('la ganancia devuelve la voz a su volumen de entrada, con tope', () => {
+test('the gain brings the voice back to its input volume, capped', () => {
   assert.strictEqual(gananciaCompensada(-20.2, -25.3), 5.1);
   assert.strictEqual(gananciaCompensada(-20, -40), 12);
   assert.strictEqual(gananciaCompensada(-20, NaN), 0);

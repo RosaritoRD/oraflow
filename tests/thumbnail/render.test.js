@@ -189,11 +189,12 @@ test('production keeps the composed oracion thumbnail (no legacy AI replacement)
   assert.equal(result.path, artworkPath);
 });
 
-/* 13/10/2026: el largo de la mañana salió SIN miniatura. Las de la biblioteca
-   del autor llegan con style 'propio'; este paso solo conocía 'oracion', las
-   mandaba al camino de IA, la IA no estaba y devolvía un .info de simulación,
-   y YouTube rechazaba ese .info («The provided image content is invalid»). */
-test('production keeps el autor library thumbnails (style propio)', async t => {
+/* 13/10/2026: the morning long video went out WITHOUT a thumbnail. The ones from
+   the owner's library arrive with style 'propio'; this step only knew 'oracion',
+   sent them down the AI path, the AI wasn't there and it returned a simulated
+   .info, and YouTube rejected that .info («The provided image content is
+   invalid»). */
+test('production keeps the owner\'s library thumbnails (style propio)', async t => {
   const { artworkPath } = await fixture(t);
   const { ProductionManagementAgent } = require('../../agents/production-management-agent');
   let calls = 0;
@@ -210,7 +211,7 @@ test('a simulated .info thumbnail never replaces a real image', async t => {
   const context = { aiVideoGenerator: { generateThumbnail: async () => ({ path: '/tmp/thumbnail_sim_1.info', dimensions: { width: 1792, height: 1024 } }) }, logger: { error() {}, warn() {} } };
   const result = await ProductionManagementAgent.prototype.processThumbnail.call(context, { path: artworkPath, concept: { style: 'clean' } }, { title: 'X' });
   t.after(() => fs.rm(result.path, { force: true }));
-  // El camino de respaldo copia la original: tiene que ser la MISMA imagen.
+  // The fallback path copies the original: it has to be the SAME image.
   assert.doesNotMatch(result.path, /\.info$/);
   assert.deepEqual(await fs.readFile(result.path), await fs.readFile(artworkPath));
   assert.equal(result.originalPath, artworkPath);

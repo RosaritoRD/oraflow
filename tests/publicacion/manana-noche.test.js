@@ -1,5 +1,5 @@
-// 29/09/2026: 2 vídeos largos (04:00 mañana, 18:30 noche) + 2 Shorts
-// (07:00 mañana, 21:00 noche) al día, hora de Nueva York.
+// 29/09/2026: 2 long videos (04:00 morning, 18:30 evening) + 2 Shorts
+// (07:00 morning, 21:00 evening) a day, New York time.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const os = require('os');
@@ -14,61 +14,61 @@ const { DailyAutomation } = require('../../schedules/daily-automation');
 const NY = 'America/New_York';
 const hourNY = iso => new Intl.DateTimeFormat('en-US', { timeZone: NY, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(iso));
 
-test('parseClocks ordena, normaliza y descarta lo que no es hora', () => {
+test('parseClocks sorts, normalizes and drops what isn\'t a time', () => {
   assert.deepEqual(parseClocks('18:30, 4:00,xx'), ['04:00', '18:30']);
   assert.deepEqual(parseClocks('', '07:00,21:00'), ['07:00', '21:00']);
 });
 
-test('franja por hora: 04:00 y 07:00 mañana, 18:30 y 21:00 noche', () => {
+test('time of day by hour: 04:00 and 07:00 morning, 18:30 and 21:00 night', () => {
   assert.equal(franjaDeHora('04:00'), 'MAÑANA');
   assert.equal(franjaDeHora('07:00'), 'MAÑANA');
   assert.equal(franjaDeHora('18:30'), 'NOCHE');
   assert.equal(franjaDeHora('21:00'), 'NOCHE');
 });
 
-test('a las 13:00 el próximo hueco es el de las 18:30 de hoy', () => {
+test('at 13:00 the next slot is today\'s 18:30', () => {
   const now = new Date('2026-09-29T17:00:00Z'); // 13:00 NY
   const slot = nextFreeSlot({ now, timeZone: NY, clocks: ['04:00', '18:30'] });
   assert.deepEqual(slot, { publishTime: '2026-09-29T22:30:00.000Z', clock: '18:30', franja: 'NOCHE' });
 });
 
-test('con la noche ocupada pasa a la mañana siguiente', () => {
+test('with the evening taken it moves to the next morning', () => {
   const now = new Date('2026-09-29T17:00:00Z');
   const slot = nextFreeSlot({ now, timeZone: NY, clocks: ['04:00', '18:30'], taken: ['2026-09-29T22:30:00.000Z'] });
   assert.equal(slot.publishTime, '2026-09-30T08:00:00.000Z');
   assert.equal(slot.franja, 'MAÑANA');
 });
 
-test('un vídeo manual a media mañana ocupa el hueco de la mañana, no el de la noche', () => {
-  const now = new Date('2026-09-29T03:00:00Z'); // 23:00 NY del 28
+test('a manual video mid-morning takes the morning slot, not the evening one', () => {
+  const now = new Date('2026-09-29T03:00:00Z'); // 23:00 NY on the 28th
   const slot = nextFreeSlot({ now, timeZone: NY, clocks: ['04:00', '18:30'], taken: ['2026-09-29T14:33:00.000Z'] }); // 10:33 NY
   assert.equal(slot.publishTime, '2026-09-29T22:30:00.000Z');
 });
 
-test('el cambio de hora no mueve las 18:30', () => {
-  const now = new Date('2026-11-01T12:00:00Z'); // día del cambio (EST desde las 02:00)
+test('the clock change doesn\'t move 18:30', () => {
+  const now = new Date('2026-11-01T12:00:00Z'); // the day the clocks change (EST from 02:00)
   const slot = nextFreeSlot({ now, timeZone: NY, clocks: ['04:00', '18:30'] });
   assert.equal(hourNY(slot.publishTime), '18:30');
   assert.equal(slot.publishTime, '2026-11-01T23:30:00.000Z');
 });
 
-test('Short = 1080x1920 vertical; largo = el del .env', () => {
+test('Short = 1080x1920 vertical; long = the one in .env', () => {
   assert.deepEqual(lienzo('short'), { aspectRatio: '9:16', resolution: '1080x1920' });
   assert.deepEqual(lienzo('long', {}), { aspectRatio: '16:9', resolution: '1920x1080' });
   assert.equal(esShort({ contentFormat: 'short' }), true);
   assert.equal(esShort({}), false);
 });
 
-test('la fecha del título es la del hueco del encargo', () => {
+test('the title\'s date is the job\'s slot date', () => {
   assert.equal(fechaDelEncargo({ publishSlot: '2026-09-29T22:30:00.000Z' }).toISOString(), '2026-09-29T22:30:00.000Z');
 });
 
-test('la franja del hueco cuenta si el guion no dice ninguna', () => {
+test('the slot\'s time of day counts if the script says none', () => {
   assert.equal(franjaDelContenido({ title: 'Oración por mi familia' }, { franja: 'NOCHE' }), 'NOCHE');
   assert.equal(franjaDelContenido({ title: 'Oración de la mañana' }, { franja: 'NOCHE' }), 'MAÑANA');
 });
 
-// ── Publicación ─────────────────────────────────────────────────────────────
+// ── Publishing ──────────────────────────────────────────────────────────────
 
 function fakeDb(settings = {}) {
   const rows = [];
@@ -102,7 +102,7 @@ function agentWith(db) {
   return agent;
 }
 
-test('largos a 04:00 y 18:30, alternando', async () => {
+test('long videos at 04:00 and 18:30, alternating', async () => {
   const agent = agentWith(fakeDb({ daily_publish_time: '04:00,18:30' }));
   const horas = [];
   for (const id of ['a', 'b', 'c']) horas.push(hourNY((await agent.scheduleContent(production(id))).publishTime));
@@ -110,7 +110,7 @@ test('largos a 04:00 y 18:30, alternando', async () => {
   assert.ok(horas.filter(h => h === '04:00').length >= 1 && horas.filter(h => h === '18:30').length >= 1);
 });
 
-test('los Shorts van a sus horas (07:00 / 21:00) y no ocupan los huecos de los largos', async () => {
+test('Shorts go at their times (07:00 / 21:00) and don\'t take the long videos\' slots', async () => {
   const db = fakeDb({ daily_publish_time: '04:00,18:30' });
   const agent = agentWith(db);
   const s1 = await agent.scheduleContent(production('s1', { contentFormat: 'short' }));
@@ -123,14 +123,14 @@ test('los Shorts van a sus horas (07:00 / 21:00) y no ocupan los huecos de los l
   assert.equal(largo.metadata.contentFormat, 'long');
 });
 
-test('se respeta el hueco que el programador asignó al encargo', async () => {
+test('the slot the scheduler assigned to the job is respected', async () => {
   const agent = agentWith(fakeDb({ daily_publish_time: '04:00,18:30' }));
   const slot = nextFreeSlot({ now: new Date(Date.now() + 2 * 86400000), timeZone: NY, clocks: ['04:00', '18:30'] }).publishTime;
   const e = await agent.scheduleContent(production('x', { publishSlot: slot }));
   assert.equal(e.publishTime, slot);
 });
 
-test('daily_shorts_time=off: los Shorts caen en las horas de los largos', async () => {
+test('daily_shorts_time=off: Shorts fall on the long videos\' times', async () => {
   const agent = agentWith(fakeDb({ daily_publish_time: '04:00,18:30', daily_shorts_time: 'off' }));
   const cfg = await agent.dailySlotConfig();
   assert.deepEqual(cfg.shortClocks, []);
@@ -152,7 +152,7 @@ function automation({ taken = {}, attempts = 0, daily }) {
 
 const DAILY = { timeZone: NY, clock: '04:00', clocks: ['04:00', '18:30'], shortClocks: ['07:00', '21:00'] };
 
-test('el programador elige el hueco vacío más cercano y lo pasa al encargo', async () => {
+test('the scheduler picks the nearest empty slot and passes it to the job', async () => {
   const a = automation({ daily: DAILY });
   assert.equal(await a.shouldGenerateContentToday(), true);
   const t = a.lastDailyTarget;
@@ -162,9 +162,9 @@ test('el programador elige el hueco vacío más cercano y lo pasa al encargo', a
   assert.equal(t.publishTime, nextLong < nextShort ? nextLong : nextShort);
 });
 
-test('con todo cubierto en 24 h no genera', async () => {
+test('with everything covered for 24 h it doesn\'t generate', async () => {
   const taken = { long: [], short: [] };
-  // ocupa los próximos 3 huecos de cada formato (cubre de sobra 24 h)
+  // takes the next 3 slots of each format (more than covers 24 h)
   for (const [format, clocks] of [['long', DAILY.clocks], ['short', DAILY.shortClocks]]) {
     for (let i = 0; i < 3; i++) taken[format].push(nextFreeSlot({ timeZone: NY, clocks, taken: taken[format] }).publishTime);
   }
@@ -172,12 +172,12 @@ test('con todo cubierto en 24 h no genera', async () => {
   assert.equal(await a.shouldGenerateContentToday(), false);
 });
 
-test('un hueco con 3 intentos fallidos se salta', async () => {
+test('a slot with 3 failed attempts is skipped', async () => {
   const a = automation({ daily: DAILY, attempts: 3 });
   assert.equal(await a.shouldGenerateContentToday(), false);
 });
 
-test('el encargo del programador lleva formato, franja y hueco', async () => {
+test('the scheduler\'s job carries format, time of day and slot', async () => {
   let recibido = null;
   const a = automation({ daily: DAILY });
   a.generateContent = async input => { recibido = input; return { id: 'job1' }; };

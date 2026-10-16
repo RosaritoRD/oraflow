@@ -1,12 +1,12 @@
 /**
- * Un carrusel de oración al día en Instagram y Facebook (04/10/2026).
+ * One prayer carousel a day on Instagram and Facebook (04/10/2026).
  *
- * Cada vuelta de la cola (15 min) mira si ya toca: hora en
- * `instagram_carousel_time` (por defecto 12:00, hora del canal) y uno por día.
- * Se apaga/enciende con `instagram_carousel_enabled` ('true' para activarlo:
- * arranca APAGADO hasta que el autor apruebe el diseño).
- * Estado en settings: instagram_carousel_last (JSON del último) y
- * instagram_carousel_temas (últimos temas, para no repetir).
+ * Every queue round (15 min) checks whether it's due: time in
+ * `instagram_carousel_time` (12:00 channel time by default) and one per day.
+ * Turned off/on with `instagram_carousel_enabled` ('true' to enable it: it starts
+ * OFF until the owner approves the design).
+ * State in settings: instagram_carousel_last (JSON of the last one) and
+ * instagram_carousel_temas (latest topics, to avoid repeats).
  */
 const path = require('path');
 const fs = require('fs');
@@ -21,7 +21,7 @@ const HORA_DEFECTO = '12:00';
 const MAX_INTENTOS_DIA = 3;
 const espera = ms => new Promise(ok => setTimeout(ok, ms));
 
-/** ¿Toca publicar? Devuelve la fecha local (YYYY-MM-DD) o null. */
+/** Is it due? Returns the local date (YYYY-MM-DD) or null. */
 async function tocaHoy({ db, now = new Date() }) {
   if (await db.getSetting('instagram_carousel_enabled') !== 'true') return null;
   const tz = await db.getSetting('channel_timezone') || DEFAULT_TZ;
@@ -35,12 +35,13 @@ async function tocaHoy({ db, now = new Date() }) {
 }
 
 /**
- * Publica el carrusel del día en cada red disponible:
- * - Instagram (`instagram_carousel_format`): 'carrusel' (imágenes, por
- *   defecto), 'reel' (vídeo con música) o 'ambos'. Necesita token + enlace público.
- * - Facebook (`facebook_carousel_reel`, 'true' por defecto): el vídeo con
- *   música como Reel de la Página (la API tampoco pone música a fotos).
- * Cada red se apunta por separado: un reintento no repite la que ya salió.
+ * Publishes the day's carousel on every available network:
+ * - Instagram (`instagram_carousel_format`): 'carrusel' (images, the default), 'reel'
+ *   (video with music) or 'ambos'. Needs a token + a public link.
+ * - Facebook (`facebook_carousel_reel`, 'true' by default): the video with music as a
+ *   Page Reel (the API can't add music to photos either).
+ * Each network is recorded separately: a retry doesn't repeat the one that already
+ * went out.
  */
 async function publicaCarruselDelDia({
   db, ai, logger, env = process.env, now = new Date(), dirBase = path.join(process.cwd(), 'temp', 'carruseles'),
@@ -75,7 +76,7 @@ async function publicaCarruselDelDia({
 
   const copias = [];
   const carpeta = path.join(dirBase, hoy);
-  // Espera a que Instagram procese el contenedor y lo publica.
+  // Waits for Instagram to process the container and publishes it.
   const publicaContenedor = async ({ containerId, igUserId }, intentosMax = 20) => {
     let estado = 'IN_PROGRESS';
     for (let i = 0; i < intentosMax && estado === 'IN_PROGRESS'; i += 1) {
@@ -115,12 +116,12 @@ async function publicaCarruselDelDia({
         logger?.success?.(`Carrusel del día (${tema}) → ${tarea}: ${redes[tarea].url || 'ok'}`);
       } catch (error) {
         redes[tarea] = { status: 'failed', error: error.message };
-        logger?.warn?.(`Carrusel del día → ${tarea} falló (intento ${intentos}): ${error.message}`);
+        logger?.warn?.(`Daily carousel → ${tarea} failed (attempt ${intentos}): ${error.message}`);
       }
     }
   } catch (error) {
     for (const t of tareas) if (pendiente(t)) redes[t] = { status: 'failed', error: error.message };
-    logger?.warn?.(`Carrusel del día falló (intento ${intentos}): ${error.message}`);
+    logger?.warn?.(`Daily carousel failed (attempt ${intentos}): ${error.message}`);
   } finally {
     for (const c of copias) await d.borraCopia(c.nombre, enlace);
     await fs.promises.rm(carpeta, { recursive: true, force: true }).catch(() => {});

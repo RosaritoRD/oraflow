@@ -1,25 +1,26 @@
 /**
- * Titular de la miniatura (11/10/2026, referencia del autor «ORACIÓN /
- * PODEROSA / para hoy»): tres piezas
- *   arriba  1-2 palabras grandes, blanco plateado («Oración»)
- *   oro     1-3 palabras grandes, doradas («PODEROSA»)
- *   abajo   línea pequeña en minúscula entre filetes («para hoy»)
- * y tres variantes para el «Probar y comparar» de YouTube Studio:
- *   A beneficio · B invitación · C oración en primera persona.
- * La IA propone; lo que no pasa la validación se cambia por el catálogo.
+ * Thumbnail headline (11/10/2026, the owner's reference «ORACIÓN / PODEROSA
+ * / para hoy»): three pieces
+ *   arriba  1-2 big words, silvery white («Oración»)
+ *   oro     1-3 big words, gold («PODEROSA»)
+ *   abajo   a small lower-case line between rules («para hoy»)
+ * and three variants for YouTube Studio's «Test and compare»:
+ *   A benefit · B invitation · C first-person prayer.
+ * The AI proposes; whatever fails validation is swapped for the catalog.
  */
 const { franjaDe } = require('./miniatura-oracion');
 
-// 11/10/2026: «milagro» y «urgente» sí (las propuso el autor); prometerlo seguro, no.
+// 11/10/2026: «milagro» and «urgente» are allowed (the owner proposed them); promising it for sure isn't.
 const TONO_PROHIBIDO = /no\s+sabes?\s+(c[oó]mo\s+)?orar|no\s+sabes?\s+qu[eé]\s+decir|c[oó]mo\s+orar|aprende\s+a\s+orar|milagro\s+(garantizado|seguro)|garantiz|te\s+sanar[aá]|sanaci[oó]n\s+(total|segura|inmediata)|última\s+oportunidad|no\s+ignores/i;
 const LIMITES = { arriba: [1, 2, 12], oro: [1, 3, 16], abajo: [1, 5, 26] };
-// Palabras en total (el autor, 11/10/2026): Shorts 2-4 grandes y sin línea pequeña; largos 3-6.
+// Total words (the owner, 11/10/2026): Shorts 2-4 big ones and no small line; long videos 3-6.
 const TOTAL = { short: [2, 4], largo: [3, 6] };
 
 const t = (s) => { const [arriba, oro, abajo] = s.split('|'); return { arriba, oro, abajo }; };
-// Del más concreto al más general: la primera necesidad que case manda. [A, B, C]
-// Largos: «arriba|ORO|abajo»; los Shorts usan solo arriba + oro (2-4 palabras).
-// Frases de las listas del autor (11/10/2026).
+// From the most specific to the most general: the first need that matches rules. [A,
+// B, C]
+// Long videos: «arriba|ORO|abajo»; Shorts only use arriba + oro (2-4 words).
+// Phrases from the owner's lists (11/10/2026).
 const CATALOGO = [
   { re: /ansiedad|preocupa|angusti|inquiet|agobi|estr[eé]s/i, v: ['Entrega|TU ANSIEDAD|oración de hoy', 'Calma|MI MENTE|oración de paz', 'Suéltalo|EN DIOS|oración de hoy'] },
   { re: /miedo|temor|tem[ae]s?\b|p[aá]nico/i, v: ['Vence|EL TEMOR|oración poderosa', 'Sin|MIEDO|oración de fe', 'Dios|VA CONTIGO|oración de hoy'] },
@@ -52,7 +53,7 @@ const limpia = (s) => String(s ?? '')
   .replace(/["“”«»|]/g, '').replace(/\s+/g, ' ').trim()
   .replace(/[.!¡¿?]+$/g, '').replace(/^[¡¿]+/, '');
 
-/** Cada pieza dentro de sus límites y sin tono prohibido. Devuelve el titular limpio o null. */
+/** Each piece within its limits and without a forbidden tone. Returns the clean headline or null. */
 function titularValido(titular, formato = 'largo') {
   if (!titular || typeof titular !== 'object') return null;
   const corto = formato === 'short';
@@ -69,9 +70,9 @@ function titularValido(titular, formato = 'largo') {
   }
   const [tmin, tmax] = TOTAL[corto ? 'short' : 'largo'];
   if (total < tmin || total > tmax) return null;
-  // Partido en dos líneas («Si no | SABES ORAR») también cuenta.
+  // Split across two lines («Si no | SABES ORAR») also counts.
   if (TONO_PROHIBIDO.test(`${out.arriba} ${out.oro} ${out.abajo}`)) return null;
-  // «arriba» va en Cinzel: la primera letra grande y el resto en versalitas.
+  // «arriba» goes in Cinzel: the first letter large and the rest in small caps.
   out.arriba = out.arriba.charAt(0).toUpperCase() + out.arriba.slice(1).toLowerCase();
   out.oro = out.oro.toUpperCase();
   if (out.abajo) {
@@ -81,7 +82,7 @@ function titularValido(titular, formato = 'largo') {
   return out;
 }
 
-/** Las tres variantes del catálogo. La franja la manda el título (lo publicado). */
+/** The catalog's three variants. The title sets the time of day (what's published). */
 function titularesPorReglas({ topic = '', title = '', formato = 'largo' } = {}) {
   const necesidad = CATALOGO.find((n) => n.re.test(`${title} ${topic}`));
   const franja = franjaDe(String(title).split('|')[0]) || franjaDe(topic) || 'MAÑANA';
@@ -110,8 +111,8 @@ function prompt({ topic, title, guion, franja, formato }) {
 const clave = (x) => `${x.arriba}|${x.oro}|${x.abajo}`.toLowerCase();
 
 /**
- * Las tres variantes [A, B, C]. Nunca lanza: sin IA o con respuesta mala,
- * cada hueco inválido se rellena con el catálogo.
+ * The three variants [A, B, C]. Never throws: without AI or with a bad answer, each invalid slot
+ * is filled from the catalog.
  * @returns {Promise<{ titulares: {arriba,oro,abajo}[], origen: 'ia'|'reglas'|'mixto' }>}
  */
 async function titularesMiniatura({ topic = '', title = '', guion = '', formato = 'largo', aiTextService = null, logger = console } = {}) {
@@ -125,14 +126,14 @@ async function titularesMiniatura({ topic = '', title = '', guion = '', formato 
     const json = JSON.parse(String(bruto).trim().replace(/^```(?:json)?\s*|\s*```$/g, ''));
     const ia = [json.beneficio, json.invitacion, json.oracion].map((x) => titularValido(x, formato));
     const titulares = ia.map((x, i) => x || reglas[i]);
-    // Dos variantes iguales no sirven para comparar.
+    // Two identical variants are useless for comparing.
     for (let i = 1; i < titulares.length; i++) {
       if (titulares.slice(0, i).some((y) => clave(y) === clave(titulares[i]))) titulares[i] = reglas[i];
     }
     const buenos = ia.filter(Boolean).length;
     return { titulares, origen: buenos === 3 ? 'ia' : buenos ? 'mixto' : 'reglas' };
   } catch (error) {
-    logger.warn?.(`Titular de miniatura por IA no disponible (${error.message}); se usa el catálogo`);
+    logger.warn?.(`AI thumbnail headline unavailable (${error.message}); using the catalog`);
     return { titulares: reglas, origen: 'reglas' };
   }
 }

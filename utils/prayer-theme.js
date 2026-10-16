@@ -60,13 +60,13 @@ function musicGainDb() {
 }
 
 /*
- * Volumen del piano por formato (02/10/2026, el autor: «un poquito más fuerte» en
- * las oraciones; en los Shorts «en algunos, no en todos»).
- *   BACKGROUND_MUSIC_DB           base (Shorts normales)
- *   BACKGROUND_MUSIC_DB_LONG      largos (por defecto base + 3)
- *   BACKGROUND_MUSIC_DB_SHORT_LOUD Shorts «altos» (por defecto base + 3)
- *   SHORT_MUSIC_LOUD_PCT          % de Shorts altos (por defecto 40)
- * Qué Short va alto lo decide el id del vídeo: un reintento suena igual.
+ * Piano volume per format (02/10/2026, the owner: «a little louder» on the
+ * prayers; on the Shorts «on some, not all»).
+ *   BACKGROUND_MUSIC_DB            base (normal Shorts)
+ *   BACKGROUND_MUSIC_DB_LONG       long videos (base + 3 by default)
+ *   BACKGROUND_MUSIC_DB_SHORT_LOUD «loud» Shorts (base + 3 by default)
+ *   SHORT_MUSIC_LOUD_PCT           % of loud Shorts (40 by default)
+ * Which Short is loud is decided by the video id: a retry sounds the same.
  */
 function musicGainFor({ formato = null, semilla = '', env = process.env } = {}) {
   const limita = v => Math.max(-40, Math.min(0, v));
@@ -179,14 +179,13 @@ function slideshowHtml(script, images = [], options = {}) {
 }
 
 /**
- * Miniatura estilo "oración" tal y como la usan los canales que funcionan en
- * español (medido sobre 6 canales con 350k-104M visitas): texto ENORME en
- * amarillo dorado con borde negro grueso, en mayúsculas, sobre foto de
- * naturaleza. Nada de serif elegante: en el móvil, dentro de una parrilla de
- * miniaturas, gana el contraste, no el buen gusto.
+ * "Prayer"-style thumbnail as the channels that work in Spanish use it (measured on 6 channels
+ * with 350k-104M views): HUGE golden-yellow text with a thick black outline, in capitals, over a
+ * nature photo. No elegant serif: on a phone, inside a thumbnail grid, contrast wins, not good
+ * taste.
  *
- * Con `date` escribe la fecha en grande, que es el formato de la oración
- * diaria — la gente busca "oración de hoy" todos los días.
+ * With `date` it writes the date large, which is the daily prayer format — people search
+ * "oración de hoy" every day.
  */
 function thumbnailLoudSvg(title, options = {}) {
   const { width = 1280, height = 720, imageHref = null, date = null, paletteIndex = 0 } = options;
@@ -201,7 +200,7 @@ function thumbnailLoudSvg(title, options = {}) {
     : `<rect width="${width}" height="${height}" fill="url(#cielo)"/>
        <ellipse cx="${width / 2}" cy="${height * 0.85}" rx="${width * 0.42}" ry="${height * 0.42}" fill="url(#sol)"/>`;
 
-  // El bloque de texto se centra verticalmente contando cabecera + líneas + fecha.
+  // The text block is centered vertically counting header + lines + date.
   const alturaCabecera = Math.round(height * 0.115);
   const alturaLinea = Math.round(height * 0.145);
   const alturaFecha = date ? Math.round(height * 0.105) : 0;
@@ -246,7 +245,7 @@ function thumbnailLoudSvg(title, options = {}) {
 </svg>`;
 }
 
-/** Fecha en español para la miniatura: "MIÉRCOLES 23 DE SEPTIEMBRE". */
+/** Spanish date for the thumbnail: "MIÉRCOLES 23 DE SEPTIEMBRE". */
 function fechaEnEspanol(fecha = new Date(), zona = process.env.CHANNEL_TIMEZONE || 'America/New_York') {
   const dia = new Intl.DateTimeFormat('es-ES', { weekday: 'long', timeZone: zona }).format(fecha);
   const numero = new Intl.DateTimeFormat('es-ES', { day: 'numeric', timeZone: zona }).format(fecha);

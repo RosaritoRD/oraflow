@@ -1,16 +1,15 @@
 /**
- * Mensaje privado a quien comenta «Amén» en Instagram (el autor, 05/10/2026).
- * ARRANCA APAGADO (dm_amen_enabled='true' lo enciende, "para más adelante").
+ * Private message to whoever comments «Amén» on Instagram (the owner, 05/10/2026).
+ * IT STARTS OFF (dm_amen_enabled='true' turns it on, "for later").
  *
- * Usa las "respuestas privadas" de Instagram: un mensaje directo como
- * respuesta a UN comentario, permitido en los 7 días siguientes al comentario
- * (POST /me/messages con recipient.comment_id). Necesita el permiso
- * instagram_business_manage_messages en el token.
+ * Uses Instagram's "private replies": a direct message as a reply to ONE comment, allowed
+ * within 7 days of the comment (POST /me/messages with recipient.comment_id). Needs the
+ * instagram_business_manage_messages permission on the token.
  *
- * Primero la oración (lo que la persona vino a buscar), después el libro con
- * el cupón. Para no parecer spam: UNA vez por persona (no por comentario),
- * tope diario y solo comentarios que son un Amén. Sin 🕊️.
- * Settings: dm_amen_enabled, dm_amen_usuarios (a quién ya se le escribió), dm_amen_dia.
+ * First the prayer (what the person came looking for), then the book with the coupon. To
+ * not look like spam: ONCE per person (not per comment), a daily cap and only comments
+ * that are an Amén. No 🕊️.
+ * Settings: dm_amen_enabled, dm_amen_usuarios (who was already written to), dm_amen_dia.
  */
 const crypto = require('crypto');
 
@@ -20,9 +19,9 @@ const MAX_DIAS = 7;
 const ESPERA_PERMISO_MS = 3600000;
 const textos = require('./textos-canal');
 
-// 40 oraciones distintas (05/10/2026), una por tema y en dos tandas: ansiedad,
-// insomnio, familia, hijos, salud, trabajo, deudas, soledad, duelo, miedo…
-// Todas con Jesús de Nazaret como Rey de reyes y «Amén» (revisadas al guardarlas).
+// 40 different prayers (05/10/2026), one per topic and in two batches: anxiety,
+// insomnia, family, children, health, work, debts, loneliness, grief, fear…
+// All with Jesus of Nazareth as King of kings and «Amén» (reviewed when saved).
 const ORACIONES = require('./oraciones-privado.json');
 
 function textoMensaje({ id }, indice = null) {
@@ -39,7 +38,7 @@ async function leeJson(res) {
   return body;
 }
 
-/** Envía el mensaje privado a quien escribió el comentario. */
+/** Sends the private message to whoever wrote the comment. */
 async function enviaPrivado({ token, commentId, texto, fetchImpl = fetch }) {
   return leeJson(await fetchImpl(`${GRAPH}/me/messages`, {
     method: 'POST',
@@ -48,17 +47,17 @@ async function enviaPrivado({ token, commentId, texto, fetchImpl = fetch }) {
   }));
 }
 
-// Respuesta pública al comentario cuando se le envía la oración por privado (el autor, 05/10/2026).
+// Public reply to the comment when the prayer is sent privately (the owner, 05/10/2026).
 const avisos = () => textos.lista('aviso_privado');
 const avisoPara = id => { const l = avisos(); return l[crypto.createHash('sha1').update(String(id)).digest()[0] % l.length]; };
 
 /**
- * Una vuelta en Instagram. Desde el 05/10/2026 vale CUALQUIER comentario (no
- * solo «Amén»): la primera vez que alguien comenta recibe una oración por
- * privado y, en el comentario, el aviso "te envié una oración por DM". Si ya
- * la recibió antes y vuelve a escribir «Amén», se le contesta como siempre
- * (`respuestaAmen`); lo demás lo contesta el autor.
- * `comentarios` = los que aún no tienen respuesta del canal: [{ id, texto, usuario, fecha }].
+ * One round on Instagram. Since 05/10/2026 ANY comment counts (not only «Amén»): the first time
+ * someone comments they get a prayer privately and, on the comment, the notice "te envié una
+ * oración por DM". If they already got one and write «Amén» again, they get the usual reply
+ * (`respuestaAmen`); the rest is answered by the owner.
+ * `comentarios` = the ones that don't have a reply from the channel yet: [{ id, texto, usuario,
+ * fecha }].
  */
 async function enviaMensajesAmen({ db, token, comentarios, esAmen, respuestaAmen, responde, logger, now = new Date(), fetchImpl = fetch }) {
   if (!token || await db.getSetting('dm_amen_enabled') !== 'true') return 0;
@@ -67,12 +66,12 @@ async function enviaMensajesAmen({ db, token, comentarios, esAmen, respuestaAmen
   let cuenta = dia.fecha === hoy ? dia.cuenta || 0 : 0;
   const usuarios = JSON.parse(await db.getSetting('dm_amen_usuarios') || '[]');
   const ya = new Set(usuarios);
-  // Quien pidió borrar sus datos (utils/borrado-datos.js) no vuelve a recibir privados (07/10/2026).
+  // Whoever asked to delete their data (utils/borrado-datos.js) doesn't get private messages again (07/10/2026).
   const noContactar = new Set(JSON.parse(await db.getSetting('dm_no_contactar') || '[]'));
   let fallo = null;
   const nuevos = [];
   let publicas = 0;
-  // Meta rechazó el privado: esta vuelta ya no se intenta más. Si fue por permisos, se espera 1 h.
+  // Meta rejected the private message: it's not tried again this round. If it was about permissions, it waits 1 h.
   const previo = JSON.parse(await db.getSetting('dm_amen_estado') || '{}').ultimoError;
   let privadoCaido = Boolean(previo?.at && /permission|permiso|capability|\(#(3|10|200)\)/i.test(previo.mensaje || '')
     && now.getTime() - Date.parse(previo.at) < ESPERA_PERMISO_MS);
@@ -81,29 +80,29 @@ async function enviaMensajesAmen({ db, token, comentarios, esAmen, respuestaAmen
     if (now.getTime() - Date.parse(c.fecha) > MAX_DIAS * 86400000) continue;
     const nuevo = !ya.has(c.usuario) && !noContactar.has(c.usuario);
     if (nuevo && !privadoCaido) {
-      if (cuenta >= TOPE_DIARIO) continue; // mañana, dentro de los 7 días
+      if (cuenta >= TOPE_DIARIO) continue; // tomorrow, within the 7 days
       try {
         const turno = Number(await db.getSetting('dm_amen_turno') || 0);
         await enviaPrivado({ token, commentId: c.id, texto: textoMensaje(c, turno), fetchImpl });
-        await db.setSetting('dm_amen_turno', String(turno + 1)); // la siguiente persona recibe otra oración
+        await db.setSetting('dm_amen_turno', String(turno + 1)); // the next person gets another prayer
         ya.add(c.usuario);
         nuevos.push(c.usuario);
         cuenta += 1;
         if (responde) { await responde({ id: c.id, texto: avisoPara(c.id) }); publicas += 1; }
         continue;
       } catch (error) {
-        logger?.warn?.(`Instagram (oración por privado): ${error.message}`);
+        logger?.warn?.(`Instagram (private-message prayer): ${error.message}`);
         fallo = { mensaje: String(error.message).slice(0, 300), at: now.toISOString() };
-        privadoCaido = true; // permiso o límite: no insistir hasta la próxima vuelta
+        privadoCaido = true; // permission or limit: don't insist until the next round
       }
     }
-    // Sin privado (ya la recibió, pidió no recibir más, o Meta lo rechaza): el «Amén» se contesta en público (07/10/2026).
+    // No private message (already got it, asked not to get more, or Meta rejects it): the «Amén» is answered publicly (07/10/2026).
     if (responde && esAmen?.(c.texto) && respuestaAmen) {
       try {
         await responde({ id: c.id, texto: respuestaAmen(c) });
         publicas += 1;
       } catch (error) {
-        logger?.warn?.(`Instagram (respuesta al Amén): ${error.message}`);
+        logger?.warn?.(`Instagram (Amén reply): ${error.message}`);
         break;
       }
     }
@@ -113,7 +112,7 @@ async function enviaMensajesAmen({ db, token, comentarios, esAmen, respuestaAmen
     await db.setSetting('dm_amen_dia', JSON.stringify({ fecha: hoy, cuenta }));
   }
   if (nuevos.length || fallo) {
-    // Para el panel (área Redes): cuántos, cuándo el último y el último error.
+    // For the panel (Social area): how many, when the last one was and the last error.
     const antes = JSON.parse(await db.getSetting('dm_amen_estado') || '{}');
     await db.setSetting('dm_amen_estado', JSON.stringify({
       hoy: cuenta,
@@ -122,7 +121,7 @@ async function enviaMensajesAmen({ db, token, comentarios, esAmen, respuestaAmen
       ultimoError: fallo || (nuevos.length ? null : antes.ultimoError || null)
     }));
   }
-  if (nuevos.length || publicas) logger?.info?.(`Instagram: oración por privado a ${nuevos.length} persona(s), ${publicas} respuesta(s) en comentarios`);
+  if (nuevos.length || publicas) logger?.info?.(`Instagram: private-message prayer to ${nuevos.length} person(s), ${publicas} comment reply(ies)`);
   return nuevos.length;
 }
 

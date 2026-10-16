@@ -12,6 +12,7 @@
     "test": "node test.js",
     "test:thumbnail": "node --test tests/thumbnail/*.test.js",
     "test:shorts": "node --test tests/shorts-studio/*.test.js",
+    "test:outliers": "node --test tests/outliers/*.test.js",
     "test:accounts": "node --test tests/accounts/*.test.js tests/dashboard/*.test.js",
     "thumbnail:jeshua": "node scripts/jeshua-thumbnail.js",
     "agent:strategy": "node agents/content-strategy-agent.js",

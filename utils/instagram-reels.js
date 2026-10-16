@@ -1,14 +1,15 @@
 /**
- * Reels en Instagram (@tu_cuenta) con la API de "inicio de sesión con
- * Instagram" (graph.instagram.com), 04/10/2026.
+ * Reels on Instagram (@your_account) with the "Instagram login" API
+ * (graph.instagram.com), 04/10/2026.
  *
- * Instagram no deja programar por API, pero el contenedor aguanta 24 h sin
- * publicar. Por eso: al subir el Short a YouTube (≈12 h antes) se crea el
- * contenedor; a la hora exacta solo falta `media_publish`.
- * Instagram admite Reels de hasta 15 min: va el Short original, sin acelerar.
+ * Instagram doesn't allow scheduling through the API, but the container survives
+ * 24 h unpublished. So: when the Short is uploaded to YouTube (≈12 h before) the
+ * container is created; at the exact time only `media_publish` is left.
+ * Instagram accepts Reels up to 15 min: the original Short goes, not sped up.
  *
- * El token dura 60 días y se renueva cada semana; el renovado se guarda en
- * `settings` (instagram_token). Si se pega otro a mano en el .env, manda ese.
+ * The token lasts 60 days and is renewed every week; the renewed one is stored
+ * in `settings` (instagram_token). If another one is pasted by hand into .env,
+ * that one rules.
  */
 const crypto = require('crypto');
 
@@ -32,7 +33,7 @@ function tokenDelEnv(env = process.env) {
   return String(env.INSTAGRAM_TOKEN || '').trim() || null;
 }
 
-/** Token en uso: el renovado (BD) si salió del mismo token del .env; si no, el del .env. */
+/** Token in use: the renewed one (DB) if it came from the same .env token; otherwise, the .env one. */
 async function tokenInstagram(db, env = process.env) {
   const delEnv = tokenDelEnv(env);
   if (!delEnv) return null;
@@ -47,7 +48,7 @@ async function renuevaTokenSiToca({ db, env = process.env, now = new Date(), fet
   const origen = huella(delEnv);
   const ultima = Date.parse(await db.getSetting('instagram_token_refreshed_at') || '');
   if (await db.getSetting('instagram_token_origin') !== origen || !Number.isFinite(ultima)) {
-    // Token nuevo (o primera vez): se apunta y se renueva dentro de una semana.
+    // New token (or first time): it's noted down and renewed in a week.
     await db.setSetting('instagram_token_origin', origen);
     await db.setSetting('instagram_token', delEnv);
     await db.setSetting('instagram_token_refreshed_at', now.toISOString());
@@ -57,20 +58,20 @@ async function renuevaTokenSiToca({ db, env = process.env, now = new Date(), fet
   const actual = await tokenInstagram(db, env);
   const url = `${GRAPH}/refresh_access_token?${new URLSearchParams({ grant_type: 'ig_refresh_token', access_token: actual })}`;
   const body = await leeRespuesta(await fetchImpl(url), 'renovar token');
-  if (!body.access_token) throw new Error('Instagram (renovar token): respuesta sin access_token');
+  if (!body.access_token) throw new Error('Instagram (renew token): response without access_token');
   await db.setSetting('instagram_token', body.access_token);
   await db.setSetting('instagram_token_refreshed_at', now.toISOString());
   return true;
 }
 
 /**
- * Crea el contenedor REELS a partir de un enlace público (`videoUrl`).
- * ⚠ upload_type=resumable responde "video_url is required" con este tipo de
- * token (probado en v21/v23/v25, 04/10/2026), y los enlaces de Facebook
- * (fbcdn) los rechaza: el enlace lo da utils/enlace-publico.js.
- * `coverUrl` (11/10/2026): la portada del Reel. Solo se puede poner AQUÍ, al
- * crear el contenedor: un Reel ya creado o publicado no cambia de portada por
- * la API. Probado ese día con el token de "inicio de sesión con Instagram".
+ * Creates the REELS container from a public link (`videoUrl`).
+ * ⚠ upload_type=resumable answers "video_url is required" with this kind of
+ * token (tested on v21/v23/v25, 04/10/2026), and Facebook links (fbcdn) are
+ * rejected: the link comes from utils/enlace-publico.js.
+ * `coverUrl` (11/10/2026): the Reel's cover. It can only be set HERE, when
+ * creating the container: a Reel already created or published doesn't change its
+ * cover through the API. Tested that day with the "Instagram login" token.
  */
 async function preparaReelIG({ token, videoUrl, coverUrl = null, caption = '', version = VERSION, fetchImpl = fetch }) {
   const me = await leeRespuesta(await fetchImpl(
@@ -85,7 +86,7 @@ async function preparaReelIG({ token, videoUrl, coverUrl = null, caption = '', v
       share_to_feed: 'true', caption, access_token: token
     }).toString()
   }), 'contenedor');
-  if (!contenedor.id) throw new Error('Instagram (contenedor): no devolvió id');
+  if (!contenedor.id) throw new Error('Instagram (container): returned no id');
   return { containerId: contenedor.id, igUserId };
 }
 
@@ -109,18 +110,18 @@ async function publicaIG({ token, igUserId, containerId, version = VERSION, fetc
       `${GRAPH}/${version}/${pub.id}?${new URLSearchParams({ fields: 'permalink', access_token: token })}`
     ), 'enlace');
     permalink = info.permalink || null;
-  } catch (_e) { /* publicado igual; el enlace es un extra */ }
+  } catch (_e) { /* published anyway; the link is an extra */ }
   return { mediaId: pub.id, permalink };
 }
 
 /**
- * Carrusel de imágenes (2-10 JPG con enlace público). Crea un contenedor por
- * imagen, el contenedor CAROUSEL con todas y devuelve su id; la publicación
- * se hace con publicaIG() cuando el estado es FINISHED.
+ * Image carousel (2-10 JPGs with a public link). Creates one container per
+ * image, the CAROUSEL container with all of them and returns its id; publishing
+ * is done with publicaIG() when the status is FINISHED.
  */
 async function preparaCarruselIG({ token, imageUrls, caption = '', version = VERSION, fetchImpl = fetch }) {
   if (!Array.isArray(imageUrls) || imageUrls.length < 2 || imageUrls.length > 10) {
-    throw new Error('Instagram (carrusel): hacen falta entre 2 y 10 imágenes');
+    throw new Error('Instagram (carousel): between 2 and 10 images are needed');
   }
   const me = await leeRespuesta(await fetchImpl(
     `${GRAPH}/${version}/me?${new URLSearchParams({ fields: 'user_id,username', access_token: token })}`
@@ -137,13 +138,13 @@ async function preparaCarruselIG({ token, imageUrls, caption = '', version = VER
     hijos.push(hijo.id);
   }
   const carrusel = await crea({ media_type: 'CAROUSEL', children: hijos.join(','), caption }, 'carrusel');
-  if (!carrusel.id) throw new Error('Instagram (carrusel): no devolvió id');
+  if (!carrusel.id) throw new Error('Instagram (carousel): returned no id');
   return { containerId: carrusel.id, igUserId };
 }
 
-/** Una sola imagen (JPG con enlace público) para el feed; se publica con publicaIG() cuando esté FINISHED. */
+/** A single image (JPG with a public link) for the feed; published with publicaIG() when it's FINISHED. */
 async function preparaImagenIG({ token, imageUrl, caption = '', version = VERSION, fetchImpl = fetch }) {
-  if (!imageUrl) throw new Error('Instagram (imagen): falta la URL pública');
+  if (!imageUrl) throw new Error('Instagram (image): missing the public URL');
   const me = await leeRespuesta(await fetchImpl(
     `${GRAPH}/${version}/me?${new URLSearchParams({ fields: 'user_id,username', access_token: token })}`
   ), 'cuenta');
@@ -153,13 +154,13 @@ async function preparaImagenIG({ token, imageUrl, caption = '', version = VERSIO
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ image_url: imageUrl, caption, access_token: token }).toString()
   }), 'imagen');
-  if (!imagen.id) throw new Error('Instagram (imagen): no devolvió id');
+  if (!imagen.id) throw new Error('Instagram (image): returned no id');
   return { containerId: imagen.id, igUserId };
 }
 
-/** Historia (imagen 9:16 con enlace público). ⚠ La API no admite stickers de enlace. */
+/** Story (9:16 image with a public link). ⚠ The API doesn't support link stickers. */
 async function preparaHistoriaIG({ token, imageUrl, version = VERSION, fetchImpl = fetch }) {
-  if (!imageUrl) throw new Error('Instagram (historia): falta la URL pública');
+  if (!imageUrl) throw new Error('Instagram (story): missing the public URL');
   const me = await leeRespuesta(await fetchImpl(
     `${GRAPH}/${version}/me?${new URLSearchParams({ fields: 'user_id,username', access_token: token })}`
   ), 'cuenta');
@@ -169,7 +170,7 @@ async function preparaHistoriaIG({ token, imageUrl, version = VERSION, fetchImpl
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ image_url: imageUrl, media_type: 'STORIES', access_token: token }).toString()
   }), 'historia');
-  if (!historia.id) throw new Error('Instagram (historia): no devolvió id');
+  if (!historia.id) throw new Error('Instagram (story): returned no id');
   return { containerId: historia.id, igUserId };
 }
 

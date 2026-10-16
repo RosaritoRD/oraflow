@@ -4,13 +4,13 @@ const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
 const sharp = require('sharp');
-// La entrada real de generación debe activar la protección antes de leer imágenes.
+// The real generation entry point must turn the protection on before reading images.
 require('../../utils/ai-video-generator');
 
 const canvas = () => sharp({ create: { width: 8, height: 8, channels: 3, background: '#204060' } });
 
 for (const format of ['gif', 'tiff', 'avif']) {
-  test(`rechaza ${format} por contenido, también con extensión JPG`, async t => {
+  test(`rejects ${format} by content, even with a JPG extension`, async t => {
     const input = await canvas().toFormat(format).toBuffer();
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'safe-image-'));
     t.after(() => fs.rm(dir, { recursive: true, force: true }));
@@ -21,7 +21,7 @@ for (const format of ['gif', 'tiff', 'avif']) {
   });
 }
 
-test('conserva PNG, JPEG, WebP y los SVG de las miniaturas', async () => {
+test('keeps PNG, JPEG, WebP and the thumbnails\' SVGs', async () => {
   for (const format of ['png', 'jpeg', 'webp']) {
     const input = await canvas().toFormat(format).toBuffer();
     const output = await sharp(input).resize(4, 4).png().toBuffer();

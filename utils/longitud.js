@@ -1,12 +1,12 @@
 /**
- * Tope DURO de palabras para los largos. Pedir "14-16 minutes" no bastaba:
- * la IA escribía ~45% más (≈20 min y 17.894 caracteres de ElevenLabs el 29/09).
- * El tope sale del máximo de minutos a 130 palabras/min; con la voz del canal
- * eso queda por debajo del máximo pedido, nunca por encima.
+ * HARD word cap for long videos. Asking for "14-16 minutes" wasn't enough: the AI
+ * wrote ~45% more (≈20 min and 17,894 ElevenLabs characters on 29/09).
+ * The cap comes from the maximum minutes at 130 words/min; with the channel's
+ * voice that lands below the requested maximum, never above.
  */
 const PALABRAS_POR_MINUTO = 130;
 
-/** "6-8 minutes" → 1040. Sin minutos (los Shorts van en segundos) → null. */
+/** "6-8 minutes" → 1040. No minutes (Shorts go in seconds) → null. */
 function topePalabras(etiqueta = '') {
   const m = String(etiqueta || '').match(/(\d+)(?:\s*-\s*(\d+))?\s*min/i);
   if (!m) return null;
@@ -18,7 +18,7 @@ function cuentaPalabras(texto) {
   return plano.split(/\s+/).filter(Boolean).length;
 }
 
-/** Quita secciones del final hasta que todo (fijo + secciones) quepa; deja al menos una. */
+/** Removes sections from the end until everything (fixed + sections) fits; keeps at least one. */
 function recortaSecciones(secciones, tope, palabrasFijas = 0) {
   if (!tope) return secciones;
   const out = [...secciones];

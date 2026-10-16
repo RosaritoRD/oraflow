@@ -1,11 +1,11 @@
-// 05/10/2026: vídeos recomendados en la descripción (modelo Harrigan).
+// 05/10/2026: recommended videos in the description (Harrigan model).
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const d = require('../../utils/destacados');
 const { componeDescripcion, INVITA, VER } = require('../../agents/seo-optimizer-agent');
 const { textoParaRed } = require('../../utils/texto-social');
 
-test('elige el largo y el Short más vistos', () => {
+test('picks the most-watched long video and Short', () => {
   assert.equal(d.duracionSegundos('PT7M3S'), 423);
   const r = d.eligeDestacados([
     { id: 'L1', titulo: 'a', vistas: 10, segundos: 420 }, { id: 'L2', titulo: 'b', vistas: 99, segundos: 400 },
@@ -15,7 +15,7 @@ test('elige el largo y el Short más vistos', () => {
   assert.equal(r.ver.url, 'https://www.youtube.com/watch?v=S1');
 });
 
-test('descripción: invita arriba, "Tienes que ver" tras la raya del pie, hashtags finales; nada de eso pasa a Instagram', () => {
+test('description: invitation at the top, "Tienes que ver" after the footer rule, hashtags last; none of that goes to Instagram', () => {
   process.env.DESCRIPTION_FOOTER = '━━━━━\\n📖 Libro';
   try {
     const t = componeDescripcion('Cuerpo.', ['oracion'], { invita: { url: 'https://www.youtube.com/watch?v=L2' }, ver: { url: 'https://www.youtube.com/watch?v=S1' } });
@@ -30,7 +30,7 @@ test('descripción: invita arriba, "Tienes que ver" tras la raya del pie, hashta
   }
 });
 
-test('control de calidad: usa el título editado en el panel', async () => {
+test('quality control: uses the title edited in the panel', async () => {
   const { OperatorService } = require('../../utils/operator-service');
   const vistos = [];
   const op = Object.create(OperatorService.prototype);

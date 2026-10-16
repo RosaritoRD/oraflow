@@ -9,8 +9,8 @@ class OperatorService {
   }
 
   async runQualityChecks(production, profile = {}) {
-    // El título editado en el panel manda (05/10/2026): antes se comprobaba el original y
-    // un duplicado no se podía arreglar cambiándolo.
+    // The title edited in the panel rules (05/10/2026): before, the original one was
+    // checked and a duplicate couldn't be fixed by changing it.
     const title = String(production.editorData?.title || production.seo?.title || production.script?.title || '').trim();
     const description = String(production.seo?.description || '').trim();
     const tags = Array.isArray(production.seo?.tags) ? production.seo.tags : [];
@@ -37,8 +37,9 @@ class OperatorService {
           : finalVideo?.path ? 'Final MP4 is ready' : 'Final MP4 is missing')
     ];
 
-    // Si la IA falla (p. ej. OpenAI sin créditos) el guion sale de la plantilla
-    // genérica en inglés; eso nunca debe publicarse solo en el canal.
+    // If the AI fails (e.g. OpenAI out of credits) the script comes from the
+    // generic English template; that must never be published on its own on the
+    // channel.
     if (String(process.env.ALLOW_TEMPLATE_CONTENT || '').toLowerCase() !== 'on') {
       const aiScript = production.script?.metadata?.generationSource === 'ai';
       checks.push(this.check('ai_script', aiScript,

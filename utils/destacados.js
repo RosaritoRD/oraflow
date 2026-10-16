@@ -1,8 +1,8 @@
 /**
- * Vídeos que se recomiendan en las descripciones (05/10/2026, modelo de Juan
- * Carlos Harrigan): arriba "¡Te invitamos a ver la siguiente oración!" con el
- * largo más visto, y en el pie "Tienes que ver este vídeo" con el Short más
- * visto. YouTube pinta esos enlaces como tarjetas del vídeo.
+ * Videos recommended in the descriptions (05/10/2026, modeled on a large prayer
+ * channel): at the top "¡Te invitamos a ver la siguiente oración!" with the
+ * most-watched long video, and in the footer "Tienes que ver este vídeo" with
+ * the most-watched Short. YouTube renders those links as video cards.
  * Setting `videos_destacados` = { invita: {id,url,titulo}, ver: {…}, at }.
  */
 const esShort = segundos => segundos > 0 && segundos <= 180;
@@ -13,7 +13,7 @@ function duracionSegundos(iso = '') {
   return m ? (Number(m[1] || 0) * 3600) + (Number(m[2] || 0) * 60) + Number(m[3] || 0) : 0;
 }
 
-/** De la lista de vídeos públicos ({id, titulo, vistas, segundos}) elige el largo y el Short más vistos. */
+/** From the list of public videos ({id, titulo, vistas, segundos}) it picks the most-watched long video and Short. */
 function eligeDestacados(videos) {
   const orden = l => [...l].sort((a, b) => b.vistas - a.vistas)[0] || null;
   const enlace = v => (v ? { id: v.id, url: `https://www.youtube.com/watch?v=${v.id}`, titulo: v.titulo } : null);
@@ -23,7 +23,7 @@ function eligeDestacados(videos) {
   };
 }
 
-/** Lee el canal (YouTube Data API) y guarda los destacados. ~2 unidades por 50 vídeos. */
+/** Reads the channel (YouTube Data API) and stores the featured ones. ~2 units per 50 videos. */
 async function actualizaDestacados({ youtube, db, now = new Date() }) {
   const canal = (await youtube.channels.list({ part: ['contentDetails'], mine: true })).data.items?.[0];
   if (!canal) return null;

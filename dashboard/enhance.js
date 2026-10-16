@@ -13,7 +13,7 @@
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const MINI_LABELS = {
-    overview: i18n.t('Home'), research: i18n.t('Research'), shorts: i18n.t('Shorts'), clipping: i18n.t('Clipping'), operator: i18n.t('Operator'), pipeline: i18n.t('Pipeline'),
+    overview: i18n.t('Home'), research: i18n.t('Research'), outliers: i18n.t('Outliers'), shorts: i18n.t('Shorts'), clipping: i18n.t('Clipping'), operator: i18n.t('Operator'), pipeline: i18n.t('Pipeline'),
     calendar: i18n.t('Calendar'), analytics: i18n.t('Stats'), engagement: i18n.t('Audience'), readiness: i18n.t('Checks'), accounts: i18n.t('Accounts'), settings: i18n.t('Setup'), docs: i18n.t('Guides')
   };
   function ensureMiniLabels() {
@@ -34,6 +34,7 @@
     research: [i18n.t('RESEARCH INBOX'), i18n.t('Turn evidence into the next production.'), i18n.t('Research')],
     shorts: [i18n.t('VERSE SHORTS'), i18n.t('Verses in, shorts out.'), i18n.t('Shorts')],
     clipping: [i18n.t('CLIPPING'), i18n.t('Long videos into short clips.'), i18n.t('Clipping')],
+    outliers: [i18n.t('OUTLIERS'), i18n.t('What already works, before you film.'), i18n.t('Outliers')],
     operator: [i18n.t('AUTONOMOUS OPERATOR'), i18n.t('Give Oraflow the strategy.'), i18n.t('Operator')],
     pipeline: [i18n.t('CONTENT OPERATIONS'), i18n.t('From idea to published.'), i18n.t('Pipeline')],
     calendar: [i18n.t('EDITORIAL PLANNING'), i18n.t('Plan before you generate.'), i18n.t('Calendar')],
@@ -45,7 +46,7 @@
     docs: [i18n.t('GUIDES'), i18n.t('How to get the most out of Oraflow.'), i18n.t('Guides')]
   };
   let currentView = ui.currentView;
-  // Si se entró por enlace (#docs…), la pestaña activa puede quedar fuera de la tira del móvil.
+  // If you arrived through a link (#docs…), the active tab can end up outside the mobile strip.
   if (matchMedia('(max-width: 900px)').matches) {
     requestAnimationFrame(() => document.querySelector('.nav-item.active')?.scrollIntoView({ block: 'nearest', inline: 'center' }));
   }
@@ -57,7 +58,7 @@
       const previous = currentView;
       currentView = view;
       baseSwitchView(view);
-      // En el móvil el menú es una tira horizontal: trae la pestaña activa a la vista.
+      // On mobile the menu is a horizontal strip: bring the active tab into view.
       document.querySelector(`.nav-item[data-view="${view}"]`)?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
       document.title = `${i18n.t(VIEW_META[view][2])} · Oraflow`;
       const section = $(`#${view}-view`);
@@ -137,12 +138,13 @@
   const listEl = palette.querySelector('.cmdk-list');
   const inputEl = palette.querySelector('.cmdk-input');
 
-  // Palabras clave en español e inglés para que «configuración» encuentre "Channel setup".
+  // Keywords in Spanish and English so «configuración» finds "Channel setup".
   const VIEW_KEYWORDS = {
     overview: 'resumen inicio home dashboard panel',
     research: 'investigacion nichos ideas radar oportunidades',
     shorts: 'shorts versiculos biblia salmos lote fondos musica vertical',
     clipping: 'clipping clips recortar campana subtitulos whisper predica',
+    outliers: 'outliers virales rompen media canal vidiq tendencias buscar videos exitosos',
     operator: 'operador autonomo estrategia automatico',
     pipeline: 'produccion videos contenido revisar aprobar estados',
     calendar: 'calendario programados ideas backlog fechas',
@@ -186,7 +188,7 @@
     return cmds;
   }
 
-  /* Contenido: solo aparece al escribir, para que la lista inicial siga corta. */
+  /* Content: only shows up while typing, so the initial list stays short. */
   function contentCommands() {
     const cmds = [];
     for (const item of ui.state?.pipeline || []) {
@@ -235,7 +237,7 @@
       listEl.innerHTML = `<div class="cmdk-empty">${escapeHTML(i18n.t('No results for'))} “${escapeHTML(q)}”.<br><small>${escapeHTML(i18n.t('Try fewer words, or search the guides.'))}</small></div>`;
       return;
     }
-    // Todo lo que viene de datos (títulos de videos, ideas…) se escapa antes de pintarse.
+    // Everything that comes from data (video titles, ideas…) is escaped before being drawn.
     const mark = text => (core ? core.highlight(text, q, escapeHTML) : escapeHTML(text));
     let lastGroup = '';
     listEl.innerHTML = filtered.map((c, i) => {

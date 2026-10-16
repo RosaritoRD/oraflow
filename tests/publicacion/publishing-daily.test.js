@@ -39,14 +39,14 @@ function agentWith(db) {
   return agent;
 }
 
-test('la cola muestra el título SEO que se enviará a YouTube', async () => {
+test('the queue shows the SEO title that will be sent to YouTube', async () => {
   const entry = await agentWith(fakeDb()).scheduleContent(production('seo', {
     seo: { title: 'Oración de la noche para descansar' }
   }));
   assert.equal(entry.title, entry.metadata.seo.title);
 });
 
-test('cada vídeo largo recibe su propio día a las 04:00 de NY', async () => {
+test('each long video gets its own day at 04:00 NY', async () => {
   const db = fakeDb();
   const agent = agentWith(db);
   const a = await agent.scheduleContent(production('p1'));
@@ -58,20 +58,20 @@ test('cada vídeo largo recibe su propio día a las 04:00 de NY', async () => {
   assert.equal(a.metadata.dailySlot, true);
 });
 
-test('los Shorts conservan su hora propia', async () => {
+test('Shorts keep their own time', async () => {
   const agent = agentWith(fakeDb());
   const s = await agent.scheduleContent(production('s1', { contentType: 'short', shortClipId: 'c1' }));
   assert.equal(s.publishTime, '2030-01-01T14:00:00.000Z');
   assert.equal(s.metadata.dailySlot, false);
 });
 
-test('con daily_publish_enabled=false vuelve al comportamiento anterior', async () => {
+test('with daily_publish_enabled=false it goes back to the previous behavior', async () => {
   const agent = agentWith(fakeDb({ daily_publish_enabled: 'false' }));
   const e = await agent.scheduleContent(production('p1'));
   assert.equal(e.publishTime, '2030-01-01T14:00:00.000Z');
 });
 
-test('se sube por adelantado, privado y con publishAt = la hora del hueco', async () => {
+test('uploaded in advance, private and with publishAt = the slot time', async () => {
   const db = fakeDb();
   const agent = agentWith(db);
   const entry = await agent.scheduleContent(production('p1'));

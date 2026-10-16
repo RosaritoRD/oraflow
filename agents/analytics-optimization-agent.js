@@ -228,7 +228,7 @@ class AnalyticsOptimizationAgent {
       ids: 'channel==MINE',
       startDate,
       endDate,
-      // Sin impressions: Analytics v2 la rechaza y tumbaba toda la consulta (02/10/2026).
+      // No impressions: Analytics v2 rejects it and it was breaking the whole query (02/10/2026).
       metrics: 'views',
       dimensions: 'day',
       filters: `video==${videoId}`
@@ -415,9 +415,9 @@ class AnalyticsOptimizationAgent {
   }
 
   async analyzeThumbnailPerformance(videoId, period = null) {
-    // Las impresiones y el CTR de la miniatura no están en YouTube Analytics v2 para
-    // este canal («Unknown identifier» / «query is not supported», probado 02/10/2026):
-    // solo se ven en YouTube Studio. No se consulta para no ensuciar el registro.
+    // Impressions and thumbnail CTR aren't in YouTube Analytics v2 for this channel
+    // («Unknown identifier» / «query is not supported», tested 02/10/2026): they only show
+    // in YouTube Studio. Not queried, to keep the log clean.
     return {
       available: false,
       impressions: 0,
@@ -795,8 +795,8 @@ class AnalyticsOptimizationAgent {
   }
 
   calculateOrganicPercentage(sources) {
-    // Indicador histórico de la aplicación: cuota de búsquedas + vídeos relacionados.
-    // No representa todo el tráfico no pagado (por ejemplo, el feed Shorts).
+    // The app's historical indicator: search quota + related videos. It doesn't
+    // represent all unpaid traffic (for example, the Shorts feed).
     const organicSources = ['YT_SEARCH', 'RELATED_VIDEO', 'SEARCH', 'YOUTUBE_SEARCH', 'SUGGESTED_VIDEO'];
     const total = sources.reduce((sum, row) => sum + row[1], 0);
     const organic = sources

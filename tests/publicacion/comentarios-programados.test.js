@@ -1,6 +1,6 @@
-// 02/10/2026: la sincronización de comentarios pedía los de vídeos aún programados
-// (privados hasta su hora) y YouTube respondía «has disabled comments»: 40+ avisos
-// falsos al día. Un vídeo que todavía no es público no se sincroniza.
+// 02/10/2026: comment sync was requesting comments on videos still scheduled (private
+// until their time) and YouTube answered «has disabled comments»: 40+ false warnings a
+// day. A video that isn't public yet isn't synced.
 const test = require('node:test');
 const assert = require('node:assert');
 const { AudienceEngagementService } = require('../../utils/audience-engagement-service');
@@ -8,25 +8,25 @@ const { AudienceEngagementService } = require('../../utils/audience-engagement-s
 const svc = Object.create(AudienceEngagementService.prototype);
 const ahora = new Date('2026-10-02T12:00:00Z');
 
-test('un vídeo programado para más tarde no se sincroniza todavía', () => {
+test('a video scheduled for later isn\'t synced yet', () => {
   assert.strictEqual(svc.isSyncDue(null, '2026-10-02T16:00:00Z', ahora), false);
   assert.strictEqual(svc.isSyncDue({ lastSyncedAt: '2026-10-01T00:00:00Z' }, '2026-10-02T16:00:00Z', ahora), false);
 });
 
-test('un vídeo ya público y nunca sincronizado sí se sincroniza', () => {
+test('a video already public and never synced does get synced', () => {
   assert.strictEqual(svc.isSyncDue(null, '2026-10-02T09:00:00Z', ahora), true);
 });
 
-test('sin fecha de publicación se mantiene el comportamiento anterior', () => {
+test('without a publish date the previous behavior is kept', () => {
   assert.strictEqual(svc.isSyncDue(null, null, ahora), true);
 });
 
-test('recién publicado (menos de 15 min) aún no se sincroniza: YouTube tarda en hacerlo público', () => {
+test('just published (under 15 min) isn\'t synced yet: YouTube takes a while to make it public', () => {
   assert.strictEqual(svc.isSyncDue(null, '2026-10-02T11:59:59Z', ahora), false);
   assert.strictEqual(svc.isSyncDue(null, '2026-10-02T11:40:00Z', ahora), true);
 });
 
-test('«comentarios desactivados» con la forma real de googleapis se apunta y no se reintenta', async () => {
+test('«comments disabled» in googleapis\' real shape is recorded and not retried', async () => {
   const guardado = [];
   const db = {
     getEngagementInsight: async () => null,

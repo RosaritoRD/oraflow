@@ -1,23 +1,23 @@
 /**
- * Los Shorts del canal que más vistas sacaron en su primera semana (12/10/2026).
+ * The channel's Shorts with the most views in their first week (12/10/2026).
  *
- * Con 19 Shorts medidos a 7 días, los que nombran una situación concreta del que
- * mira («Oración de la noche cuando no puedes dejar de pensar» 9.624 vistas,
- * «Si despertaste con ansiedad, haz esta oración» 6.283) sacaron 2-3 veces más que
- * los genéricos («…para comenzar el día con paz y esperanza»). El guionista de
- * Shorts los ve como FORMA a imitar, no como texto a copiar: el control de títulos
- * repetidos sigue igual. Los datos salen de performance_snapshots (YouTube Analytics).
+ * With 19 Shorts measured at 7 days, the ones that name a concrete situation of the
+ * viewer («Oración de la noche cuando no puedes dejar de pensar» 9,624 views, «Si
+ * despertaste con ansiedad, haz esta oración» 6,283) got 2-3 times more than the generic
+ * ones («…para comenzar el día con paz y esperanza»). The Shorts scriptwriter sees them
+ * as a SHAPE to imitate, not text to copy: the repeated-titles check stays the same. The
+ * data comes from performance_snapshots (YouTube Analytics).
  */
 
 function tituloDe(fila) {
   try {
     const seo = JSON.parse(fila.metadata || '{}')?.seo?.title;
     if (seo && String(seo).trim()) return String(seo).trim();
-  } catch (_e) { /* el título de la programación vale */ }
+  } catch (_e) { /* the scheduling title is fine */ }
   return String(fila.title || '').trim();
 }
 
-/** Filas {video_id, metrics, title, metadata} → [{ titulo, vistas }] de más a menos vistas. */
+/** Rows {video_id, metrics, title, metadata} → [{ titulo, vistas }] from most to least viewed. */
 function mejoresShorts(filas = [], n = 5) {
   const porVideo = new Map();
   for (const f of filas) {
@@ -31,7 +31,7 @@ function mejoresShorts(filas = [], n = 5) {
   return [...porVideo.values()].sort((a, b) => b.vistas - a.vistas).slice(0, n);
 }
 
-/** El trozo del prompt del guionista; '' sin datos. */
+/** The scriptwriter's prompt fragment; '' without data. */
 function bloqueEjemplos(ejemplos) {
   if (!Array.isArray(ejemplos) || !ejemplos.length) return '';
   return '\nShorts of THIS channel with the most views in their first week. Do not copy them or reuse their titles; '

@@ -1,11 +1,11 @@
-// 05/10/2026: área «Redes» del panel.
+// 05/10/2026: the panel's «Social» area.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const r = require('../../utils/redes-estado');
 
 const dbFalsa = (s = {}) => ({ s, getSetting: async k => s[k] ?? null, setSetting: async (k, v) => { s[k] = v; } });
 
-test('estadoRedes: encendidas por defecto, carrusel apagado por defecto, horas y último resultado', async () => {
+test('estadoRedes: on by default, carousel off by default, times and last result', async () => {
   const db = dbFalsa({ oracion_fecha_last: JSON.stringify({ fecha: '2026-10-05', status: 'published', redes: { instagram: { status: 'published', url: 'u' } } }) });
   const lista = await r.estadoRedes(db);
   const por = id => lista.find(p => p.id === id);
@@ -16,7 +16,7 @@ test('estadoRedes: encendidas por defecto, carrusel apagado por defecto, horas y
   assert.equal(por('amen').hoy, 0);
 });
 
-test('cambiaPieza: hora válida, apagar, y rechaza lo que no existe', async () => {
+test('cambiaPieza: valid time, turning off, and rejects what doesn\'t exist', async () => {
   const db = dbFalsa();
   assert.deepEqual(await r.cambiaPieza(db, 'frase_compartir', { hora: '21:30', encendida: false }), { ok: true });
   assert.equal(db.s.frase_compartir_time, '21:30');
@@ -26,7 +26,7 @@ test('cambiaPieza: hora válida, apagar, y rechaza lo que no existe', async () =
   assert.match((await r.cambiaPieza(db, 'nada', {})).error, /desconocida/);
 });
 
-test('privado de Instagram: se ve y se enciende desde el panel, con envíos, error y peticiones de borrado (07/10/2026)', async () => {
+test('Instagram private message: visible and toggled from the panel, with sends, error and deletion requests (07/10/2026)', async () => {
   const db = dbFalsa({
     dm_amen_enabled: 'true',
     dm_amen_estado: JSON.stringify({ hoy: 3, total: 10, ultimoEnvio: '2026-10-07T10:00:00Z', ultimoError: { mensaje: '(#10) sin permiso', at: '2026-10-07T11:00:00Z' } }),
@@ -48,6 +48,6 @@ test('privado de Instagram: se ve y se enciende desde el panel, con envíos, err
 
   assert.deepEqual(await r.cambiaPieza(db, 'privado', { encendida: false }), { ok: true });
   assert.equal(db.s.dm_amen_enabled, 'false');
-  // apagado por defecto, como hasta ahora
+  // off by default, as until now
   assert.equal((await r.estadoRedes(dbFalsa())).find(x => x.id === 'privado').encendida, false);
 });

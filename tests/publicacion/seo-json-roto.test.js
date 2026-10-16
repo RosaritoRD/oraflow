@@ -1,5 +1,5 @@
-// 07/10/2026: la IA de SEO devolvió JSON con un salto de línea dentro de la
-// descripción («Unterminated string») y el vídeo salió con la plantilla de respaldo.
+// 07/10/2026: the SEO AI returned JSON with a line break inside the description
+// («Unterminated string») and the video went out with the fallback template.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { SEOOptimizerAgent } = require('../../agents/seo-optimizer-agent');
@@ -14,13 +14,13 @@ function agente(respuestas) {
 const guion = { title: 'Oración de la noche', scriptures: [] };
 const estrategia = { topic: 'paz', keywords: ['oracion'], contentFormat: 'long' };
 
-test('saltos de línea crudos dentro de un texto JSON se reparan', () => {
+test('raw line breaks inside a JSON string are repaired', () => {
   const { a } = agente([]);
   const r = a.parseAIJsonResponse('{"title": "Oración", "description": "Primer párrafo.\nSalmos 4:8 \\"En paz\\"", "tags": ["a"]}');
   assert.equal(r.description, 'Primer párrafo.\nSalmos 4:8 "En paz"');
 });
 
-test('si la respuesta no se puede leer, se pide otra vez antes de usar la plantilla', async () => {
+test('if the response can\'t be read, it asks again before using the template', async () => {
   const bueno = JSON.stringify({ title: 'Oración para dormir en paz', description: 'Una oración.', tags: ['oracion', 'paz'], hashtags: ['#oracion'] });
   const { a, llamadas } = agente(['{"title": "Oración", "description": "cortado', bueno]);
   const r = await a.generateSEOWithAI(guion, estrategia);
@@ -29,5 +29,5 @@ test('si la respuesta no se puede leer, se pide otra vez antes de usar la planti
 
   const { a: b, llamadas: n2 } = agente(['roto', 'roto']);
   assert.equal(await b.generateSEOWithAI(guion, estrategia), null);
-  assert.equal(n2(), 2); // no más de un reintento
+  assert.equal(n2(), 2); // no more than one retry
 });

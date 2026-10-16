@@ -66,9 +66,9 @@ class AudienceEngagementService {
   }
 
   isSyncDue(insight, publishedAt, now = new Date()) {
-    // Programado y aún privado: YouTube responde «has disabled comments» (02/10/2026).
+    // Scheduled and still private: YouTube answers «has disabled comments» (02/10/2026).
     const programado = publishedAt ? new Date(publishedAt) : null;
-    // 15 min de margen: a la hora exacta YouTube aún no lo ha hecho público.
+    // 15 min of margin: at the exact time YouTube hasn't made it public yet.
     if (programado && !Number.isNaN(programado.getTime()) && programado.getTime() + 15 * 60000 > now.getTime()) return false;
     if (!insight?.lastSyncedAt) return true;
     const published = publishedAt ? new Date(publishedAt) : null;
@@ -151,7 +151,7 @@ class AudienceEngagementService {
         pageToken = reachedWatermark ? null : page.nextPageToken || null;
       } while (pageToken && fetched < this.maxCommentsPerSync);
     } catch (error) {
-      // googleapis trae el motivo en response.data.error.errors (02/10/2026: antes nunca coincidía).
+      // googleapis carries the reason in response.data.error.errors (02/10/2026: before, it never matched).
       const motivo = error?.errors?.[0]?.reason || error?.response?.data?.error?.errors?.[0]?.reason;
       if (motivo === 'commentsDisabled' || /disabled comments/i.test(error?.message || '')) {
         disabled = true;

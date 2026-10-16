@@ -1,18 +1,18 @@
 /**
- * Varias voces para los vídeos (pedido del autor, 03/10/2026).
+ * Several voices for the videos (requested by the owner, 03/10/2026).
  *
- * ELEVENLABS_VOICE_IDS = lista separada por comas. Cada vídeo usa UNA, elegida
- * por su id: el mismo vídeo siempre suena con la misma voz, así un reintento
- * no cambia de narrador ni vuelve a pagar la narración (la caché de audio va
- * por voz + texto). Sin lista, ELEVENLABS_VOICE_ID como siempre.
+ * ELEVENLABS_VOICE_IDS = a comma-separated list. Each video uses ONE, picked by its
+ * id: the same video always sounds with the same voice, so a retry doesn't change
+ * narrator or pay for the narration again (the audio cache is keyed by voice +
+ * text). Without a list, ELEVENLABS_VOICE_ID as always.
  *
- * 07/10/2026 — calendario de voces. Los números del canal: los Shorts con la
- * voz con la que nació el canal (grave, "El Faraón") rinden más; la segunda voz
- * de hombre algo menos y la de mujer, la que menos. el autor decidió:
- *   ELEVENLABS_VOICE_PRINCIPAL   todo lo demás
- *   ELEVENLABS_VOICE_SECUNDARIA  martes, jueves y sábado, en el Short de la noche
- *   ELEVENLABS_VOICE_MUJER       días 1 y 15 del mes, en el vídeo largo
- * Con PRINCIPAL definida manda el calendario y la lista no se usa.
+ * 07/10/2026 — voice calendar. The channel's numbers: Shorts with the voice the
+ * channel was born with (deep, "El Faraón") perform best; the second male voice
+ * somewhat less and the female one the least. The owner decided:
+ *   ELEVENLABS_VOICE_PRINCIPAL   everything else
+ *   ELEVENLABS_VOICE_SECUNDARIA  Tuesday, Thursday and Saturday, on the evening Short
+ *   ELEVENLABS_VOICE_MUJER       the 1st and 15th of the month, on the long video
+ * With PRINCIPAL set, the calendar rules and the list isn't used.
  */
 const crypto = require('crypto');
 
@@ -28,7 +28,7 @@ function listaDeVoces(env = process.env) {
   return env.ELEVENLABS_VOICE_ID ? [String(env.ELEVENLABS_VOICE_ID).trim()] : [];
 }
 
-/** La fecha del vídeo: la de publicación; si no, la que lleva su id (ms). */
+/** The video's date: the publishing one; otherwise, the one in its id (ms). */
 function fechaDelVideo(idVideo, fecha) {
   const f = fecha ? new Date(fecha) : null;
   if (f && !Number.isNaN(f.getTime())) return { fecha: f, conHora: true };
@@ -43,7 +43,7 @@ function partesEnNuevaYork(fecha) {
   return { semana: partes.weekday, dia: Number(partes.day), hora: Number(partes.hour) };
 }
 
-/** La voz según el calendario del autor; null si no hay calendario. */
+/** The voice per the owner's calendar; null if there's no calendar. */
 function vozDelCalendario(idVideo, env, { fecha = null, short = false } = {}) {
   const principal = String(env.ELEVENLABS_VOICE_PRINCIPAL || '').trim();
   if (!principal) return null;
@@ -53,14 +53,14 @@ function vozDelCalendario(idVideo, env, { fecha = null, short = false } = {}) {
   const { semana, dia, hora } = partesEnNuevaYork(f);
   if (mujer && !short && DIAS_MUJER.has(dia)) return mujer;
   if (secundaria && DIAS_SECUNDARIA.has(semana)) {
-    // El Short de la noche; si no se sabe la hora, el largo de ese día.
+    // The evening Short; if the time isn't known, that day's long video.
     if (short && conHora && hora >= HORA_NOCHE) return secundaria;
     if (!short && !conHora) return secundaria;
   }
   return principal;
 }
 
-/** La voz de un vídeo: estable para el mismo id (y la misma fecha). */
+/** A video's voice: stable for the same id (and the same date). */
 function vozPara(idVideo, env = process.env, opciones = {}) {
   const delCalendario = vozDelCalendario(idVideo, env, opciones);
   if (delCalendario) return delCalendario;

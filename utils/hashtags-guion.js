@@ -18,8 +18,8 @@ for (const aliases of [
   for (const name of names) libros.set(etiqueta(name), etiqueta(names[0]));
 }
 
-// Solo extrae el capítulo de la referencia declarada. La verificación del texto
-// bíblico corresponde al control de procedencia, no a los hashtags.
+// It only extracts the chapter from the declared reference. Verifying the biblical
+// text is the provenance check's job, not the hashtags'.
 function hashtagReferencia(reference) {
   const match = String(reference || '').trim().match(/^(.+?)\s+([1-9]\d{0,2})\s*:\s*[1-9]\d*(?:\s*[-–]\s*[1-9]\d*)?$/u);
   const book = match && libros.get(etiqueta(match[1]));
@@ -39,8 +39,8 @@ function hashtagsDelGuion(candidates, script = {}, strategy = {}) {
     ? [franja ? `#oraciondela${franja}` : '#oracion', '#oracion', '#fe']
     : [];
   const supplied = (candidates || []).map(etiqueta).filter(Boolean).map(h => `#${h}`);
-  // Las etiquetas de capítulos se reconstruyen desde el guion, nunca se deduce
-  // si «salmo48» significa capítulo 48 o capítulo 4, versículo 8.
+  // Chapter tags are rebuilt from the script; it never guesses whether «salmo48»
+  // means chapter 48 or chapter 4, verse 8.
   const topical = [...new Set([...supplied, ...defaults])].filter(h => h !== '#shorts' && !esCapitulo(h));
   const first = esShort(strategy) ? ['#shorts'] : [];
   const scripture = references.slice(0, 1);

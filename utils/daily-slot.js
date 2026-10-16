@@ -1,7 +1,7 @@
 /**
- * Hueco diario de publicación: un vídeo largo por día a una hora local fija
- * (por defecto 04:00 de Nueva York). Todo en funciones puras para poder
- * probar el cambio de hora sin tocar el reloj del sistema.
+ * Daily publishing slot: one long video a day at a fixed local time (04:00 New
+ * York by default). All in pure functions so the clock change can be tested
+ * without touching the system clock.
  */
 
 const DEFAULT_TZ = 'America/New_York';
@@ -16,7 +16,7 @@ function parseClock(value) {
   return { hour, minute };
 }
 
-/** Partes de la fecha/hora tal como se ven en la zona `timeZone`. */
+/** Date/time parts as seen in the `timeZone` zone. */
 function localParts(date, timeZone) {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone, hourCycle: 'h23',
@@ -32,10 +32,10 @@ function localDateKey(date, timeZone = DEFAULT_TZ) {
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-/** Instante UTC que corresponde a year-month-day hour:minute en `timeZone`. */
+/** The UTC instant matching year-month-day hour:minute in `timeZone`. */
 function zonedToUtc({ year, month, day, hour, minute }, timeZone) {
   const guess = Date.UTC(year, month - 1, day, hour, minute);
-  // Dos pasadas: la segunda corrige el caso en que la primera cae al otro lado del cambio de hora.
+  // Two passes: the second fixes the case where the first lands on the other side of the clock change.
   let utc = guess;
   for (let i = 0; i < 2; i++) {
     const seen = localParts(new Date(utc), timeZone);
@@ -46,8 +46,8 @@ function zonedToUtc({ year, month, day, hour, minute }, timeZone) {
 }
 
 /**
- * Próximo hueco diario libre, con al menos `minLeadMinutes` de margen.
- * `taken` = horas (ISO) que ya tienen un vídeo asignado.
+ * Next free daily slot, with at least `minLeadMinutes` of margin.
+ * `taken` = times (ISO) that already have a video assigned.
  */
 function nextDailySlot({ now = new Date(), timeZone = DEFAULT_TZ, clock = DEFAULT_CLOCK, minLeadMinutes = 20, taken = [] } = {}) {
   const { hour, minute } = parseClock(clock) || parseClock(DEFAULT_CLOCK);
@@ -55,7 +55,7 @@ function nextDailySlot({ now = new Date(), timeZone = DEFAULT_TZ, clock = DEFAUL
   const earliest = now.getTime() + minLeadMinutes * 60000;
   const today = localParts(now, timeZone);
   for (let offset = 0; offset < 400; offset++) {
-    // Mediodía UTC del día local + offset: evita saltos raros al sumar días.
+    // Noon UTC of the local day + offset: avoids odd jumps when adding days.
     const base = new Date(Date.UTC(today.year, today.month - 1, today.day + offset, 12));
     const slot = zonedToUtc({
       year: base.getUTCFullYear(), month: base.getUTCMonth() + 1, day: base.getUTCDate(), hour, minute
@@ -68,8 +68,8 @@ function nextDailySlot({ now = new Date(), timeZone = DEFAULT_TZ, clock = DEFAUL
 }
 
 /**
- * Varios huecos al día (29/09/2026): "04:00,18:30" = mañana y noche. Devuelve
- * las horas válidas ordenadas; si no queda ninguna, la de `fallback`.
+ * Several slots a day (29/09/2026): "04:00,18:30" = morning and evening. Returns
+ * the valid times sorted; if none is left, the `fallback` one.
  */
 function parseClocks(value, fallback = DEFAULT_CLOCK) {
   const clocks = String(value || '').split(',').map(v => v.trim()).filter(v => parseClock(v));
@@ -80,7 +80,7 @@ function parseClocks(value, fallback = DEFAULT_CLOCK) {
   return unique.length ? unique : parseClocks(fallback, DEFAULT_CLOCK);
 }
 
-/** MAÑANA antes de las 12, TARDE hasta las 18, NOCHE después (18:30 → NOCHE). */
+/** MORNING before 12, AFTERNOON until 18, NIGHT after (18:30 → NIGHT). */
 function franjaDeHora(clock) {
   const { hour } = parseClock(clock) || parseClock(DEFAULT_CLOCK);
   if (hour < 12) return 'MAÑANA';
@@ -89,16 +89,16 @@ function franjaDeHora(clock) {
 }
 
 /**
- * Próximo hueco libre entre varias horas al día. Un vídeo ya programado ocupa
- * el hueco más cercano de su mismo día local (así un vídeo manual a las 10:33
- * cuenta como el de la mañana y no se publican dos seguidos).
+ * Next free slot among several times a day. An already scheduled video takes the
+ * nearest slot on its same local day (that way a manual video at 10:33 counts as
+ * the morning one and two don't go out back to back).
  * → { publishTime (ISO), clock, franja }
  */
 function nextFreeSlot({ now = new Date(), timeZone = DEFAULT_TZ, clocks = [DEFAULT_CLOCK], minLeadMinutes = 20, taken = [] } = {}) {
   const list = parseClocks(Array.isArray(clocks) ? clocks.join(',') : clocks);
   const parsed = list.map(parseClock);
   const minuteOfDay = ({ hour, minute }) => hour * 60 + minute;
-  // Hueco que ocupa una hora ya programada: el de su día con la hora más cercana.
+  // The slot taken by an already scheduled time: the one on its day with the closest time.
   const occupied = new Set(taken.filter(Boolean).map(t => {
     const when = new Date(t);
     const local = localParts(when, timeZone);
@@ -124,9 +124,10 @@ function nextFreeSlot({ now = new Date(), timeZone = DEFAULT_TZ, clocks = [DEFAU
 }
 
 /**
- * Cómo subir un vídeo con hueco diario: siempre privado con publishAt, para
- * que YouTube lo haga público a la hora exacta aunque la VPS esté apagada.
- * Si el hueco ya pasó, sale a los 10 minutos en vez de quedarse privado.
+ * How to upload a video with a daily slot: always private with publishAt, so
+ * YouTube makes it public at the exact time even if the VPS is off.
+ * If the slot has already passed, it goes out in 10 minutes instead of staying
+ * private.
  */
 function uploadPlan({ publishTime, now = new Date(), graceMinutes = 10 }) {
   const target = new Date(publishTime).getTime();
@@ -136,9 +137,9 @@ function uploadPlan({ publishTime, now = new Date(), graceMinutes = 10 }) {
 }
 
 /**
- * Fecha que debe llevar el título y la miniatura: la del día en que el vídeo
- * se hace público, no la del día en que se genera (a las 06:00 se genera el
- * de mañana). DAILY_PUBLISH=off vuelve a "hoy".
+ * The date the title and thumbnail must carry: the day the video goes public,
+ * not the day it's generated (tomorrow's is generated at 06:00).
+ * DAILY_PUBLISH=off goes back to "today".
  */
 function fechaDePublicacion(now = new Date(), env = process.env) {
   if (String(env.DAILY_PUBLISH || '').toLowerCase() === 'off') return now;
@@ -150,8 +151,8 @@ function fechaDePublicacion(now = new Date(), env = process.env) {
 }
 
 /**
- * Fecha de publicación de UN encargo: el hueco que le asignó el programador
- * (mañana 04:00, noche 18:30…) o, si no lo trae, el próximo hueco diario.
+ * Publish date of ONE job: the slot the scheduler assigned to it (morning
+ * 04:00, evening 18:30…) or, if it doesn't carry one, the next daily slot.
  */
 function fechaDelEncargo(strategy = null, now = new Date(), env = process.env) {
   const slot = strategy?.publishSlot ? new Date(strategy.publishSlot) : null;
@@ -159,19 +160,19 @@ function fechaDelEncargo(strategy = null, now = new Date(), env = process.env) {
 }
 
 /**
- * Valida lo que se guarda en daily_publish_time / daily_shorts_time desde la
- * API: "off" o de 1 a 6 horas HH:MM separadas por comas. Devuelve el valor
- * normalizado (ordenado, sin repetidas) o lanza un error legible.
+ * Validates what's saved to daily_publish_time / daily_shorts_time from the
+ * API: "off" or 1 to 6 HH:MM times separated by commas. Returns the normalized
+ * value (sorted, no duplicates) or throws a readable error.
  */
 function validaHoras(valor) {
   const crudo = String(valor ?? '').trim();
   if (crudo.toLowerCase() === 'off') return 'off';
   const partes = crudo.split(',').map(v => v.trim()).filter(Boolean);
   if (!partes.length || partes.some(v => !parseClock(v))) {
-    throw new Error('Las horas deben ser "off" o HH:MM separadas por comas (por ejemplo 05:00,12:00,19:00)');
+    throw new Error('Times must be "off" or HH:MM separated by commas (for example 05:00,12:00,19:00)');
   }
   const horas = parseClocks(partes.join(','));
-  if (horas.length > 6) throw new Error('Como mucho 6 horas al día');
+  if (horas.length > 6) throw new Error('At most 6 times a day');
   return horas.join(',');
 }
 

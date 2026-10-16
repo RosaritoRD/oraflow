@@ -9,14 +9,14 @@ class ServiceRequestError extends Error {
   }
 }
 
-// Un plazo para cabeceras y cuerpo. No reintenta escrituras ni devuelve URLs,
-// credenciales o mensajes crudos del proveedor al navegador.
+// One deadline for headers and body. Doesn't retry writes or return the
+// provider's URLs, credentials or raw messages to the browser.
 async function requestJSON(url, { fetchImpl = fetch, timeoutMs = 5000, service = 'Conexión', ...options } = {}) {
   const controller = new AbortController();
   let timer;
   const timeout = new Promise((_, reject) => {
     timer = setTimeout(() => {
-      reject(new ServiceRequestError(`${service}: no respondió a tiempo. Vuelve a comprobar la conexión.`, 504, 'TIMEOUT'));
+      reject(new ServiceRequestError(`${service}: did not respond in time. Check the connection again.`, 504, 'TIMEOUT'));
       controller.abort();
     }, timeoutMs);
   });
@@ -32,18 +32,18 @@ async function requestJSON(url, { fetchImpl = fetch, timeoutMs = 5000, service =
       }
       let data;
       try { data = await response.json(); } catch (_) {
-        throw new ServiceRequestError(`${service}: respuesta no válida. Comprueba la dirección y el acceso del servicio.`, 502, 'INVALID_RESPONSE');
+        throw new ServiceRequestError(`${service}: invalid response. Check the service address and access.`, 502, 'INVALID_RESPONSE');
       }
       if (!data || typeof data !== 'object' || Array.isArray(data)) {
-        throw new ServiceRequestError(`${service}: respuesta no válida.`, 502, 'INVALID_RESPONSE');
+        throw new ServiceRequestError(`${service}: invalid response.`, 502, 'INVALID_RESPONSE');
       }
-      if (data.error) throw new ServiceRequestError(`${service}: el proveedor rechazó la consulta. Revisa el acceso y los permisos.`, 502, 'UPSTREAM', response.status);
+      if (data.error) throw new ServiceRequestError(`${service}: the provider rejected the request. Check access and permissions.`, 502, 'UPSTREAM', response.status);
       return data;
     })()]);
   } catch (error) {
     controller.abort();
     if (error instanceof ServiceRequestError) throw error;
-    throw new ServiceRequestError(`${service}: no se pudo conectar. Vuelve a comprobar la conexión.`);
+    throw new ServiceRequestError(`${service}: could not connect. Check the connection again.`);
   } finally {
     clearTimeout(timer);
   }

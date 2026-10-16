@@ -1,4 +1,4 @@
-// 05/10/2026: textos del canal editables desde el panel.
+// 05/10/2026: the channel's texts, editable from the panel.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const t = require('../../utils/textos-canal');
@@ -9,7 +9,7 @@ const { lineaLibro } = require('../../utils/libro');
 
 const dbFalsa = () => { const s = {}; return { s, getSetting: async k => s[k] ?? null, setSetting: async (k, v) => { s[k] = v; } }; };
 
-test('lo editado en el panel manda; null vuelve al de fábrica; los módulos lo usan al momento', async () => {
+test('what\'s edited in the panel rules; null goes back to the factory text; modules use it right away', async () => {
   const db = dbFalsa();
   assert.equal(comentario.TEXTOS.reel, t.DEFECTO.comentario_reel.valor);
   assert.deepEqual(await t.guarda(db, { comentario_reel: 'Nuevo 👑', cupon: 'OTRO10', amen_respuestas: 'Amén{n} A\n\nAmén{n} B\n', libro_linea: '' }), { ok: true });
@@ -20,11 +20,11 @@ test('lo editado en el panel manda; null vuelve al de fábrica; los módulos lo 
   assert.equal(JSON.parse(db.s['texto:amen_respuestas']).length, 2);
   await t.guarda(db, { comentario_reel: null, cupon: null, amen_respuestas: null, libro_linea: null });
   assert.equal(comentario.TEXTOS.reel, t.DEFECTO.comentario_reel.valor);
-  assert.match(t.catalogo().find(x => x.clave === 'cupon').valor, /TU_CUPON/);
+  assert.match(t.catalogo().find(x => x.clave === 'cupon').valor, /YOUR_COUPON/);
   assert.match((await t.guarda(db, { nada: 'x' })).error, /desconocido/);
 });
 
-test('carga lee lo guardado al arrancar', async () => {
+test('carga reads what\'s saved at startup', async () => {
   const db = dbFalsa();
   db.s['texto:privado_cierre'] = 'Bendiciones 👑';
   await t.carga(db);

@@ -1,18 +1,19 @@
 /**
- * Elige el paisaje de fondo para la miniatura según la HORA a la que se publica.
+ * Picks the background landscape for the thumbnail according to the TIME it's
+ * published.
  *
- * Regla del canal (el autor, 23/09/2026): solo lugares naturales — bosque, playa,
- * río, montaña, campo, lago, cascada. Nunca oficinas, escritorios, ciudades ni
- * interiores de trabajo. De día por la mañana; de noche, el mismo sitio de noche.
+ * The channel's rule (23/09/2026): natural places only — forest, beach, river,
+ * mountain, field, lake, waterfall. Never offices, desks, cities or work interiors.
+ * Daytime in the morning; at night, the same place at night.
  *
- * Devuelve la ruta local de una imagen ya descargada, o null si no hay nada.
+ * Returns the local path of an already downloaded image, or null if there's nothing.
  */
 const path = require('path');
 const crypto = require('crypto');
 const fs = require('fs').promises;
 
-// Los lugares del canal. Cada uno con su versión de día y de noche, porque
-// "playa" de madrugada y "playa" a medianoche son dos búsquedas distintas.
+// The channel's places. Each with its day and night version, because "beach"
+// at dawn and "beach" at midnight are two different searches.
 const LUGARES = [
   { nombre: 'bosque',   dia: 'sunrise light through forest trees',   noche: 'forest at night under starry sky' },
   { nombre: 'playa',    dia: 'sunrise over calm beach',              noche: 'moonlight over the sea at night' },
@@ -23,8 +24,8 @@ const LUGARES = [
   { nombre: 'cascada',  dia: 'waterfall in sunlight',                noche: 'waterfall at dusk' }
 ];
 
-// Nada de esto entra en una miniatura de oración, aunque el buscador lo
-// devuelva: son los falsos positivos típicos de "morning"/"light".
+// None of this goes into a prayer thumbnail, even if the search returns it:
+// they're the typical false positives of "morning"/"light".
 const PROHIBIDO = [
   'office', 'desk', 'laptop', 'computer', 'meeting', 'business', 'startup',
   'coworking', 'city', 'street', 'traffic', 'car', 'urban', 'building',
@@ -32,7 +33,7 @@ const PROHIBIDO = [
   'oficina', 'escritorio', 'ordenador', 'ciudad', 'calle', 'coche'
 ];
 
-/** 'manana' antes de las 12, 'tarde' hasta las 18, 'noche' después. */
+/** 'manana' before 12, 'tarde' until 18, 'noche' after. */
 function franja(fecha = new Date(), zona = process.env.CHANNEL_TIMEZONE || 'America/New_York') {
   const hora = Number(new Intl.DateTimeFormat('en-US', {
     hour: 'numeric', hour12: false, timeZone: zona
@@ -42,7 +43,7 @@ function franja(fecha = new Date(), zona = process.env.CHANNEL_TIMEZONE || 'Amer
   return 'noche';
 }
 
-/** El día del año decide el lugar: así no salen tres playas seguidas. */
+/** The day of the year decides the place: that way three beaches don't come out in a row. */
 function lugarDelDia(fecha = new Date()) {
   const inicio = Date.UTC(fecha.getUTCFullYear(), 0, 0);
   const dia = Math.floor((Date.UTC(fecha.getUTCFullYear(), fecha.getUTCMonth(), fecha.getUTCDate()) - inicio) / 86400000);
@@ -58,7 +59,7 @@ function consultas(fecha = new Date(), zona) {
   const momento = franja(fecha, zona);
   const lugar = lugarDelDia(fecha);
   const clave = momento === 'noche' ? 'noche' : 'dia';
-  // El lugar del día primero; los otros dos como respaldo si no hay resultados.
+  // The day's place first; the other two as a fallback if there are no results.
   const otros = LUGARES.filter(l => l.nombre !== lugar.nombre).slice(0, 2);
   return {
     momento,
@@ -70,8 +71,8 @@ function consultas(fecha = new Date(), zona) {
 /**
  * @param {object} opciones
  * @param {object} opciones.stockMedia  StockMediaService
- * @param {Date}   [opciones.cuando]    momento de publicación (por defecto, ahora)
- * @param {Set}    [opciones.excluir]   ids de assets ya usados
+ * @param {Date}   [opciones.cuando]    publish time (defaults to now)
+ * @param {Set}    [opciones.excluir]   ids of assets already used
  * @returns {Promise<{ruta, momento, lugar, assetId}|null>}
  */
 async function eligeFondo({ stockMedia, cuando = new Date(), excluir = new Set(), logger = console, destino = null } = {}) {
@@ -98,16 +99,16 @@ async function eligeFondo({ stockMedia, cuando = new Date(), excluir = new Set()
       logger.info?.(`Fondo de miniatura: ${lugar} de ${momento} — "${query}"`);
       return { ruta, momento, lugar, assetId: buenos[0].id, query };
     } catch (error) {
-      logger.warn?.(`Búsqueda de fondo fallida ("${query}"): ${error.message}`);
+      logger.warn?.(`Background search failed ("${query}"): ${error.message}`);
     }
   }
   return null;
 }
 
 /**
- * La persona rezando que va a la DERECHA de la miniatura (patrón de Grace Oasis
- * y de casi todos los canales del nicho): manos juntas, ojos cerrados, luz
- * cálida detrás. Se pide en vertical/cuadrado porque ocupa media miniatura.
+ * The person praying who goes on the RIGHT of the thumbnail (the pattern of Grace
+ * Oasis and almost every channel in the niche): hands together, eyes closed, warm
+ * light behind. Requested vertical/square because it takes up half the thumbnail.
  */
 const ORANDO = {
   manana: [
@@ -122,7 +123,7 @@ const ORANDO = {
   ]
 };
 
-// Lo que delata una foto que NO sirve para una miniatura de oración.
+// What gives away a photo that does NOT work for a prayer thumbnail.
 const NO_ORANTE = ['office', 'desk', 'laptop', 'business', 'yoga', 'meditation studio',
   'spa', 'massage', 'gym', 'wedding', 'kiss', 'couple in bed'];
 
@@ -142,24 +143,24 @@ async function eligePersonaOrando({ stockMedia, cuando = new Date(), excluir = n
         if (a.type !== 'image') return false;
         const texto = `${a.title || ''} ${(a.keywords || []).map((k) => (typeof k === 'string' ? k : k?.name || '')).join(' ')}`.toLowerCase();
         if (NO_ORANTE.some((t) => texto.includes(t))) return false;
-        return /pray|praying|prayer|orando|rezando|worship/.test(texto);   // que salga rezando de verdad
+        return /pray|praying|prayer|orando|rezando|worship/.test(texto);   // that they really come out praying
       });
       if (!buenos.length) continue;
       const ruta = await stockMedia.download(buenos[0], carpeta);
       logger.info?.(`Persona orando (${momento}): "${query}"`);
       return { ruta, momento, assetId: buenos[0].id, query };
     } catch (error) {
-      logger.warn?.(`Búsqueda de persona orando fallida ("${query}"): ${error.message}`);
+      logger.warn?.(`Praying-person search failed ("${query}"): ${error.message}`);
     }
   }
   return null;
 }
 
 /**
- * Logo del canal para la esquina superior izquierda de la miniatura.
- * Se pone un PNG (con transparencia) en `data/assets/marca/logo.png`, o la ruta
- * que diga CHANNEL_LOGO. Si no hay ninguno, devuelve null y la miniatura sale
- * sin logo — nunca se inventa uno.
+ * Channel logo for the thumbnail's top-left corner.
+ * Put a PNG (with transparency) at `data/assets/marca/logo.png`, or the path in
+ * CHANNEL_LOGO. If there's none, it returns null and the thumbnail comes out
+ * without a logo — one is never invented.
  */
 async function logoDelCanal() {
   const candidatos = [
@@ -177,11 +178,12 @@ async function logoDelCanal() {
 }
 
 /**
- * Fondo generado por IA: UNA sola imagen con la persona orando ya integrada en
- * el paisaje, que es lo que hacen los canales grandes. Con dos fotos de banco
- * pegadas se nota el corte; así la luz es coherente.
+ * AI-generated background: a SINGLE image with the praying person already blended into
+ * the landscape, which is what the big channels do. With two stock photos glued
+ * together the cut shows; this way the light is consistent.
  *
- * ~$0,04 por imagen con gpt-image-2 en calidad media. Se apaga con THUMBNAIL_AI=off.
+ * ~$0.04 per image with gpt-image-2 at medium quality. Turned off with
+ * THUMBNAIL_AI=off.
  */
 async function generaFondoIA({ titulo = '', cuando = new Date(), openai = null, logger = console, destino = null } = {}) {
   if (String(process.env.THUMBNAIL_AI || 'on').toLowerCase() === 'off') return null;
@@ -193,7 +195,7 @@ async function generaFondoIA({ titulo = '', cuando = new Date(), openai = null, 
   const escena = momento === 'noche'
     ? `${lugar.noche}, noche serena, luz de luna cálida`
     : `${lugar.dia}, amanecer dorado`;
-  // El sujeto rota con el día para que el canal no sea siempre la misma persona.
+  // The subject rotates with the day so the channel isn't always the same person.
   const sujetos = [
     'una mujer latina de unos 40 años orando con las manos juntas, de perfil',
     'un hombre latino de unos 45 años orando con las manos juntas, de perfil',
@@ -216,24 +218,24 @@ async function generaFondoIA({ titulo = '', cuando = new Date(), openai = null, 
       quality: process.env.IMAGE_QUALITY || 'medium', n: 1
     });
     const b64 = r?.data?.[0]?.b64_json;
-    if (!b64) throw new Error('la API no devolvió imagen');
+    if (!b64) throw new Error('the API returned no image');
     const carpeta = destino || path.join(__dirname, '..', 'data', 'assets', 'thumbnails');
     await fs.mkdir(carpeta, { recursive: true });
     const ruta = path.join(carpeta, `ia_${Date.now()}.png`);
     await fs.writeFile(ruta, Buffer.from(b64, 'base64'));
-    logger.info?.(`Fondo de miniatura por IA (${lugar.nombre} de ${momento}) en ${Math.round((Date.now() - t0) / 1000)}s`);
+    logger.info?.(`AI thumbnail background (${lugar.nombre}, ${momento}) in ${Math.round((Date.now() - t0) / 1000)}s`);
     return { ruta, momento, lugar: lugar.nombre, origen: 'ia', prompt };
   } catch (error) {
-    logger.warn?.(`Fondo por IA no disponible (${error.message}); se usa banco de imágenes`);
+    logger.warn?.(`AI background unavailable (${error.message}); using the image bank`);
     return null;
   }
 }
 
 /**
- * Fondos hechos a mano por el autor con su ChatGPT Plus (29/09/2026): la API de
- * OpenAI se estaba comiendo el saldo. Carpetas `manana/` y `noche/` dentro de
- * FONDOS_MANUALES_DIR (por defecto data/assets/fondos-miniatura). Se usa el
- * más antiguo de la franja y se mueve a `usados/` para no repetirlo.
+ * Backgrounds hand-made by the owner with ChatGPT Plus (29/09/2026): the OpenAI
+ * API was eating the balance. `manana/` and `noche/` folders inside
+ * FONDOS_MANUALES_DIR (data/assets/fondos-miniatura by default). The oldest one
+ * for the time of day is used and moved to `usados/` so it isn't repeated.
  */
 const EXT_IMAGEN = /\.(jpe?g|png|webp)$/i;
 
@@ -258,12 +260,12 @@ async function fondoManual({ cuando = new Date(), logger = console, raiz = carpe
 }
 
 /*
- * Colección de fondos (30/09/2026): imágenes que ROTAN para siempre en
- * fondos-miniatura/coleccion/ (manos orando sobre la Biblia, personas orando…,
- * hechas con ChatGPT/Gemini o las de IA ya pagadas). Cada uso sale editado
- * distinto sin coste: otro encuadre (siempre anclado a la derecha, donde está
- * el sujeto, porque el texto va a la izquierda) y otro tono; de noche, más
- * oscuro y azulado. El estado de la rotación vive en coleccion/_rotacion.json.
+ * Background collection (30/09/2026): images that ROTATE forever in
+ * fondos-miniatura/coleccion/ (hands praying over the Bible, people praying…,
+ * made with ChatGPT/Gemini or the AI ones already paid for). Each use comes out
+ * edited differently at no cost: another framing (always anchored to the right,
+ * where the subject is, because the text goes on the left) and another tone; at
+ * night, darker and bluer. The rotation state lives in coleccion/_rotacion.json.
  */
 const ENCUADRES = [
   { zoom: 1.0, alto: 0.5 }, { zoom: 1.1, alto: 0.35 }, { zoom: 1.05, alto: 0.65 },
@@ -278,13 +280,13 @@ const TONOS_DIA = [
 async function editaFondo(origen, { usos = 0, momento = 'manana', salida, sinRecorte = false }) {
   const sharp = require('./safe-sharp');
   const { width: W, height: H } = await sharp(origen).metadata();
-  // Fondos que ya traen el logo dentro: encuadre entero, solo cambia el tono.
+  // Backgrounds that already carry the logo inside: full framing, only the tone changes.
   const e = sinRecorte ? { zoom: 1, alto: 0.5 } : ENCUADRES[usos % ENCUADRES.length];
   let cw = Math.min(W, Math.round(H * 16 / 9));
   let ch = Math.round(cw * 9 / 16);
   cw = Math.round(cw / e.zoom);
   ch = Math.round(ch / e.zoom);
-  const left = W - cw;                                   // anclado a la derecha: el sujeto no se sale
+  const left = W - cw;                                   // anchored to the right: the subject doesn't fall out
   const top = Math.round((H - ch) * e.alto);
   let img = sharp(origen).extract({ left, top, width: cw, height: ch }).resize(1280, 720, { fit: 'cover' });
   if (momento === 'noche') {
@@ -298,11 +300,11 @@ async function editaFondo(origen, { usos = 0, momento = 'manana', salida, sinRec
 }
 
 /*
- * Fondos PRINCIPALES (02/10/2026, el autor: «la misma miniatura, la de la Biblia
- * con la mano, en la mayoría de los vídeos»; el largo con más vistas la
- * llevaba). coleccion/_principal.json = ["nombre.png", …]. Salen el
- * FONDO_PRINCIPAL_PCT % de las veces (80 por defecto); el resto rota entre las
- * demás para que el canal no parezca clonado. Sin el archivo, todo igual que antes.
+ * MAIN backgrounds (02/10/2026: «the same thumbnail, the one with the Bible and the
+ * hand, on most videos»; the most-watched long video had it).
+ * coleccion/_principal.json = ["name.png", …]. They come out FONDO_PRINCIPAL_PCT % of
+ * the time (80 by default); the rest rotates among the others so the channel doesn't
+ * look cloned. Without the file, everything as before.
  */
 async function listaJson(carpeta, archivo, nombres) {
   try {
@@ -335,24 +337,26 @@ async function fondoColeccion({ cuando = new Date(), logger = console, raiz = ca
   const nombre = candidatos[0];
   const usos = estado[nombre]?.usos || 0;
   const momento = franja(cuando) === 'noche' ? 'noche' : 'manana';
-  // _con_logo.json (02/10/2026): imágenes que ya traen el logo del canal. No se
-  // recortan (se cortaría) y la miniatura no pinta otro logo encima.
+  // _con_logo.json (02/10/2026): images that already carry the channel's logo.
+  // They aren't cropped (it would be cut) and the thumbnail doesn't draw another
+  // logo on top.
   const conLogo = (await listaJson(carpeta, '_con_logo.json', todos)).includes(nombre);
   const salida = path.join(require('os').tmpdir(), `coleccion_${Date.now()}_${crypto.randomBytes(3).toString('hex')}.jpg`);
   await editaFondo(path.join(carpeta, nombre), { usos, momento, salida, sinRecorte: conLogo });
   estado[nombre] = { usos: usos + 1, en: new Date().toISOString() };
   estado._ultimo = nombre;
   await fs.writeFile(rutaEstado, JSON.stringify(estado, null, 1));
-  logger.info?.(`Fondo de la colección (${momento}${favoritas.includes(nombre) ? ', principal' : ''}): ${nombre}, uso nº ${usos + 1} de ${todos.length} fondos`);
+  logger.info?.(`Collection background (${momento}${favoritas.includes(nombre) ? ', main' : ''}): ${nombre}, use #${usos + 1} of ${todos.length} backgrounds`);
   return { ruta: salida, momento, origen: 'coleccion', nombre, usos: usos + 1, conLogo };
 }
 
-/** Tus fondos primero, IA si está activada, banco de imágenes si no, y null si tampoco hay. */
+/** Your backgrounds first, AI if it's on, the stock library otherwise, and null if there's nothing either. */
 async function fondoDeMiniatura(opciones = {}) {
   const manual = (await fondoManual(opciones)) || (await fondoColeccion(opciones)) || (await generaFondoIA(opciones));
   if (manual) return manual;
-  // 29/09/2026: el diseñador nunca pasaba stockMedia y el banco devolvía null
-  // siempre (no se notaba mientras la IA daba imagen): miniatura sin fondo.
+  // 29/09/2026: the designer never passed stockMedia and the library always
+  // returned null (it went unnoticed while the AI was providing images): a
+  // thumbnail with no background.
   const stockMedia = opciones.stockMedia || new (require('./stock-media-service').StockMediaService)({
     logger: opciones.logger, cacheDir: path.join(__dirname, '..', 'data', 'assets', 'stock')
   });

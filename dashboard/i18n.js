@@ -379,6 +379,82 @@ What makes this take distinctive?|¿Qué distingue este enfoque?
 
   // Runtime and dynamic-view messages are kept alongside static-page messages.
   const dynamicEntries = `
+Social|Redes
+Instagram and Facebook|Instagram y Facebook
+Daily posts|Publicaciones diarias
+Today's story|Historia de hoy
+Covers to upload|Portadas para subir
+Comments|Comentarios
+«Amén» replies|Respuestas «Amén»
+Settings|Ajustes
+Texts and links|Textos y enlaces
+Book (sales page)|Libro (página de venta)
+Messages|Mensajes
+Conversations|Conversaciones
+Overview|Resumen
+Inbox|Bandeja
+Automatic|Automático
+Per-video automations|Automatizaciones por vídeo
+Runs|Ejecuciones
+Connected accounts|Cuentas conectadas
+SOCIAL MEDIA|REDES SOCIALES
+Instagram and Facebook on autopilot.|Instagram y Facebook en piloto automático.
+MESSAGES|MENSAJES
+All your accounts in one place.|Todas tus cuentas en un solo lugar.
+MESSAGES · INBOX|MENSAJES · BANDEJA
+All your conversations together.|Todas tus conversaciones juntas.
+MESSAGES · AUTOMATIONS|MENSAJES · AUTOMATIZACIONES
+An automatic message for each video.|Un mensaje automático para cada vídeo.
+MESSAGES · RUNS|MENSAJES · EJECUCIONES
+What went out, to whom and what failed.|Qué salió, a quién y qué falló.
+MESSAGES · ACCOUNTS|MENSAJES · CUENTAS
+Connect all your accounts.|Conecta todas tus cuentas.
+Everything that goes out on its own each day: turn each piece on or off, change its time and see what went out and what failed.|Todo lo que sale solo cada día: enciende o apaga cada pieza, cambia su hora y mira qué salió y qué falló.
+What the channel writes on its own: pinned comment, private message, «Amén» replies, book, coupon and YouTube footer. Whatever you save is used from the next post on.|Lo que escribe el canal solo: comentario fijo, mensaje privado, respuestas «Amén», libro, cupón y pie de YouTube. Lo que guardes se usa desde la siguiente publicación.
+All your accounts at a glance: what's connected, how many rules are working and what went out today.|Todas tus cuentas en un vistazo: qué está conectado, cuántas reglas trabajan y qué salió hoy.
+Private messages from Instagram, Facebook, WhatsApp and Telegram together. Pick a conversation to read it and reply.|Los mensajes privados de Instagram, Facebook, WhatsApp y Telegram juntos. Elige una conversación para leerla y contestar.
+Automations|Automatizaciones
+A different message for each video: if someone comments a word on that post (Instagram, Facebook or YouTube), they get your private message and a reply on their comment. On WhatsApp and Telegram, automatic replies by keyword.|Un mensaje distinto para cada vídeo: si alguien comenta una palabra en esa publicación (Instagram, Facebook o YouTube), recibe tu mensaje privado y una respuesta en su comentario. En WhatsApp y Telegram, respuestas automáticas por palabra clave.
+Every comment a rule handled: to whom, what they wrote, whether the private message and the reply went out, or why not.|Cada comentario que atendió una regla: a quién, qué escribió, si salió el privado y la respuesta, o por qué no.
+Accounts|Cuentas
+Connect all the apps you want to manage from here: Instagram, Facebook, WhatsApp, Telegram and your YouTube channel. Each one comes with its instructions.|Conecta todas las apps que quieras administrar desde aquí: Instagram, Facebook, WhatsApp, Telegram y tu canal de YouTube. Cada una trae sus instrucciones.
+New rule|Nueva regla
+No guide matches.|Ninguna guía coincide.
+GUIDE|GUÍA
+All accounts|Todas
+Skipped|Omitido
+Connect account|Conectar cuenta
+Conversations|Conversaciones
+Refresh|Actualizar
+Account|Cuenta
+Status|Estado
+Sent|Enviado
+Partial|A medias
+Failed|Falló
+Profile preferences|Preferencias del perfil
+Theme|Tema
+Dark|Oscuro
+Light|Claro
+Like the phone|Como el teléfono
+Panel language|Idioma del panel
+Start screen|Pantalla al entrar
+Compact view (less space between blocks)|Vista compacta (menos espacio entre bloques)
+Sign out|Cerrar sesión
+Preference saved|Preferencia guardada
+Could not save|No se pudo guardar
+Today|Hoy
+Social (Instagram and Facebook)|Redes (Instagram y Facebook)
+Messages (overview)|Mensajes (resumen)
+Messages (inbox)|Mensajes (bandeja)
+Videos in production|Vídeos en producción
+Calendar and ideas|Calendario e ideas
+Verse Shorts|Shorts de versículos
+Results|Resultados
+Research|Investigación
+Autopilot|Piloto automático
+Channel settings|Ajustes del canal
+Production review|Revisión de producción
+Guides|Guías
 Enter the API_KEY value from your .env. It stays in this browser only.|Introduce el valor de API_KEY del archivo .env. Se guarda solo en este navegador.
 Request failed|La solicitud falló
 Not scheduled|Sin programar
@@ -1113,6 +1189,33 @@ Menu|Menú
 Close|Cerrar
 Open menu|Abrir menú
 ← Main panel|← Panel principal
+OUTLIERS|OUTLIERS
+Outliers|Outliers
+What already works, before you film.|Lo que ya funciona, antes de grabar.
+Videos that beat their own channel by far. What already works, before you film.|Vídeos que superan con mucho a su propio canal. Lo que ya funciona, antes de grabar.
+YOUTUBE · PUBLIC DATA|YOUTUBE · DATOS PÚBLICOS
+Search a topic|Busca un tema
+Score = video views ÷ median views of the channel's last 30 videos. 40× means it did 40 times better than usual for that channel.|Puntuación = vistas del vídeo ÷ mediana de vistas de los últimos 30 vídeos del canal. 40× significa que le fue 40 veces mejor de lo normal en ese canal.
+Portuguese|Portugués
+Country|País
+All|Todos
+Long (over 3 min)|Largos (más de 3 min)
+Published in the last|Publicados en los últimos
+6 months|6 meses
+1 year|1 año
+2 years|2 años
+Minimum score|Puntuación mínima
+Minimum views|Vistas mínimas
+Find outliers|Buscar outliers
+Best first|Los mejores primero
+Searching|Buscando
+subs|suscriptores
+views|vistas
+channel median|mediana del canal
+from cache|de la caché
+@@0@@ of @@1@@ videos beat their channel @@2@@× or more · @@3@@ quota units|@@0@@ de @@1@@ vídeos superan @@2@@× a su canal · @@3@@ unidades de cuota
+Type a topic and search. Each search uses about 150–300 of the 10,000 daily YouTube API units.|Escribe un tema y busca. Cada búsqueda gasta unas 150–300 de las 10.000 unidades diarias de la API de YouTube.
+No video beats its channel by that much. Lower the minimum or widen the dates.|Ningún vídeo supera tanto a su canal. Baja el mínimo o amplía las fechas.
 `;
 
   const normalize = value => String(value).replaceAll('&amp;', '&').replaceAll('&quot;', '"').replaceAll('&#039;', "'").replace(/\s+/g, ' ').trim();
@@ -1130,9 +1233,11 @@ Open menu|Abrir menú
     const key = canonical(line.slice(0, split), slots);
     catalogue.set(key, canonical(line.slice(split + 1), slots));
   }
-  let language = 'es';
-  // 05/10/2026: español por defecto (el canal y su equipo hablan español); cada usuario lo cambia en su perfil.
-  try { language = localStorage.getItem('oraflow_language') || 'es'; } catch (_) { language = 'es'; }
+  // The language saved in the user's profile wins; with none saved yet, the
+  // browser decides (a Spanish browser gets Spanish, anything else English).
+  const browser = /^es\b/i.test((window.navigator && window.navigator.language) || '') ? 'es' : 'en';
+  let language = browser;
+  try { language = localStorage.getItem('oraflow_language') || browser; } catch (_) { language = browser; }
   if (!['es', 'en'].includes(language)) language = 'en';
 
   function t(source) {

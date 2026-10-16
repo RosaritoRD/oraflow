@@ -1,4 +1,4 @@
-// 11/10/2026 (el autor): las portadas se ponen a mano desde /portadas.
+// 11/10/2026: covers are set by hand from /portadas.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('path');
@@ -7,7 +7,7 @@ const { listaPortadas, rutaSegura, paginaPortadas } = require('../../utils/porta
 const raiz = path.join(__dirname, '..', '..');
 const db = (filas) => ({ getAllRows: async () => filas });
 
-test('Short usa su portada vertical y el largo su miniatura', async () => {
+test('a Short uses its vertical cover and a long video its thumbnail', async () => {
   const items = await listaPortadas(db([
     { id: 's1', title: 'Corto', publish_time: '2026-10-12T09:00:00.000Z', youtube_url: null,
       metadata: JSON.stringify({ contentFormat: 'short' }),
@@ -27,7 +27,7 @@ test('Short usa su portada vertical y el largo su miniatura', async () => {
   assert.deepEqual(items[0].variantes, []);
 });
 
-test('solo sirve archivos de data/ o uploads/', () => {
+test('only serves files from data/ or uploads/', () => {
   assert.ok(rutaSegura(path.join(raiz, 'data', 'videos', 'a.jpg')));
   assert.ok(rutaSegura(path.join(raiz, 'uploads', 'thumbnails', 'a.jpg')));
   assert.equal(rutaSegura(path.join(raiz, 'data', '..', '.env')), null);
@@ -36,7 +36,7 @@ test('solo sirve archivos de data/ o uploads/', () => {
   assert.equal(rutaSegura(null), null);
 });
 
-test('la página escapa el título y enlaza la imagen por id', () => {
+test('the page escapes the title and links the image by id', () => {
   const html = paginaPortadas([{ id: 'p<1>', titulo: '<b>Hola</b>', cuando: '2026-10-12T09:00:00.000Z', formato: 'short', youtube: null, imagen: '/x.jpg' }]);
   assert.ok(html.includes('&lt;b&gt;Hola&lt;/b&gt;'));
   assert.ok(html.includes('/portadas/img/p%3C1%3E.jpg'));
@@ -44,7 +44,7 @@ test('la página escapa el título y enlaza la imagen por id', () => {
   assert.ok(paginaPortadas([]).includes('Todavía no hay publicaciones'));
 });
 
-test('las variantes B y C del largo salen para Probar y comparar', () => {
+test('the long video\'s B and C variants come out for Test and compare', () => {
   const html = paginaPortadas([{ id: 'l1', titulo: 'Largo', cuando: '2026-10-12T08:00:00.000Z', formato: 'largo', youtube: null, imagen: '/a.jpg',
     variantes: [{ letra: 'A', path: '/a.jpg' }, { letra: 'B', path: '/b.jpg' }, { letra: 'C', path: '/c.jpg' }] }]);
   assert.ok(html.includes('/portadas/img/l1.jpg?v=B'));

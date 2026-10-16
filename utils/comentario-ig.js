@@ -1,16 +1,16 @@
 /**
- * Primer comentario en cada publicación nueva de Instagram (el autor, 05/10/2026).
- * La API de Instagram NO deja fijarlo: el sistema lo escribe y el autor toca la
- * chincheta. Texto según el tipo de publicación (opciones A/B/C acordadas),
- * siempre con Jesús de Nazaret como Rey y la invitación al «Amén». Sin 🕊️.
+ * First comment on every new Instagram post (05/10/2026).
+ * The Instagram API does NOT allow pinning it: the system writes it and the owner
+ * taps the pin. Text depending on the post type (agreed options A/B/C), always with
+ * Jesus of Nazareth as King and the invitation to «Amén». No 🕊️.
  *
- * Settings: ig_comentario_enabled ('false' lo apaga), ig_comentados (ids hechos).
+ * Settings: ig_comentario_enabled ('false' turns it off), ig_comentados (ids done).
  */
 const GRAPH = 'https://graph.instagram.com/v25.0';
 const MAX_HORAS = 48;
 
-// Formato que eligió el autor (05/10/2026, su comentario fijado): invitación con
-// Jesús Rey + 👑, ".\n." y dos líneas con icono. Editables en el panel (utils/textos-canal.js).
+// The format the owner chose (05/10/2026, their pinned comment): an invitation with Jesus as King
+// + 👑, ".\n." and two lines with an icon. Editable in the panel (utils/textos-canal.js).
 const textos = require('./textos-canal');
 const TEXTOS = Object.defineProperties({}, {
   general: { get: () => textos.texto('comentario_general'), enumerable: true },
@@ -31,7 +31,7 @@ async function leeJson(res) {
   return body;
 }
 
-/** Comenta las publicaciones de las últimas 48 h que aún no tienen el comentario del canal. */
+/** Comments on posts from the last 48 h that don't have the channel's comment yet. */
 async function comentaNuevas({ db, token, logger, now = new Date(), fetchImpl = fetch }) {
   if (!token || await db.getSetting('ig_comentario_enabled') === 'false') return 0;
   const hechos = JSON.parse(await db.getSetting('ig_comentados') || '[]');
@@ -55,7 +55,7 @@ async function comentaNuevas({ db, token, logger, now = new Date(), fetchImpl = 
   }
   if (nuevos.length) {
     await db.setSetting('ig_comentados', JSON.stringify([...nuevos, ...hechos].slice(0, 300)));
-    logger?.info?.(`Comentario del canal en ${nuevos.length} publicación(es) de Instagram: falta fijarlo a mano 📌`);
+    logger?.info?.(`Channel comment on ${nuevos.length} Instagram post(s): pin it by hand 📌`);
   }
   return nuevos.length;
 }

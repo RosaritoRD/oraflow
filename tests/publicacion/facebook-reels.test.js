@@ -1,6 +1,6 @@
-// 04/10/2026: cada Short publicado en YouTube se sube también como Reel a la
-// Página de Facebook. Facebook solo admite Reels de 3 a 90 s y los Shorts
-// salen de 92-99 s, así que la copia de Facebook se acelera un poco.
+// 04/10/2026: every Short published on YouTube is also uploaded as a Reel to the
+// Facebook Page. Facebook only accepts Reels of 3 to 90 s and the Shorts come
+// out at 92-99 s, so the Facebook copy is sped up slightly.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const os = require('os');
@@ -11,7 +11,7 @@ const {
 } = require('../../utils/facebook-reels');
 const { PublishingSchedulingAgent } = require('../../agents/publishing-scheduling-agent');
 
-test('sin página o sin token, Facebook queda apagado', () => {
+test('without a page or token, Facebook stays off', () => {
   assert.equal(facebookConfig({}), null);
   assert.equal(facebookConfig({ FACEBOOK_PAGE_ID: '123' }), null);
   assert.deepEqual(
@@ -21,7 +21,7 @@ test('sin página o sin token, Facebook queda apagado', () => {
   assert.equal(facebookConfig({ FACEBOOK_PAGE_ID: '1', FACEBOOK_PAGE_TOKEN: 't', FACEBOOK_REELS: 'off' }), null);
 });
 
-test('hasta 89,5 s no se toca; de 92-99 s se acelera; más largo se rechaza', () => {
+test('up to 89.5 s it\'s untouched; 92-99 s gets sped up; longer is rejected', () => {
   assert.equal(planDeVelocidad(60).speed, 1);
   assert.equal(planDeVelocidad(89.5).speed, 1);
   const p = planDeVelocidad(98.745);
@@ -31,7 +31,7 @@ test('hasta 89,5 s no se toca; de 92-99 s se acelera; más largo se rechaza', ()
   assert.throws(() => planDeVelocidad(2), /3/);
 });
 
-test('se programa a la misma hora que YouTube si faltan más de 10 min', () => {
+test('scheduled at the same time as YouTube if more than 10 min remain', () => {
   const now = new Date('2026-10-04T12:00:00Z');
   assert.deepEqual(modoDePublicacion('2026-10-04T23:00:00Z', now), {
     video_state: 'SCHEDULED',
@@ -52,7 +52,7 @@ function fakeFetch(calls, { failFinish = false } = {}) {
   };
 }
 
-test('publicaReel sigue los 3 pasos de Meta con el token de la página', async () => {
+test('publicaReel follows Meta\'s 3 steps with the page token', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fbreel-'));
   const video = path.join(dir, 'v.mp4');
   fs.writeFileSync(video, Buffer.alloc(1234));
@@ -76,7 +76,7 @@ test('publicaReel sigue los 3 pasos de Meta con el token de la página', async (
   assert.deepEqual(r, { videoId: 'vid9', state: 'SCHEDULED', speed: 1 });
 });
 
-test('si Meta rechaza el Reel, el error trae su mensaje', async () => {
+test('if Meta rejects the Reel, the error carries its message', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fbreel-'));
   const video = path.join(dir, 'v.mp4');
   fs.writeFileSync(video, Buffer.alloc(10));
@@ -93,7 +93,7 @@ function agenteFalso() {
   return { agent, updates };
 }
 
-test('el Short va como Reel a Facebook y el resultado queda en el encargo', async () => {
+test('the Short goes to Facebook as a Reel and the result is stored on the job', async () => {
   const { agent, updates } = agenteFalso();
   const env = { FACEBOOK_PAGE_ID: 'P1', FACEBOOK_PAGE_TOKEN: 'T' };
   const otro = { id: 's1', status: 'published', metadata: { contentFormat: 'podcast', video: { path: '/x.mp4' } } };
@@ -105,11 +105,11 @@ test('el Short va como Reel a Facebook y el resultado queda en el encargo', asyn
   assert.equal(fb.reelId, 'r1');
   assert.equal(updates.at(-1).metadata.facebook.reelId, 'r1');
 
-  // Ya subido: no se repite.
+  // Already uploaded: not repeated.
   assert.equal((await agent.syncSocial(corto, { env, publicarFacebook: async () => assert.fail('repetido') })).facebook.reelId, 'r1');
 });
 
-test('un fallo de Facebook no tumba la publicación de YouTube', async () => {
+test('a Facebook failure doesn\'t take down the YouTube publication', async () => {
   const { agent, updates } = agenteFalso();
   const corto = { id: 's3', status: 'published', metadata: { contentFormat: 'short', video: { path: '/x.mp4' } } };
   const { facebook: fb } = await agent.syncSocial(corto, {
@@ -121,7 +121,7 @@ test('un fallo de Facebook no tumba la publicación de YouTube', async () => {
   assert.equal(updates.at(-1).status, 'published');
 });
 
-test('el vídeo largo va a la Página como vídeo, con miniatura, y no a Instagram', async () => {
+test('the long video goes to the Page as a video, with a thumbnail, and not to Instagram', async () => {
   const { agent } = agenteFalso();
   const largo = {
     id: 'l1', status: 'published', publishTime: '2026-10-05T08:00:00.000Z',
@@ -146,7 +146,7 @@ test('el vídeo largo va a la Página como vídeo, con miniatura, y no a Instagr
   assert.equal(largo.metadata.instagram, undefined);
 });
 
-test('publicaVideoLargo sube por trozos, programa con published=false y pone la miniatura', async () => {
+test('publicaVideoLargo uploads in chunks, schedules with published=false and sets the thumbnail', async () => {
   const { publicaVideoLargo } = require('../../utils/facebook-reels');
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fblargo-'));
   const video = path.join(dir, 'v.mp4');

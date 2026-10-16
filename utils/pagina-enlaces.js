@@ -1,16 +1,17 @@
 /**
- * Página de enlaces propia para la bio (05/10/2026), pública en /enlaces.
- * Sustituye a Linktree (que metía anuncios ajenos). Estilo de /libro.
- * Cada botón pasa por /enlaces/ir/<id> para contar los clics (setting enlaces_clics).
+ * In-house links page for the bio (05/10/2026), public at /enlaces.
+ * Replaces Linktree (which added third-party ads). Same style as /libro.
+ * Every button goes through /enlaces/ir/<id> to count the clicks (setting
+ * enlaces_clics).
  */
 const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const ENLACES = [
   { id: 'hoy', texto: '🙏 Oración de hoy', sub: 'El vídeo nuevo de YouTube', url: '/hoy', principal: true },
   { id: 'libro', texto: '📖 30 días de paz · $10', sub: 'Devocional para la ansiedad', url: '/libro', principal: true },
-  { id: 'youtube', texto: '▶️ Suscríbete en YouTube', sub: 'Una oración cada mañana y cada noche', url: 'https://www.youtube.com/@tu-canal?sub_confirmation=1' },
-  { id: 'instagram', texto: 'Instagram', sub: '@tu_cuenta', url: 'https://www.instagram.com/tu_cuenta' },
-  { id: 'facebook', texto: 'Facebook', sub: 'Oraciones en Presencia de Yeshua', url: 'https://www.facebook.com/profile.php?id=ID_DE_TU_PAGINA_DE_FACEBOOK' }
+  { id: 'youtube', texto: '▶️ Suscríbete en YouTube', sub: 'Una oración cada mañana y cada noche', url: 'https://www.youtube.com/@your-channel?sub_confirmation=1' },
+  { id: 'instagram', texto: 'Instagram', sub: '@your_account', url: 'https://www.instagram.com/your_account' },
+  { id: 'facebook', texto: 'Facebook', sub: 'Oraciones en Presencia de Yeshua', url: 'https://www.facebook.com/profile.php?id=YOUR_FACEBOOK_PAGE_ID' }
 ];
 
 const destino = id => ENLACES.find(e => e.id === id)?.url || null;
@@ -19,7 +20,7 @@ function paginaEnlaces() {
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Oraciones en Presencia de Yeshua</title>
 <meta name="description" content="Una oración cada mañana y cada noche en el nombre de Jesús de Nazaret, el Rey de reyes.">
-<meta property="og:title" content="Oraciones en Presencia de Yeshua"><meta property="og:image" content="https://tu-dominio.com/libro/portada.jpg">
+<meta property="og:title" content="Oraciones en Presencia de Yeshua"><meta property="og:image" content="https://your-domain.com/libro/portada.jpg">
 <style>
 @font-face { font-family: 'Cormorant'; src: url('/libro/f/CormorantGaramond-VF.ttf'); font-weight: 300 700; font-display: swap; }
 @font-face { font-family: 'Cormorant'; src: url('/libro/f/CormorantGaramond-Italic-VF.ttf'); font-style: italic; font-weight: 300 700; font-display: swap; }
@@ -47,7 +48,7 @@ ${ENLACES.map(e => `<a class="boton${e.principal ? ' principal' : ''}" href="/en
 </main></body></html>`;
 }
 
-/** Suma un clic al contador del día (para ver qué funciona). */
+/** Adds a click to the day's counter (to see what works). */
 async function cuentaClic(db, id, now = new Date()) {
   const dia = now.toISOString().slice(0, 10);
   const c = JSON.parse(await db.getSetting('enlaces_clics') || '{}');

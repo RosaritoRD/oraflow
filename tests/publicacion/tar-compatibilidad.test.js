@@ -7,7 +7,7 @@ const { execFile } = require('node:child_process');
 const { promisify } = require('node:util');
 const tar = require('tar');
 
-test('SQLite conserva la extracción de sus fuentes con la versión corregida de tar', async t => {
+test('SQLite keeps extracting its sources with the fixed tar version', async t => {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'sqlite-tar-'));
   t.after(() => fs.rm(dir, { recursive: true, force: true }));
   const input = path.join(dir, 'input');

@@ -1,18 +1,18 @@
 /**
- * Elementos del vídeo (pedido del autor, 03/10/2026): qué se añade encima de los
- * vídeos largos y cuándo. Se elige en el panel (Ajustes → Elementos del vídeo) y
- * se guarda en el ajuste `video_extras` como JSON:
- *   suscribir — animación «me gusta · SUSCRÍBETE → SUSCRITO · campana» (marca-suscribir-svg.js)
- *   campana   — tarjeta «ACTIVA LA CAMPANA» con la campana moviéndose
- *   comentar  — tarjeta con el texto que se elija («Escribe AMÉN en los comentarios»)
- *   compartir — tarjeta «COMPARTE ESTA ORACIÓN con alguien que la necesite» (apagada por defecto)
- * Momentos: inicio (a los 3 s del cuerpo, 0:11 con la intro), mitad, final (30 s antes).
- * Shorts: solo suscribirse (casilla `suscribir.shorts`), siempre a 6 s del final.
- * Un ajuste roto nunca para un render: se usan los valores por defecto.
+ * Video elements (requested by the owner, 03/10/2026): what's added on top of long videos and
+ * when. Chosen in the panel (Settings → Video elements) and saved in the `video_extras` setting as
+ * JSON:
+ *   suscribir — «like · SUBSCRIBE → SUBSCRIBED · bell» animation (marca-suscribir-svg.js)
+ *   campana   — «TURN ON THE BELL» card with the bell moving
+ *   comentar  — card with the chosen text («Escribe AMÉN en los comentarios»)
+ *   compartir — «SHARE THIS PRAYER with someone who needs it» card (off by default)
+ * Moments: start (3 s into the body, 0:11 with the intro), middle, end (30 s before).
+ * Shorts: only subscribe (checkbox `suscribir.shorts`), always 6 s before the end.
+ * A broken setting never stops a render: the defaults are used.
  */
 const TIPOS = ['suscribir', 'campana', 'comentar', 'compartir'];
 const MOMENTOS = ['inicio', 'mitad', 'final'];
-/** Segundos que dura cada animación (las secuencias van a 30 fps). */
+/** Seconds each animation lasts (the sequences run at 30 fps). */
 const DURACION = Object.freeze({ suscribir: 3.5, campana: 4.5, comentar: 5, compartir: 4.5 });
 const TEXTO_COMENTAR = 'Escribe AMÉN en los comentarios';
 const MAX_TEXTO = 60;
@@ -53,7 +53,7 @@ function segundoDe(momento, duracion) {
   return duracion - 30;
 }
 
-/** [{ tipo, inicio }] en orden, escalonados con 1 s de aire y dentro del vídeo. */
+/** [{ tipo, inicio }] in order, staggered with 1 s of air and inside the video. */
 function planDeExtras({ extras, duracion, formato = 'long' }) {
   const total = Number(duracion) || 0;
   const e = normalizaExtras(extras);

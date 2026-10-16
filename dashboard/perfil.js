@@ -1,16 +1,17 @@
-/* global showToast */
-// Perfil en la barra superior, como en KEIZAC TECH (05/10/2026): avatar con
-// iniciales + nombre; al tocarlo, preferencias de ESTE usuario (tema, idioma,
-// pantalla de inicio, modo compacto) y cerrar sesión. Se guardan en el servidor
-// (/api/me/prefs) y se recuerdan en el navegador para que no parpadee al cargar.
+/* global showToast, i18n */
+// Profile in the top bar (05/10/2026): avatar with initials + name; tapping it
+// opens THIS user's preferences (theme, language, start screen, compact mode)
+// and sign-out. They're stored on the server (/api/me/prefs) and remembered in
+// the browser so nothing flickers on load.
 (() => {
   'use strict';
 
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const VISTAS = [['overview', 'Hoy'], ['redes', 'Redes (Instagram y Facebook)'], ['pipeline', 'Vídeos en producción'], ['calendar', 'Calendario e ideas'],
-    ['shorts', 'Shorts de versículos'], ['analytics', 'Resultados'], ['engagement', 'Comentarios'], ['research', 'Investigación'],
-    ['operator', 'Piloto automático'], ['accounts', 'Cuentas'], ['settings', 'Ajustes del canal'], ['readiness', 'Revisión de producción'], ['docs', 'Guías']];
+  const t = s => i18n.t(s);
+  const VISTAS = [['overview', 'Today'], ['redes', 'Social (Instagram and Facebook)'], ['msj-resumen', 'Messages (overview)'], ['msj-bandeja', 'Messages (inbox)'], ['pipeline', 'Videos in production'], ['calendar', 'Calendar and ideas'],
+    ['shorts', 'Verse Shorts'], ['analytics', 'Results'], ['engagement', 'Comments'], ['research', 'Research'],
+    ['operator', 'Autopilot'], ['accounts', 'Accounts'], ['settings', 'Channel settings'], ['readiness', 'Production review'], ['docs', 'Guides']];
   let yo = null;
   const temaSistema = matchMedia('(prefers-color-scheme: light)');
   temaSistema.addEventListener('change', () => { if (yo?.prefs.tema === 'sistema') aplicaTema('sistema'); });
@@ -20,19 +21,19 @@
     document.documentElement.dataset.theme = claro ? 'light' : 'dark';
   }
   function recuerda(prefs) {
-    try { localStorage.setItem('kt_prefs', JSON.stringify(prefs)); localStorage.setItem('oraflow_language', prefs.idioma); } catch (_e) { /* modo privado */ }
+    try { localStorage.setItem('kt_prefs', JSON.stringify(prefs)); if (prefs.idioma) localStorage.setItem('oraflow_language', prefs.idioma); } catch (_e) { /* private mode */ }
   }
 
-  // Antes de pintar nada: el tema y el modo compacto recordados en este navegador.
+  // Before drawing anything: the theme and compact mode remembered in this browser.
   try {
     const guardadas = JSON.parse(localStorage.getItem('kt_prefs') || 'null');
     if (guardadas) { aplicaTema(guardadas.tema); document.body.classList.toggle('compacto', Boolean(guardadas.compacto)); }
-  } catch (_e) { /* sin almacenamiento */ }
+  } catch (_e) { /* no storage */ }
 
   async function guarda(cambios) {
     const res = await fetch('/api/me/prefs', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cambios) });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.success || !data.prefs) throw new Error(data.error || 'No se pudo guardar');
+    if (!res.ok || !data.success || !data.prefs) throw new Error(data.error || t('Could not save'));
     yo.prefs = data.prefs;
     recuerda(yo.prefs);
     return yo.prefs;
@@ -43,22 +44,22 @@
     if (!barra || !yo) return;
     const chip = document.createElement('div');
     chip.className = 'kt-perfil';
-    chip.innerHTML = `<button type="button" class="kt-perfil__btn" aria-label="Preferencias del perfil" aria-controls="kt-perfil-menu" aria-expanded="false" title="${esc(yo.correo)}">
+    chip.innerHTML = `<button type="button" class="kt-perfil__btn" aria-label="${esc(t('Profile preferences'))}" aria-controls="kt-perfil-menu" aria-expanded="false" title="${esc(yo.correo)}">
         <span class="kt-perfil__av">${esc(yo.iniciales)}</span><span class="kt-perfil__nombre">${esc(yo.nombre)}</span></button>
-      <div id="kt-perfil-menu" class="kt-perfil__menu" hidden role="region" aria-label="Preferencias del perfil">
+      <div id="kt-perfil-menu" class="kt-perfil__menu" hidden role="region" aria-label="${esc(t('Profile preferences'))}">
         <div class="kt-perfil__cab"><span class="kt-perfil__av grande">${esc(yo.iniciales)}</span><div><b>${esc(yo.nombre)}</b><small>${esc(yo.correo)}</small></div></div>
-        <label>Tema<select data-pref="tema"><option value="oscuro">Oscuro</option><option value="claro">Claro</option><option value="sistema">Como el teléfono</option></select></label>
-        <label>Idioma del panel<select data-pref="idioma"><option value="es">Español</option><option value="en">English</option></select></label>
-        <label>Pantalla al entrar<select data-pref="inicio">${VISTAS.map(([v, n]) => `<option value="${v}">${esc(n)}</option>`).join('')}</select></label>
-        <label class="kt-perfil__check"><input type="checkbox" data-pref="compacto"> Vista compacta (menos espacio entre bloques)</label>
-        <a class="kt-perfil__salir" href="/oauth2/sign_out?rd=%2F">Cerrar sesión</a>
+        <label>${esc(t('Theme'))}<select data-pref="tema"><option value="oscuro">${esc(t('Dark'))}</option><option value="claro">${esc(t('Light'))}</option><option value="sistema">${esc(t('Like the phone'))}</option></select></label>
+        <label>${esc(t('Panel language'))}<select data-pref="idioma"><option value="es">Español</option><option value="en">English</option></select></label>
+        <label>${esc(t('Start screen'))}<select data-pref="inicio">${VISTAS.map(([v, n]) => `<option value="${v}">${esc(t(n))}</option>`).join('')}</select></label>
+        <label class="kt-perfil__check"><input type="checkbox" data-pref="compacto"> ${esc(t('Compact view (less space between blocks)'))}</label>
+        <a class="kt-perfil__salir" href="/oauth2/sign_out?rd=%2F">${esc(t('Sign out'))}</a>
       </div>`;
-    barra.appendChild(chip); // a la derecha de todo, como el perfil de KEIZAC TECH
-    document.querySelector('.kbar .language-control')?.setAttribute('hidden', ''); // el idioma ya está en el perfil
+    barra.appendChild(chip); // far right
+    document.querySelector('.kbar .language-control')?.setAttribute('hidden', ''); // language already lives in the profile
     const btn = chip.querySelector('.kt-perfil__btn');
     const menu = chip.querySelector('.kt-perfil__menu');
     for (const el of chip.querySelectorAll('[data-pref]')) {
-      if (el.type === 'checkbox') el.checked = Boolean(yo.prefs[el.dataset.pref]); else el.value = yo.prefs[el.dataset.pref];
+      if (el.type === 'checkbox') el.checked = Boolean(yo.prefs[el.dataset.pref]); else el.value = yo.prefs[el.dataset.pref] ?? (el.dataset.pref === 'idioma' ? i18n.language : '');
     }
     btn.addEventListener('click', () => { menu.hidden = !menu.hidden; btn.setAttribute('aria-expanded', String(!menu.hidden)); });
     const cierra = () => { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
@@ -83,7 +84,7 @@
         if (el.dataset.pref === 'tema') aplicaTema(prefs.tema);
         if (el.dataset.pref === 'compacto') document.body.classList.toggle('compacto', prefs.compacto);
         if (el.dataset.pref === 'idioma') { location.reload(); return; }
-        showToast?.('Preferencia guardada');
+        showToast?.(t('Preference saved'));
       } catch (error) {
         if (el.type === 'checkbox') el.checked = Boolean(anterior); else el.value = anterior;
         showToast?.(error.message, 'error');
@@ -101,7 +102,7 @@
     recuerda(yo.prefs);
     aplicaTema(yo.prefs.tema);
     document.body.classList.toggle('compacto', Boolean(yo.prefs.compacto));
-    // Pantalla de inicio de este usuario (solo si no llegó con un #enlace concreto).
+    // This user's start screen (only if they didn't arrive through a specific #link).
     if (!location.hash && yo.prefs.inicio && yo.prefs.inicio !== 'overview') location.hash = yo.prefs.inicio;
     pinta();
   }).catch(() => {});

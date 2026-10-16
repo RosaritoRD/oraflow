@@ -3,20 +3,21 @@ const assert = require('node:assert/strict');
 const { componeDescripcion } = require('../../agents/seo-optimizer-agent');
 const { normalizeYouTubeMetadata } = require('../../utils/youtube-metadata-validator');
 
-// 30/09: en YouTube la descripción salía en un solo bloque ("Hoy!En este
-// canal…"): la limpieza borraba los saltos de línea como si fueran basura.
-// Formato pedido por el autor: cada frase en su párrafo, separados por una línea.
+// 30/09: on YouTube the description came out as a single block ("Hoy!En este
+// canal…"): the cleanup was deleting line breaks as if they were junk.
+// The owner's requested format: each sentence in its own paragraph, separated by a
+// blank line.
 
-test('la limpieza para YouTube conserva los saltos de línea de la descripción', () => {
+test('the YouTube cleanup keeps the description\'s line breaks', () => {
   const out = normalizeYouTubeMetadata({ title: 'T', description: 'Uno.\r\n\r\n\r\nDos.\n\nTres.\u0007' });
   assert.equal(out.description, 'Uno.\n\nDos.\n\nTres.');
 });
 
-test('el título sigue sin saltos de línea', () => {
+test('the title still has no line breaks', () => {
   assert.equal(normalizeYouTubeMetadata({ title: 'Oración\nde la noche', description: '' }).title, 'Oración de la noche');
 });
 
-test('cada frase de la bienvenida y del cuerpo va en su propio párrafo', () => {
+test('each sentence of the welcome and the body goes in its own paragraph', () => {
   process.env.DESCRIPTION_INTRO = '¡Bienvenido a Oración de Hoy!\\nEn este canal hay fe. Nuestro objetivo es ayudarte.';
   delete process.env.DESCRIPTION_FOOTER;
   const d = componeDescripcion(
@@ -35,7 +36,7 @@ test('cada frase de la bienvenida y del cuerpo va en su propio párrafo', () => 
   delete process.env.DESCRIPTION_INTRO;
 });
 
-test('no parte versículos ni horas', () => {
+test('doesn\'t split verses or times', () => {
   const d = componeDescripcion('Lee Salmo 121:7-8 esta noche. Son las 4:00 a. m. en punto.', []);
   assert.deepEqual(d.split('\n\n'), ['Lee Salmo 121:7-8 esta noche.', 'Son las 4:00 a. m. en punto.']);
 });

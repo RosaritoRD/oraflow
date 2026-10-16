@@ -1,5 +1,5 @@
-// 02/10/2026 (el autor): portadas propias para los Shorts. Van como primer plano del
-// vídeo (con el título encima) para que YouTube las use de portada.
+// 02/10/2026: custom covers for the Shorts. They go in as the video's first shot
+// (with the title on top) so YouTube uses them as the cover.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
@@ -20,12 +20,12 @@ async function carpeta(nombres) {
   return dir;
 }
 
-test('sin carpeta o sin imágenes: null (el Short sale sin portada, nunca falla)', async () => {
+test('no folder or no images: null (the Short goes out without a cover, never fails)', async () => {
   assert.equal(await eligePortada({ raiz: path.join(os.tmpdir(), 'no-existe-' + Date.now()), logger: silencio }), null);
   assert.equal(await eligePortada({ raiz: await carpeta([]), logger: silencio }), null);
 });
 
-test('rota: usa todas antes de repetir y no repite la misma seguida', async () => {
+test('rotates: uses all before repeating and doesn\'t repeat the same one in a row', async () => {
   const dir = await carpeta(['a.png', 'b.png', 'c.png']);
   const usadas = [];
   for (let i = 0; i < 5; i++) usadas.push(path.basename(await eligePortada({ raiz: dir, logger: silencio })));
@@ -33,7 +33,7 @@ test('rota: usa todas antes de repetir y no repite la misma seguida', async () =
   for (let i = 1; i < usadas.length; i++) assert.notEqual(usadas[i], usadas[i - 1]);
 });
 
-test('compone a 1080x1920 con el título y el logo arriba al centro', async () => {
+test('composes at 1080x1920 with the title and the logo top center', async () => {
   const dir = await carpeta(['a.png']);
   const logo = path.join(dir, 'logo.png');
   await sharp({ create: { width: 200, height: 200, channels: 3, background: '#ffffff' } }).png().toFile(logo);
@@ -42,13 +42,13 @@ test('compone a 1080x1920 con el título y el logo arriba al centro', async () =
   const meta = await sharp(salida).metadata();
   assert.equal(meta.width, 1080);
   assert.equal(meta.height, 1920);
-  // El logo (blanco) va centrado arriba, donde lo traen las imágenes del autor.
+  // The (white) logo goes centered at the top, where the owner's images carry it.
   const { data } = await sharp(salida).extract({ left: 525, top: 125, width: 30, height: 30 }).raw().toBuffer({ resolveWithObject: true });
   assert.ok(data.reduce((n, v) => n + v, 0) / data.length > 200, 'falta el logo arriba al centro');
 });
 
-test('los segundos de portada se ajustan y tienen tope', () => {
-  // 11/10/2026: por defecto NO va dentro del vídeo (el Short empieza hablando).
+test('the cover seconds are adjusted and capped', () => {
+  // 11/10/2026: by default it does NOT go inside the video (the Short starts talking).
   assert.equal(segundosPortada({}), 0);
   assert.equal(segundosPortada({ SHORT_COVER_SECONDS: '1.5' }), 1.5);
   assert.equal(segundosPortada({ SHORT_COVER_SECONDS: '2' }), 2);
@@ -56,7 +56,7 @@ test('los segundos de portada se ajustan y tienen tope', () => {
   assert.equal(segundosPortada({ SHORT_COVER_SECONDS: 'off' }), 0);
 });
 
-test('aplicaPortada: la portada tapa el principio y el vídeo dura lo mismo', async () => {
+test('aplicaPortada: the cover hides the start and the video keeps the same duration', async () => {
   const dir = await carpeta(['a.png']);
   const video = path.join(dir, 'v.mp4');
   execFileSync('ffmpeg', ['-y', '-hide_banner', '-loglevel', 'error', '-f', 'lavfi', '-i', 'color=c=black:s=1080x1920:d=4:r=30', '-pix_fmt', 'yuv420p', video]);
@@ -73,7 +73,7 @@ test('aplicaPortada: la portada tapa el principio y el vídeo dura lo mismo', as
   assert.ok(brillo(3) < 30, 'después vuelve el vídeo');
 });
 
-test('el titular de la portada va sin emojis ni la cita entre paréntesis', () => {
+test('the cover headline goes without emojis or the reference in parentheses', () => {
   const { tituloDePortada } = require('../../utils/portada-short');
   assert.equal(tituloDePortada('Oración de la noche: en paz me acostaré (Salmo 4:8) 🙏'), 'Oración de la noche: en paz me acostaré');
   assert.equal(tituloDePortada('Oración de la mañana para comenzar con paz y esperanza ☀️🙏'), 'Oración de la mañana para comenzar con paz y esperanza');

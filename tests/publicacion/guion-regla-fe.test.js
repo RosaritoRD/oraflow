@@ -1,10 +1,10 @@
-// 05/10/2026: la regla de fe en el guion NO puede cambiar la forma de la conclusión
-// (un objeto con recap/finalThought): convertirla en texto rompió todos los guiones.
+// 05/10/2026: the faith rule in the script must NOT change the shape of the conclusion
+// (an object with recap/finalThought): turning it into text broke every script.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const ScriptWriterAgent = require('../../agents/script-writer-agent');
 
-test('cierraOracion: conserva el objeto de la conclusión y cierra con Jesús Rey + Amén', () => {
+test('cierraOracion: keeps the conclusion object and closes with Jesus as King + Amén', () => {
   const anterior = process.env.CONTENT_LANGUAGE;
   process.env.CONTENT_LANGUAGE = 'es';
   try {
@@ -23,7 +23,7 @@ test('cierraOracion: conserva el objeto de la conclusión y cierra con Jesús Re
   }
 });
 
-test('generateScript completo con IA simulada: no se rompe y cierra en Amén', async () => {
+test('full generateScript with simulated AI: doesn\'t break and closes with Amén', async () => {
   const anterior = process.env.CONTENT_LANGUAGE;
   process.env.CONTENT_LANGUAGE = 'es';
   try {

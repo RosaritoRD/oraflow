@@ -52,7 +52,7 @@ class ContentStrategyAgent {
     const youtube = this.credentials.getYouTubeClient();
     
     try {
-      if (this.db && await require('../utils/cuota-youtube').agotada(this.db)) return []; // sin cuota: no gastar en tendencias
+      if (this.db && await require('../utils/cuota-youtube').agotada(this.db)) return []; // no quota: don't spend it on trends
       const response = await youtube.videos.list({
         part: 'snippet,statistics',
         chart: 'mostPopular',

@@ -1,18 +1,18 @@
 /**
- * Comentario del canal en cada vídeo (30/09/2026): invita a suscribirse, a
- * escribir «Amén» y a compartir, para atraer público y comentarios.
+ * The channel's comment on every video (30/09/2026): invites people to
+ * subscribe, write «Amén» and share, to attract audience and comments.
  *
- * Se pone cuando el vídeo YA es público (los vídeos se suben programados en
- * privado y ahí YouTube no deja comentar). Una tarea cada 30 min recorre el
- * canal y comenta los públicos que aún no lo tienen; lo hecho queda en el
- * ajuste `comentarios_canal`. La API no permite FIJAR comentarios: eso, si se
- * quiere, se hace a mano desde YouTube Studio.
+ * It's posted once the video IS public (videos are uploaded scheduled as private
+ * and YouTube doesn't allow comments there). A task every 30 min goes through
+ * the channel and comments on the public ones that don't have it yet; what's
+ * done is kept in the `comentarios_canal` setting. The API doesn't allow PINNING
+ * comments: that, if wanted, is done by hand from YouTube Studio.
  */
 const crypto = require('crypto');
 
 const TEXTOS = {
-  // 30/09: sin peticiones de oración ni "¿por quién quieres orar?": el canal no
-  // hace oraciones personalizadas y no debe prometerlas.
+  // 30/09: no prayer requests or "¿por quién quieres orar?": the channel doesn't
+  // do personalized prayers and mustn't promise them.
   'long:mañana': [
     '🙏 Gracias por empezar el día orando con nosotros. Si esta oración te dio paz, suscríbete al canal y activa la campanita 🔔: cada mañana hay una oración nueva para comenzar el día con Dios.\n\nEscribe «Amén» si la recibes. ❤️',
     '☀️ Que Dios guíe cada paso de tu día. ¿Quieres una oración así cada mañana? Suscríbete al canal 🔔 y compártela con alguien que la necesite hoy.\n\n¿Desde qué ciudad o país oras con nosotros? Cuéntanos aquí abajo. 🌎',
@@ -47,7 +47,7 @@ function tipoDeVideo(v) {
   return { formato, franja };
 }
 
-/** Texto para un vídeo: elegido por su id, así cada vídeo lleva uno y no todos el mismo. */
+/** Text for a video: picked by its id, so each video gets one and not all the same. */
 function textoComentario({ videoId, formato, franja }) {
   const lista = formato === 'short' ? TEXTOS.short : TEXTOS[`long:${franja}`] || TEXTOS['long:mañana'];
   const h = parseInt(crypto.createHash('sha1').update(String(videoId)).digest('hex').slice(0, 8), 16);
@@ -87,11 +87,11 @@ async function comentaPublicados({ youtube, db, logger = console }) {
         });
         estado[v.id] = { commentId: r.data.id, en: new Date().toISOString() };
         nuevos += 1;
-        logger.info(`Comentario del canal puesto en ${v.id}`);
+        logger.info(`Channel comment posted on ${v.id}`);
       } catch (error) {
         const intentos = (estado[v.id]?.intentos || 0) + 1;
         estado[v.id] = { error: error.message, intentos };
-        logger.warn(`No se pudo comentar ${v.id} (intento ${intentos}/${MAX_INTENTOS}): ${error.message}`);
+        logger.warn(`Could not comment on ${v.id} (attempt ${intentos}/${MAX_INTENTOS}): ${error.message}`);
       }
       await guarda();
     }

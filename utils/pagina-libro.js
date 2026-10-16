@@ -1,9 +1,9 @@
 /**
- * Página de venta del ebook "30 días de paz" (05/10/2026), pública en /libro.
- * Hotmart pide una página de ventas para aprobar el producto; el botón lleva
- * al pago de Hotmart (setting `ebook_checkout_url`). Sin URL, el botón dice
- * "Disponible muy pronto". El contenido de muestra sale del propio ebook
- * (data/ebook/contenido.json): nada inventado.
+ * Sales page for the ebook "30 días de paz" (05/10/2026), public at /libro.
+ * Hotmart requires a sales page to approve the product; the button goes to
+ * Hotmart's checkout (setting `ebook_checkout_url`). Without a URL, the button
+ * says "Disponible muy pronto". The sample content comes from the ebook itself
+ * (data/ebook/contenido.json): nothing made up.
  */
 const fs = require('fs');
 const path = require('path');
@@ -12,14 +12,14 @@ const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 
 function paginaLibro({ checkoutUrl = '', muestra = null, partes = [] } = {}) {
   const boton = checkoutUrl
-    ? '<a class="comprar" href="/libro/comprar" rel="noopener">Quiero mi devocional · $10</a>' // cuenta el clic y lleva a Hotmart
+    ? '<a class="comprar" href="/libro/comprar" rel="noopener">Quiero mi devocional · $10</a>' // counts the click and goes to Hotmart
     : '<span class="comprar apagado">Disponible muy pronto</span>';
   const parrafo = muestra ? muestra.reflexion.split(/(?<=[.!?])\s+/).slice(0, 4).join(' ') : '';
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>30 días de paz · Devocional para la ansiedad</title>
 <meta name="description" content="Devocional cristiano de 30 días para cuando la ansiedad no te deja descansar. Un versículo, una reflexión, una oración y un paso práctico cada día.">
 <meta property="og:title" content="30 días de paz"><meta property="og:description" content="Devocional para cuando la ansiedad no te deja descansar">
-<meta property="og:image" content="https://tu-dominio.com/libro/portada.jpg">
+<meta property="og:image" content="https://your-domain.com/libro/portada.jpg">
 <style>
 @font-face { font-family: 'Cormorant'; src: url('/libro/f/CormorantGaramond-VF.ttf'); font-weight: 300 700; font-display: swap; }
 @font-face { font-family: 'Cormorant'; src: url('/libro/f/CormorantGaramond-Italic-VF.ttf'); font-style: italic; font-weight: 300 700; font-display: swap; }
@@ -79,11 +79,11 @@ footer { text-align: center; font: 400 14px 'Jost', sans-serif; color: var(--sua
   </section>
   <section class="final">${boton}</section>
 </main>
-<footer>Oraciones en Presencia de Yeshua · @tu_cuenta</footer>
+<footer>Oraciones en Presencia de Yeshua · @your_account</footer>
 </body></html>`;
 }
 
-/** Datos de la página: URL de pago (setting) y muestra del día 1 (contenido.json del ebook). */
+/** Page data: checkout URL (setting) and the day-1 sample (the ebook's contenido.json). */
 async function datosPagina({ db, dataDir }) {
   const checkoutUrl = String(await db.getSetting('ebook_checkout_url') || '').trim();
   let dias = [];

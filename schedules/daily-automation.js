@@ -29,8 +29,9 @@ class DailyAutomation {
   }
 
   async setupScheduledTasks() {
-    // Cada 2 horas: si algún hueco de las próximas 24 h (largos 04:00/18:30,
-    // Shorts según el ajuste daily_shorts_time, hoy 05:00 y 19:00) está vacío, genera el más cercano. Si no, no hace nada.
+    // Every 2 hours: if any slot in the next 24 h (long videos 04:00/18:30, Shorts per the
+    // daily_shorts_time setting, today 05:00 and 19:00) is empty, it generates the nearest one.
+    // Otherwise it does nothing.
     this.scheduledTasks.set('daily-content-generation', 
       cron.schedule('0 */2 * * *', async () => {
         if (this.isEnabled) {
@@ -75,8 +76,8 @@ class DailyAutomation {
       }, { scheduled: false })
     );
 
-    // Limpieza del disco cada día a las 3:15 AM (utils/limpieza-disco.js): restos del
-    // montaje, vídeos publicados hace 3+ días y biblioteca de clips por encima del tope.
+    // Disk cleanup every day at 3:15 AM (utils/limpieza-disco.js): editing leftovers, videos
+    // published 3+ days ago and the clip library above its cap.
     this.scheduledTasks.set('disk-cleanup',
       cron.schedule('15 3 * * *', async () => {
         try {
@@ -89,8 +90,9 @@ class DailyAutomation {
       }, { scheduled: false })
     );
 
-    // Comentario del canal en cada vídeo que ya es público (utils/comentario-fijo.js).
-    // Carrusel de oración diario en Instagram (utils/carrusel-diario.js).
+    // The channel's comment on every video that's already public
+    // (utils/comentario-fijo.js).
+    // Daily prayer carousel on Instagram (utils/carrusel-diario.js).
     this.scheduledTasks.set('instagram-carousel',
       cron.schedule('10,25,40,55 * * * *', async () => {
         if (!this.isEnabled) return;
@@ -104,7 +106,7 @@ class DailyAutomation {
       }, { scheduled: false })
     );
 
-    // "Oración del día": Reel corto en Instagram y Facebook (utils/oracion-corta.js).
+    // "Prayer of the day": a short Reel on Instagram and Facebook (utils/oracion-corta.js).
     this.scheduledTasks.set('oracion-corta',
       cron.schedule('2,17,32,47 * * * *', async () => {
         if (!this.isEnabled) return;
@@ -113,12 +115,12 @@ class DailyAutomation {
           const ai = this.agents.scriptWriter?.aiTextService || this.agents.strategy?.aiTextService;
           if (ai) await publicaOracionDelDia({ db: this.db, ai, logger: this.logger });
         } catch (error) {
-          this.logger.warn(`Oración del día: ${error.message}`);
+          this.logger.warn(`Prayer of the day: ${error.message}`);
         }
       }, { scheduled: false })
     );
 
-    // Oración de la mañana con fecha (07:00) y frase para compartir (20:00) en IG + FB (utils/piezas-diarias.js).
+    // Dated morning prayer (07:00) and a quote to share (20:00) on IG + FB (utils/piezas-diarias.js).
     this.scheduledTasks.set('piezas-diarias',
       cron.schedule('7,22,37,52 * * * *', async () => {
         if (!this.isEnabled) return;
@@ -132,7 +134,7 @@ class DailyAutomation {
           }
         }
         try {
-          // Historia en IG + FB de cada vídeo largo ya público (utils/historia-diaria.js).
+          // A story on IG + FB for every long video that's already public (utils/historia-diaria.js).
           await require('../utils/historia-diaria').publicaHistorias({ db: this.db, logger: this.logger });
         } catch (error) {
           this.logger.warn(`Historia diaria: ${error.message}`);
@@ -140,7 +142,7 @@ class DailyAutomation {
       }, { scheduled: false })
     );
 
-    // Respuesta automática a los comentarios que son solo "Amén" (utils/amen-automatico.js).
+    // Automatic reply to comments that are just "Amén" (utils/amen-automatico.js).
     this.scheduledTasks.set('amen-automatico',
       cron.schedule('*/10 * * * *', async () => { // cada vuelta real: 30-90 min al azar (amen_proxima)
         if (!this.isEnabled) return;
@@ -151,55 +153,84 @@ class DailyAutomation {
           const youtube = this.agents.publishing?.youtube;
           const token = await tokenInstagram(this.db, process.env);
           const fb = facebookConfig(process.env);
-          // Con la oración por privado encendida, Instagram lo lleva utils/mensaje-amen.js
-          // (cualquier comentario); si no, Instagram solo contesta los «Amén».
+          // With the private-message prayer on, Instagram is handled by
+          // utils/mensaje-amen.js (any comment); otherwise Instagram only replies to
+          // the «Amén» ones.
           const dmIG = token && await this.db.getSetting('dm_amen_enabled') === 'true';
           const redes = [
-            // YouTube apagado hasta que el autor lo active (06/10/2026): amen_youtube_enabled='true'.
+            // YouTube off until the owner turns it on (06/10/2026): amen_youtube_enabled='true'.
             youtube && await this.db.getSetting('amen_youtube_enabled') === 'true' && amen.youtubeRed({ youtube, db: this.db }),
             token && !dmIG && amen.instagramRed({ token }),
             fb && amen.facebookRed({ config: fb })
           ].filter(Boolean);
-          // Primero el comentario del canal en lo nuevo de Instagram (el autor lo fija a mano).
+          // Comments already handled by a Messages rule aren't touched here (utils/mensajes/motor.js).
+          const motor = require('../utils/mensajes/motor');
+          const cuentaDe = { instagram: 'principal-instagram', facebook: 'principal-facebook', youtube: 'principal-youtube' };
+          for (const red of redes.filter(r => cuentaDe[r.nombre])) {
+            const leer = red.comentarios.bind(red);
+            red.comentarios = async opts => motor.filtraAtendidos(this.db, cuentaDe[red.nombre], await leer(opts));
+          }
+          // First the channel's comment on new Instagram posts (the owner pins it by hand).
           if (token) {
             await require('../utils/comentario-ig').comentaNuevas({ db: this.db, token, logger: this.logger })
               .catch(error => this.logger.warn(`Comentario de Instagram: ${error.message}`));
           }
-          // Los comentarios cristianos que no son un «Amén» se contestan con IA (utils/respuesta-ia.js, 07/10/2026).
+          // Christian comments that aren't an «Amén» get an AI reply (utils/respuesta-ia.js, 07/10/2026).
           const ai = this.agents.scriptWriter?.aiTextService || this.agents.strategy?.aiTextService;
           const escritor = require('../utils/respuesta-ia').escritorDeRespuestas(ai, { logger: this.logger });
           await amen.respondeAmenes({ db: this.db, redes, logger: this.logger, escritor });
         } catch (error) {
-          this.logger.warn(`Amén automático: ${error.message}`);
+          this.logger.warn(`Automatic Amén: ${error.message}`);
         }
       }, { scheduled: false })
     );
 
-    // Instagram: oración por privado + aviso a los ~5 min del comentario (el autor, 05/10/2026).
-    // Cada 5 min; solo comentarios con 4+ min, así la respuesta llega entre los 4 y 9 min.
+    // Instagram: a prayer by private message + a notice ~5 min after the comment (05/10/2026).
+    // Every 5 min; only comments 4+ min old, so the reply arrives between 4 and 9 min.
     this.scheduledTasks.set('instagram-privado',
       cron.schedule('*/5 * * * *', async () => {
         if (!this.isEnabled) return;
+        // First the per-post rules of ALL accounts (Messages section, 15/10/2026); whatever
+        // they handle is no longer touched by the private-message prayer below.
+        const motor = require('../utils/mensajes/motor');
+        await motor.ejecutaTodas({ db: this.db, logger: this.logger, youtube: this.agents.publishing?.youtube || null })
+          .catch(error => this.logger.warn(`Mensajes (reglas): ${error.message}`));
         try {
           const token = await require('../utils/instagram-reels').tokenInstagram(this.db, process.env);
           if (!token || await this.db.getSetting('dm_amen_enabled') !== 'true') return;
           const amen = require('../utils/amen-automatico');
           const ig = amen.instagramRed({ token });
           const ahora = Date.now();
-          const comentarios = (await ig.comentarios({ now: new Date() }))
+          const comentarios = (await motor.filtraAtendidos(this.db, 'principal-instagram', await ig.comentarios({ now: new Date() })))
             .filter(c => ahora - Date.parse(c.fecha) >= 4 * 60000);
           await require('../utils/mensaje-amen').enviaMensajesAmen({
             db: this.db, token, comentarios, esAmen: amen.seResponde, respuestaAmen: amen.respuestaPara,
             responde: ig.responde, logger: this.logger
           });
         } catch (error) {
-          this.logger.warn(`Instagram (oración por privado): ${error.message}`);
+          this.logger.warn(`Instagram (private-message prayer): ${error.message}`);
         }
       }, { scheduled: false })
     );
 
-    // Instagram: «BORRAR»/«DELETE» por privado borra los datos de esa persona (utils/borrado-datos.js).
-    // Lo promete tu-dominio.com/oraciones-data-deletion, requisito de la app de Meta (07/10/2026).
+    // Messages: Telegram chats (polling, no public webhook) with their automatic replies, and the
+    // weekly renewal of Instagram tokens added in Messages → Accounts (15/10/2026).
+    this.scheduledTasks.set('mensajes-chats',
+      cron.schedule('* * * * *', async () => {
+        if (!this.isEnabled) return;
+        const motor = require('../utils/mensajes/motor');
+        await motor.recogeChats({ db: this.db, logger: this.logger })
+          .catch(error => this.logger.warn(`Mensajes (chats): ${error.message}`));
+        if (new Date().getMinutes() === 7) {
+          await require('../utils/mensajes/cuentas').renuevaTokensIG(this.db, { logger: this.logger })
+            .catch(error => this.logger.warn(`Mensajes (renovar tokens): ${error.message}`));
+        }
+      }, { scheduled: false })
+    );
+
+    // Instagram: «BORRAR»/«DELETE» by private message deletes that person's data
+    // (utils/borrado-datos.js).
+    // The data-deletion page promises it; it's a Meta app requirement (07/10/2026).
     this.scheduledTasks.set('borrado-datos',
       cron.schedule('17,47 * * * *', async () => {
         if (!this.isEnabled) return;
@@ -212,16 +243,16 @@ class DailyAutomation {
       }, { scheduled: false })
     );
 
-    // Vídeos recomendados en las descripciones: el largo y el Short más vistos (utils/destacados.js).
+    // Recommended videos in the descriptions: the most-watched long video and Short (utils/destacados.js).
     this.scheduledTasks.set('videos-destacados',
       cron.schedule('20 3 * * *', async () => {
         const youtube = this.agents.publishing?.youtube;
         if (!this.isEnabled || !youtube) return;
         try {
-          if (await require('../utils/cuota-youtube').agotada(this.db)) return; // la cuota que queda es para subir vídeos
+          if (await require('../utils/cuota-youtube').agotada(this.db)) return; // the remaining quota is for uploading videos
           await require('../utils/destacados').actualizaDestacados({ youtube, db: this.db });
         } catch (error) {
-          this.logger.warn(`Vídeos destacados: ${error.message}`);
+          this.logger.warn(`Featured videos: ${error.message}`);
         }
       }, { scheduled: false })
     );
@@ -232,10 +263,10 @@ class DailyAutomation {
         if (!this.isEnabled || !youtube) return;
         try {
           const { comentaPublicados } = require('../utils/comentario-fijo');
-          if (await require('../utils/cuota-youtube').agotada(this.db)) return; // la cuota que queda es para subir vídeos
+          if (await require('../utils/cuota-youtube').agotada(this.db)) return; // the remaining quota is for uploading videos
           await comentaPublicados({ youtube, db: this.db, logger: this.logger });
         } catch (error) {
-          this.logger.warn(`Comentario del canal fallido: ${error.message}`);
+          this.logger.warn(`Channel comment failed: ${error.message}`);
         }
       }, { scheduled: false })
     );
@@ -252,7 +283,7 @@ class DailyAutomation {
     // Audience comment sync every 4 hours; the service's own taper decides which videos are due
     this.scheduledTasks.set('audience-engagement-sync',
       cron.schedule('0 */4 * * *', async () => {
-        if (this.isEnabled && !await require('../utils/cuota-youtube').agotada(this.db)) { // cuota para subir vídeos
+        if (this.isEnabled && !await require('../utils/cuota-youtube').agotada(this.db)) { // quota for uploading videos
           await this.collectAudienceEngagement();
         }
       }, { scheduled: false })
@@ -261,7 +292,7 @@ class DailyAutomation {
     // Collect controlled experiment evidence and advance only pre-approved arms.
     this.scheduledTasks.set('growth-experiment-refresh',
       cron.schedule('30 */4 * * *', async () => {
-        if (this.isEnabled && !await require('../utils/cuota-youtube').agotada(this.db)) { // cuota para subir vídeos
+        if (this.isEnabled && !await require('../utils/cuota-youtube').agotada(this.db)) { // quota for uploading videos
           await this.refreshGrowthExperiments();
         }
       }, { scheduled: false })
@@ -414,9 +445,10 @@ class DailyAutomation {
   }
 
   /**
-   * Modo diario: generar solo si hay un hueco vacío en las próximas 24 h (el
-   * más cercano de largos y Shorts), no hay otra generación en marcha y ese
-   * hueco no ha gastado ya 3 intentos. Deja el hueco en `this.lastDailyTarget`.
+   * Daily mode: generate only if there's an empty slot in the next 24 h (the
+   * nearest of long videos and Shorts), no other generation is running and that
+   * slot hasn't already used 3 attempts. Leaves the slot in
+   * `this.lastDailyTarget`.
    */
   async needsDailyVideo(daily) {
     this.lastDailyTarget = null;
@@ -438,8 +470,8 @@ class DailyAutomation {
       const taken = await this.agents.publishing.takenDailySlots(format);
       const slot = nextFreeSlot({ timeZone: daily.timeZone, clocks, taken });
       if (new Date(slot.publishTime).getTime() - Date.now() > horizonMs) continue;
-      // Los fallos del proveedor de IA (sin saldo, tope de la clave) no gastan intentos
-      // del hueco (06/10/2026): una caída de OpenRouter dejó sin Short la noche del 05/10.
+      // AI provider failures (no credit, key cap) don't use up the slot's attempts
+      // (06/10/2026): an OpenRouter outage left the evening of 05/10 without a Short.
       const attempts = await this.db.getRow(
         `SELECT COUNT(*) AS count FROM generation_jobs
          WHERE source = 'scheduler' AND details LIKE ?

@@ -1,12 +1,12 @@
 /**
- * Palabras que la voz de ElevenLabs pronuncia mal (07/10/2026).
+ * Words the ElevenLabs voice mispronounces (07/10/2026).
  *
- * En el largo «Antes de mirar el teléfono» dijo «teléfene». El guion estaba
- * bien; es la voz la que tropieza con esa esdrújula. Solo se cambia lo que se
- * NARRA (los subtítulos salen de lo narrado, así que cuadran): el guion, el
- * título y la descripción se quedan como estaban.
+ * In the long video «Antes de mirar el teléfono» it said «teléfene». The script
+ * was fine; it's the voice that trips over that proparoxytone word. Only what is
+ * NARRATED is changed (captions come from the narration, so they match): the
+ * script, title and description stay as they were.
  *
- * Para añadir otra: una entrada más en CAMBIOS, con su prueba.
+ * To add another one: one more entry in CAMBIOS, with its test.
  */
 const CAMBIOS = [
   [/\btel[eé]fonos\b/giu, 'celulares'],

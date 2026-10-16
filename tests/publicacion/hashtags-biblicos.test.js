@@ -21,7 +21,7 @@ for (const [reference, incorrect, expected] of [
   ['Proverbios 3:5-6', '#proverbios356', '#proverbios3'],
   ['1 Pedro 5:7', '#1pedro57', '#1pedro5']
 ]) {
-  test(`deriva el capítulo de ${reference} en SEO y descripción`, async () => {
+  test(`derives the chapter of ${reference} in SEO and description`, async () => {
     const result = await optimize(reference, ['#SHORTS', '#OraciónDeLaNoche', incorrect]);
     assert.deepEqual(result.hashtags, ['#shorts', '#oraciondelanoche', expected]);
     assert.ok(result.description.includes(expected));
@@ -29,11 +29,11 @@ for (const [reference, incorrect, expected] of [
   });
 }
 
-test('Salmo 48:1 sí conserva #salmo48; no lo sustituye por Salmo 4', async () => {
+test('Salmo 48:1 keeps #salmo48; doesn\'t replace it with Salmo 4', async () => {
   assert.ok((await optimize('Salmo 48:1', ['#shorts', '#salmo48'])).hashtags.includes('#salmo48'));
 });
 
-test('no inventa un capítulo a partir de una referencia ambigua ni acepta uno ajeno', async () => {
+test('doesn\'t invent a chapter from an ambiguous reference or accept a foreign one', async () => {
   for (const reference of ['', 'Salmo48', 'Salmo 0:8', 'Algo 4:8']) {
     const result = await optimize(reference, ['#shorts', '#salmo48', '#oración']);
     assert.equal(result.hashtags.length, 3);
@@ -41,12 +41,12 @@ test('no inventa un capítulo a partir de una referencia ambigua ni acepta uno a
   }
 });
 
-test('sin hashtags de IA, usa etiquetas de oración breves y la cita real', async () => {
+test('without AI hashtags, uses short prayer tags and the real reference', async () => {
   const result = await optimize('Mateo 11:28', null);
   assert.deepEqual(result.hashtags, ['#shorts', '#oraciondelanoche', '#mateo11']);
 });
 
-test('un vídeo largo no hereda #shorts y el capítulo tiene espacio entre las tres etiquetas', async () => {
+test('a long video doesn\'t inherit #shorts and the chapter has room among the three tags', async () => {
   const result = await optimize('Isaías 41:10', ['#shorts', '#Fe', '#Esperanza', '#oracion'], { contentFormat: 'long' });
   assert.deepEqual(result.hashtags, ['#fe', '#esperanza', '#isaias41']);
 });

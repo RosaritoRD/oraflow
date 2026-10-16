@@ -1,18 +1,17 @@
 /**
- * Dos imágenes diarias para Instagram y Facebook (pedido del autor, 05/10/2026).
- * Estudio: notas/estrategia y notas/competencia-milagrosa-oraconfe-2026-10-05.md
+ * Two daily images for Instagram and Facebook (requested by the owner, 05/10/2026).
+ * Research: notas/estrategia and the competitor notes of 05/10/2026.
  *
- * 1. "fecha" — Oración de la mañana CON LA FECHA en la imagen ("Lunes 5 de
- *    Octubre"). En 4 de 6 cuentas grandes el post con fecha es el que más se
- *    comparte (×3-7): se reenvía como el "buenos días de hoy".
- * 2. "frase" — Frase corta para compartir (estilo @365fanpage / @mundoescritos):
- *    fondo blanco limpio, una frase sobre Jesús de Nazaret, Rey de reyes, y
- *    "Inspirada en <cita>" con el versículo REAL de la RV1909 debajo. Los
- *    virales del nicho inventan el texto del versículo; aquí nunca.
+ * 1. "fecha" — Morning prayer WITH THE DATE in the image ("Lunes 5 de
+ *    Octubre"). On 4 of 6 big accounts the dated post is the most shared (×3-7): it's forwarded as
+ *    "today's good morning".
+ * 2. "frase" — A short quote to share (@365fanpage / @mundoescritos style): a clean white
+ *   background, a sentence about Jesus of Nazareth, King of kings, and "Inspirada en <cita>" with
+ *   the REAL RV1909 verse below. The niche's viral posts make up the verse text; never here.
  *
- * Regla de fe (utils/reglas-oracion.js): Jesús de Nazaret como Rey y «Amén».
- * Settings por pieza (<clave> = oracion_fecha | frase_compartir):
- *   <clave>_enabled ('false' la apaga), <clave>_time (hora del canal), <clave>_last.
+ * Faith rule (utils/reglas-oracion.js): Jesus of Nazareth as King and «Amén».
+ * Settings per piece (<clave> = oracion_fecha | frase_compartir):
+ *   <clave>_enabled ('false' turns it off), <clave>_time (channel time), <clave>_last.
  */
 const fs = require('fs');
 const os = require('os');
@@ -31,7 +30,7 @@ const TEMAS_FRASE = ['Jesús va delante de ti', 'Jesús reina sobre tus preocupa
 
 const capital = s => s.charAt(0).toUpperCase() + s.slice(1);
 
-/** "Lunes 5 de Octubre" en la zona horaria del canal (como lo escriben las cuentas del nicho). */
+/** "Lunes 5 de Octubre" in the channel's time zone (as the niche's accounts write it). */
 function fechaLarga(now, tz = DEFAULT_TZ) {
   const partes = new Intl.DateTimeFormat('es', { weekday: 'long', day: 'numeric', month: 'long', timeZone: tz }).formatToParts(now);
   const v = tipo => partes.find(p => p.type === tipo)?.value || '';
@@ -40,7 +39,7 @@ function fechaLarga(now, tz = DEFAULT_TZ) {
 
 const temaDe = (lista, now) => lista[Math.floor(now.getTime() / 86400000) % lista.length];
 
-// ---------- 1. Oración de la mañana con fecha ----------
+// ---------- 1. Dated morning prayer ----------
 
 function promptFecha(tema, fecha) {
   return `Escribe la oración de la mañana del ${fecha} para "Oraciones en Presencia de Yeshua", cuenta cristiana en español (adultos 35-60). Tema: ${tema}.
@@ -57,10 +56,10 @@ function validaFecha(crudo) {
   const nGancho = gancho.split(' ').filter(Boolean).length;
   const nResto = resto.split(' ').filter(Boolean).length;
   if (nGancho < 5 || nGancho > 22) throw new Error(`Gancho de ${nGancho} palabras`);
-  if (nResto < 20 || nResto > 70) throw new Error(`Oración de ${nResto} palabras`);
+  if (nResto < 20 || nResto > 70) throw new Error(`Prayer of ${nResto} words`);
   const pie = String(crudo?.pie || '').trim().slice(0, 200);
-  if ([gancho, resto, pie].some(t => TONO_PROHIBIDO.test(t))) throw new Error('Tono no permitido');
-  // Regla de fe sobre la oración entera; el gancho va en negrita, el resto normal.
+  if ([gancho, resto, pie].some(t => TONO_PROHIBIDO.test(t))) throw new Error('Tone not allowed');
+  // Faith rule on the whole prayer; the hook goes in bold, the rest normal.
   const completa = conAmen(`${gancho} ${resto}`).replace(/\s*Amén\.$/, '');
   return { gancho, texto: completa.slice(gancho.length).trim(), pie };
 }
@@ -92,7 +91,7 @@ function textoFecha(d) {
   ].filter(Boolean).join('\n\n');
 }
 
-// ---------- 2. Frase para compartir ----------
+// ---------- 2. Quote to share ----------
 
 function promptFrase(tema) {
   return `Escribe una frase cristiana corta para compartir en Instagram, de "Oraciones en Presencia de Yeshua". Idea: ${tema}.
@@ -105,13 +104,13 @@ function validaFrase(crudo, biblia) {
   let frase = String(crudo?.frase || '').replace(/\s+/g, ' ').trim().replace(/^["“«]|["”»]$/g, '');
   const n = frase.split(' ').filter(Boolean).length;
   if (n < 10 || n > 40) throw new Error(`Frase de ${n} palabras`);
-  if (/(jes[uú]s|dios)\s+(te\s+)?(dijo|dice)/i.test(frase)) throw new Error('Pone palabras en boca de Dios');
-  if (TONO_PROHIBIDO.test(frase)) throw new Error('Tono no permitido');
+  if (/(jes[uú]s|dios)\s+(te\s+)?(dijo|dice)/i.test(frase)) throw new Error('Puts words in God\'s mouth');
+  if (TONO_PROHIBIDO.test(frase)) throw new Error('Tone not allowed');
   if (!nombraAJesusRey(frase)) frase = `${frase.replace(/[.\s]+$/, '')}. Jesús de Nazaret es el Rey de reyes.`;
-  // La IA a veces junta dos citas ("Juan 10:3; Apocalipsis 19:16"): vale la primera que exista (07/10/2026).
+  // The AI sometimes joins two references ("Juan 10:3; Apocalipsis 19:16"): the first one that exists counts (07/10/2026).
   const versiculo = String(crudo?.cita || '').split(/\s*;\s*/).filter(Boolean)
     .map(c => carrusel.buscaVersiculo(c, biblia)).find(v => v && v.texto.split(' ').length <= 60);
-  if (!versiculo) throw new Error(`Cita no verificable: ${crudo?.cita}`);
+  if (!versiculo) throw new Error(`Unverifiable reference: ${crudo?.cita}`);
   return { frase: /[.!?]$/.test(frase) ? frase : `${frase}.`, versiculo, pie: String(crudo?.pie || '').trim().slice(0, 250) };
 }
 
@@ -134,7 +133,7 @@ function htmlFrase(d) {
   </style></head><body>
   <div class="centro"><div class="frase">${esc(d.frase)}</div><div class="raya"></div>
     <div class="verso">“${esc(d.versiculo.texto)}”</div><div class="ref">Inspirada en ${esc(d.versiculo.cita)} · RV1909</div></div>
-  <div class="firma">@tu_cuenta</div>
+  <div class="firma">@your_account</div>
   <script>document.fonts.ready.then(() => { const c = document.querySelector('.centro'); let g = 40;
     while (c.scrollHeight > c.clientHeight && g-- > 0) for (const el of c.querySelectorAll('.frase,.verso')) el.style.fontSize = (parseFloat(getComputedStyle(el).fontSize) * 0.96) + 'px';
     document.body.dataset.listo = '1'; });</script></body></html>`;
@@ -151,7 +150,7 @@ function textoFrase(d) {
   ].filter(Boolean).join('\n\n');
 }
 
-// ---------- Común ----------
+// ---------- Shared ----------
 
 const PIEZAS = {
   fecha: { clave: 'oracion_fecha', hora: '07:00', nombre: 'Oración de la mañana con fecha' },
@@ -165,10 +164,10 @@ async function escribe({ ai, prompt, valida, intentos = 3 }) {
       return valida(carrusel.extraeJson(await ai.generateText(prompt, { maxTokens: 900, temperature: 0.8 })));
     } catch (error) { ultimo = error; }
   }
-  throw new Error(`No se pudo escribir: ${ultimo?.message}`);
+  throw new Error(`Could not write: ${ultimo?.message}`);
 }
 
-/** Contenido + HTML + texto de la publicación de una pieza. */
+/** Content + HTML + post text for a piece. */
 async function preparaPieza(tipo, { ai, now = new Date(), tz = DEFAULT_TZ, biblia }) {
   if (tipo === 'fecha') {
     const fecha = fechaLarga(now, tz);
@@ -211,7 +210,7 @@ async function tocaHoy(tipo, { db, now = new Date() }) {
   return now.getTime() >= zonedToUtc({ year, month, day, ...reloj }, tz) ? { hoy, tz } : null;
 }
 
-/** Hace y publica una pieza (imagen en el feed de Instagram + foto en la Página de Facebook). */
+/** Makes and publishes a piece (image in the Instagram feed + photo on the Facebook Page). */
 async function publicaPieza(tipo, {
   db, ai, logger, env = process.env, now = new Date(), dataDir = path.join(process.cwd(), 'data'), deps = {}
 }) {
@@ -226,7 +225,7 @@ async function publicaPieza(tipo, {
     borraCopia: enlaceMod.borraCopia, preparaImagenIG: ig.preparaImagenIG, estadoIG: ig.estadoIG, publicaIG: ig.publicaIG,
     publicaFoto: fbMod.publicaFoto, espera: ms => new Promise(ok => setTimeout(ok, ms)), ...deps
   };
-  if (!d.enlace) return null; // las dos redes bajan la imagen de un enlace público
+  if (!d.enlace) return null; // both networks download the image from a public link
   const token = await (deps.tokenInstagram || ig.tokenInstagram)(db, env);
   const fb = fbMod.facebookConfig(env);
 
@@ -262,12 +261,12 @@ async function publicaPieza(tipo, {
         logger?.success?.(`${nombre} → ${red}: ${redes[red].url || 'ok'}`);
       } catch (error) {
         redes[red] = { status: 'failed', error: error.message };
-        logger?.warn?.(`${nombre} → ${red} falló (intento ${intentos}): ${error.message}`);
+        logger?.warn?.(`${nombre} → ${red} failed (attempt ${intentos}): ${error.message}`);
       }
     }
   } catch (error) {
     for (const t of tareas) if (redes[t]?.status !== 'published') redes[t] = { status: 'failed', error: error.message };
-    logger?.warn?.(`${nombre} falló (intento ${intentos}): ${error.message}`);
+    logger?.warn?.(`${nombre} failed (attempt ${intentos}): ${error.message}`);
   } finally {
     if (copia) await d.borraCopia(copia.nombre, d.enlace);
     await fs.promises.rm(tmp, { recursive: true, force: true }).catch(() => {});

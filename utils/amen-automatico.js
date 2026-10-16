@@ -1,39 +1,38 @@
 /**
- * Respuesta automática a los comentarios que son solo un «Amén» (el autor, 05/10/2026).
+ * Automatic reply to comments that are just an «Amén» (05/10/2026).
  *
- * Solo se responde lo que es claramente un Amén ("Amén 🙏", "AMEN AMEN",
- * "Amén, gloria a Dios") o un Amén con nombres por quien orar, que es lo que
- * piden las publicaciones ("Amén, María", "Amén por mi hija Ana"): ahí se
- * contesta "Hoy oramos por María…". Lo demás (salud, preguntas, historias) lo
- * contesta el autor a mano: una palabra fuera de la lista y no se toca.
- * Ritmo (el autor, 05/10/2026): una vuelta cada 30-90 min al azar, para que no
- * parezca un robot.
- * Redes: YouTube, Instagram y Facebook (Facebook necesita los permisos
- * pages_read_user_content y pages_manage_engagement en el token de la Página).
+ * It only replies to what is clearly an Amén ("Amén 🙏", "AMEN AMEN", "Amén, gloria a
+ * Dios") or an Amén with names to pray for, which is what the posts ask for ("Amén,
+ * María", "Amén por mi hija Ana"): there it replies "Hoy oramos por María…". Everything
+ * else (health, questions, stories) the owner answers by hand: one word outside the list
+ * and it isn't touched.
+ * Pace (05/10/2026): one round every 30-90 min at random, so it doesn't look like a bot.
+ * Networks: YouTube, Instagram and Facebook (Facebook needs the pages_read_user_content
+ * and pages_manage_engagement permissions on the Page token).
  *
- * Settings: amen_auto_enabled ('false' lo apaga), amen_respondidos (ids ya
- * contestados), amen_dia (tope diario), amen_proxima (cuándo toca la próxima vuelta).
+ * Settings: amen_auto_enabled ('false' turns it off), amen_respondidos (ids already
+ * answered), amen_dia (daily cap), amen_proxima (when the next round is due).
  */
 const crypto = require('crypto');
 
 const TOPE_DIARIO = 150;
-// Cada respuesta en YouTube gasta 50 de las 10.000 unidades diarias y cada subida 1.600:
-// con 30 al día quedan unidades de sobra para los 3 vídeos (07/10/2026).
+// Each YouTube reply uses 50 of the 10,000 daily units and each upload 1,600: with 30 a day
+// there are units to spare for the 3 videos (07/10/2026).
 const TOPES_RED = { youtube: 30 };
 const TOPE_IA_POR_VUELTA = 10;
 const TOPE_POR_VUELTA = 25;
 const MAX_HORAS = 72;
 const MAX_IDS = 3000;
 const PAUSA_PERMISO_MS = 6 * 3600000;
-// Errores de Meta/Google que solo se arreglan dando permisos (no reintentando).
+// Meta/Google errors that only get fixed by granting permissions (not by retrying).
 const esDePermiso = error => /\(#(10|200|190)\)|permission|permiso|OAuthException|insufficient/i.test(String(error?.message || ''));
-// Palabras que pueden acompañar al Amén sin que deje de ser "solo un Amén".
+// Words that can go with the Amén without it stopping being "just an Amén".
 const ACOMPANAN = new Set(['amen', 'aleluya', 'gloria', 'a', 'al', 'dios', 'senor', 'jesus', 'cristo', 'gracias', 'padre', 'y', 'rey',
   'de', 'reyes', 'bendito', 'bendita', 'sea', 'asi', 'tu', 'su', 'el', 'mi', 'nombre', 'hermosa', 'bella', 'oracion', 'hecho', 'esta', 'yeshua']);
 
 const normaliza = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
-/** ¿Es solo un Amén? (con emojis, signos y alguna alabanza corta). */
+/** Is it just an Amén? (with emojis, punctuation and some short praise). */
 function esSoloAmen(texto) {
   const palabras = normaliza(texto).replace(/[^a-zñ\s]/g, ' ').split(/\s+/).filter(Boolean)
     .map(p => (/^a+m+e+[nm]+$/.test(p) ? 'amen' : p));
@@ -41,18 +40,18 @@ function esSoloAmen(texto) {
   return palabras.every(p => ACOMPANAN.has(p));
 }
 
-// Por quién se pide oración: "mi hija", "mis hijos"… (mi → tu en la respuesta).
+// Who the prayer is requested for: "mi hija", "mis hijos"… (mi → tu in the reply).
 const FAMILIA = new Set(['familia', 'hijo', 'hija', 'hijos', 'hijas', 'mama', 'papa', 'madre', 'esposo', 'esposa', 'nieto', 'nieta',
   'nietos', 'nietas', 'hermano', 'hermana', 'hermanos', 'hermanas', 'padres', 'abuela', 'abuelo', 'sobrino', 'sobrina', 'novio', 'novia']);
 const CONECTORES = new Set(['por', 'para', 'y', 'e']);
-// Palabras que en un comentario suelen ir con mayúscula y NO son nombres.
+// Words that usually come capitalized in a comment and are NOT names.
 const NO_NOMBRES = new Set(['bendiciones', 'bendicion', 'bendice', 'bendiga', 'bendigas', 'oracion', 'hermosa', 'linda', 'bella', 'paz',
   'salud', 'amor', 'fe', 'vida', 'siempre', 'hoy', 'todos', 'todo', 'todas', 'que', 'muchas', 'mucho', 'espiritu', 'santo', 'buenos',
   'buenas', 'dias', 'noches', 'feliz', 'bendecido', 'bendecida', 'hermanos', 'hermanas', 'amigos', 'te', 'me', 'nos', 'les', 'ti', 'mio']);
 
 /**
  * "Amén, María" / "Amén por mi hija Ana y Carlos" → "María" / "tu hija Ana y Carlos".
- * null si el comentario trae algo más (salud, historias…) o no nombra a nadie.
+ * null if the comment carries something else (health, stories…) or names nobody.
  */
 function porQuienOrar(texto) {
   const crudas = String(texto || '').split(/[\s,.;:!¡?¿()"“”]+/).filter(Boolean)
@@ -79,7 +78,8 @@ function porQuienOrar(texto) {
   if (!amen || !alguien) return null;
   const quien = partes.join(' ').replace(/^(y\s+)+|(\s+y)+$/g, '').replace(/(\s+y)+\s+/g, ' y ').trim();
   if (!quien || quien.split(' ').length > 8) return null;
-  // "tu hija Ana Carlos" → coma entre nombres sueltos seguidos de otro nombre: se deja tal cual (pocas veces pasa).
+  // "tu hija Ana Carlos" → a comma between bare names followed by another name: left as is (rarely
+  // happens).
   return quien;
 }
 
@@ -88,14 +88,14 @@ const respuestasNombre = () => textos.lista('amen_nombre');
 
 const respuestas = () => textos.lista('amen_respuestas');
 
-/** Nombre de pila solo si parece un nombre (no un @usuario ni algo raro). */
+/** First name only if it looks like a name (not an @user or something odd). */
 function nombreDePila(autor) {
   const primero = String(autor || '').trim().split(/\s+/)[0] || '';
   if (!/^\p{Lu}\p{Ll}{1,14}$/u.test(primero)) return '';
   return primero;
 }
 
-/** Respuesta variada (según el id) para que no sea siempre el mismo texto. */
+/** Varied reply (by id) so it's not always the same text. */
 function respuestaPara({ id, autor, texto }) {
   const byte = crypto.createHash('sha1').update(String(id)).digest()[0];
   const quien = esSoloAmen(texto) ? null : porQuienOrar(texto);
@@ -105,17 +105,18 @@ function respuestaPara({ id, autor, texto }) {
   return l[byte % l.length].replaceAll('{n}', nombre ? `, ${nombre}` : '');
 }
 
-/** ¿Lo contestamos solos? Amén suelto o Amén + por quién orar. */
+/** Do we answer it on our own? A bare Amén or Amén + who to pray for. */
 const seResponde = texto => esSoloAmen(texto) || Boolean(porQuienOrar(texto));
 
-/** Próxima vuelta: entre 30 y 90 minutos (al azar). */
+/** Next round: between 30 and 90 minutes (random). */
 const proximaVuelta = (now, azar = Math.random) => new Date(now.getTime() + (30 + Math.floor(azar() * 61)) * 60000);
 
 const reciente = (fecha, now) => now.getTime() - Date.parse(fecha) <= MAX_HORAS * 3600000;
 
-// ---------- Lectura por red: devuelven [{ id, texto, autor, fecha }] y una función para responder ----------
+// ---------- Reading per network: they return [{ id, texto, autor, fecha }] and a function to
+// reply ----------
 
-/** commentThreads.list de un vídeo con los comentarios cerrados (o aún privado). */
+/** commentThreads.list for a video with comments closed (or still private). */
 const sinComentarios = error => (error?.errors || []).some(e => e?.reason === 'commentsDisabled')
   || /disabled comments/i.test(String(error?.message || ''));
 
@@ -124,8 +125,8 @@ function youtubeRed({ youtube, db }) {
     nombre: 'youtube',
     async comentarios({ now }) {
       const desde = new Date(now.getTime() - MAX_HORAS * 3600000).toISOString();
-      // El de mañana ya está subido pero sigue privado hasta su hora: YouTube dice que tiene
-      // los comentarios desactivados y ese error tumbaba la vuelta entera (12/10/2026).
+      // Tomorrow's is already uploaded but stays private until its time: YouTube says it has
+      // comments disabled and that error took down the whole round (12/10/2026).
       const videos = ((await db.getRecentPublishedForSocial?.(desde)) || [])
         .filter(v => v.youtubeId && !(Date.parse(v.publishTime) > now.getTime()));
       const lista = [];
@@ -134,7 +135,7 @@ function youtubeRed({ youtube, db }) {
         try {
           r = await youtube.commentThreads.list({ part: ['snippet'], videoId: v.youtubeId, order: 'time', maxResults: 50 });
         } catch (error) {
-          if (sinComentarios(error)) continue; // ese vídeo no admite comentarios: los demás sí
+          if (sinComentarios(error)) continue; // that video doesn't allow comments: the others do
           throw error; // cuota o permiso: lo gestiona respondeAmenes
         }
         for (const hilo of r.data?.items || []) {
@@ -165,7 +166,7 @@ function instagramRed({ token, fetchImpl = fetch, version = 'v25.0' }) {
     nombre: 'instagram',
     async comentarios() {
       const yo = (await get('me', { fields: 'username' })).username;
-      const medios = (await get('me/media', { fields: 'id,comments_count,caption', limit: '10' })).data || []; // 10: cabe en el límite de llamadas cada 5 min
+      const medios = (await get('me/media', { fields: 'id,comments_count,caption', limit: '10' })).data || []; // 10: fits within the call limit every 5 min
       const lista = [];
       for (const m of medios.filter(x => x.comments_count > 0)) {
         const cs = (await get(`${m.id}/comments`, { fields: 'id,text,username,timestamp,replies{username}', limit: '50' })).data || [];
@@ -207,9 +208,9 @@ function facebookRed({ config, fetchImpl = fetch }) {
 }
 
 /**
- * Una vuelta: busca Amén sin contestar en cada red y los responde (con topes).
- * Con `escritor` (utils/respuesta-ia.js), los demás comentarios cristianos se
- * contestan con IA; comentarios_ia_enabled='false' lo apaga (07/10/2026).
+ * One round: looks for unanswered Amén on each network and replies (with caps).
+ * With `escritor` (utils/respuesta-ia.js), the other Christian comments get an AI reply;
+ * comentarios_ia_enabled='false' turns it off (07/10/2026).
  */
 async function respondeAmenes({ db, redes, logger, now = new Date(), azar = Math.random, escritor = null }) {
   if (await db.getSetting('amen_auto_enabled') === 'false') return { respondidos: 0 };
@@ -225,13 +226,14 @@ async function respondeAmenes({ db, redes, logger, now = new Date(), azar = Math
   const hechos = JSON.parse(await db.getSetting('amen_respondidos') || '[]');
   const ya = new Set(hechos);
   const nuevos = [];
-  const descartados = []; // la IA decidió no contestar: no se le vuelve a preguntar
-  const vistos = []; // para el panel: qué se contestó
+  const descartados = []; // the AI decided not to reply: it isn't asked again
+  const vistos = []; // for the panel: what got answered
   const porRed = {};
   const errores = {};
 
   const cuota = require('./cuota-youtube');
-  // Sin permiso no se arregla solo: la red descansa PAUSA_PERMISO en vez de fallar cada vuelta (07/10/2026).
+  // No permission doesn't fix itself: the network rests PAUSA_PERMISO instead of failing every
+  // round (07/10/2026).
   const pausas = JSON.parse(await db.getSetting('amen_pausas') || '{}');
   let pausasCambian = false;
   for (const red of redes) {
@@ -246,7 +248,7 @@ async function respondeAmenes({ db, redes, logger, now = new Date(), azar = Math
     } catch (error) {
       if (red.nombre === 'youtube' && cuota.esCuota(error)) await cuota.marcaAgotada(db, now);
       const sinPermiso = esDePermiso(error);
-      logger?.warn?.(`Amén automático (${red.nombre}): no se pudieron leer los comentarios: ${error.message}${sinPermiso ? ' (se reintenta en 6 h)' : ''}`);
+      logger?.warn?.(`Automatic Amén (${red.nombre}): could not read the comments: ${error.message}${sinPermiso ? ' (retrying in 6 h)' : ''}`);
       errores[red.nombre] = error.message;
       if (sinPermiso) {
         pausas[red.nombre] = { hasta: new Date(now.getTime() + PAUSA_PERMISO_MS).toISOString(), error: error.message };
@@ -280,8 +282,8 @@ async function respondeAmenes({ db, redes, logger, now = new Date(), azar = Math
         hoyPorRed[red.nombre] = (hoyPorRed[red.nombre] || 0) + 1;
       } catch (error) {
         if (red.nombre === 'youtube' && cuota.esCuota(error)) await cuota.marcaAgotada(db, now);
-        logger?.warn?.(`Amén automático (${red.nombre}): no se pudo responder: ${error.message}`);
-        break; // si falla una (permiso, cuota), no insistir en esta red hasta la próxima vuelta
+        logger?.warn?.(`Automatic Amén (${red.nombre}): could not reply: ${error.message}`);
+        break; // if one fails (permission, quota), don't insist on this network until the next round
       }
     }
   }
@@ -292,7 +294,7 @@ async function respondeAmenes({ db, redes, logger, now = new Date(), azar = Math
     await db.setSetting('amen_dia', JSON.stringify({ fecha: hoy, cuenta, porRed: hoyPorRed }));
     const antes = JSON.parse(await db.getSetting('amen_ultimas') || '[]');
     await db.setSetting('amen_ultimas', JSON.stringify([...vistos.reverse(), ...antes].slice(0, 40)));
-    logger?.info?.(`Amén automático: ${nuevos.length} respuestas (${Object.entries(porRed).map(([r, n]) => `${r} ${n}`).join(', ')})`);
+    logger?.info?.(`Automatic Amén: ${nuevos.length} replies (${Object.entries(porRed).map(([r, n]) => `${r} ${n}`).join(', ')})`);
   }
   if (pausasCambian) await db.setSetting('amen_pausas', JSON.stringify(pausas));
   await db.setSetting('amen_redes', JSON.stringify({ at: now.toISOString(), redes: redes.map(r => r.nombre), errores }));

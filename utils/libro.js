@@ -1,7 +1,7 @@
 /**
- * El ebook en los textos de las publicaciones (05/10/2026). La línea se edita en
- * el panel (Redes → Textos y enlaces, utils/textos-canal.js); vacía o
- * LIBRO_EN_TEXTOS=off = no se pone.
+ * The ebook in the posts' texts (05/10/2026). The line is edited in the panel
+ * (Social → Texts and links, utils/textos-canal.js); empty or LIBRO_EN_TEXTOS=off =
+ * it's not added.
  */
 const textos = require('./textos-canal');
 

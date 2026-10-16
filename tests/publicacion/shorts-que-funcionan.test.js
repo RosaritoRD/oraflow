@@ -1,7 +1,7 @@
-// 12/10/2026: con 19 Shorts medidos a 7 días, los que nombran una situación concreta del que
-// mira («cuando no puedes dejar de pensar» 9.624 vistas, «Si despertaste con ansiedad» 6.283)
-// sacaron 2-3 veces más que los genéricos. El guionista de Shorts ve los mejores del canal
-// como FORMA a imitar (no como texto a copiar); los largos no cambian.
+// 12/10/2026: with 19 Shorts measured at 7 days, the ones that name a concrete situation of the
+// viewer («cuando no puedes dejar de pensar» 9,624 views, «Si despertaste con ansiedad» 6,283)
+// got 2-3 times more than the generic ones. The Shorts scriptwriter sees the channel's best ones
+// as a SHAPE to imitate (not text to copy); long videos don't change.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { mejoresShorts, bloqueEjemplos } = require('../../utils/shorts-que-funcionan');
@@ -10,7 +10,7 @@ const fila = (video_id, views, title, seoTitle = null) => ({
   video_id, metrics: JSON.stringify({ views }), title, metadata: JSON.stringify(seoTitle ? { seo: { title: seoTitle } } : {})
 });
 
-test('mejoresShorts: los de más vistas primero, uno por vídeo, con el título publicado', () => {
+test('mejoresShorts: most viewed first, one per video, with the published title', () => {
   const r = mejoresShorts([
     fila('a', 2462, 'Si tu mente no descansa'),
     fila('b', 9624, 'Oración de la noche', 'Oración de la noche cuando no puedes dejar de pensar'),
@@ -25,7 +25,7 @@ test('mejoresShorts: los de más vistas primero, uno por vídeo, con el título 
   ]);
 });
 
-test('bloqueEjemplos: dice que no se copien y da la forma; vacío sin datos', () => {
+test('bloqueEjemplos: says not to copy them and gives the shape; empty without data', () => {
   const b = bloqueEjemplos([{ titulo: 'Si despertaste con ansiedad, haz esta oración', vistas: 6283 }]);
   assert.match(b, /do not copy/i);
   assert.match(b, /"Si despertaste con ansiedad, haz esta oración" \(6283 views in its first week\)/);
@@ -54,25 +54,25 @@ async function promptDe(strategy) {
 
 const EJEMPLOS = [{ titulo: 'Oración de la noche cuando no puedes dejar de pensar', vistas: 9624 }];
 
-test('el guion de un Short lleva los mejores Shorts del canal', async () => {
+test('a Short\'s script carries the channel\'s best Shorts', async () => {
   const p = await promptDe({ contentFormat: 'short', ejemplosQueFuncionan: EJEMPLOS });
   assert.match(p, /cuando no puedes dejar de pensar" \(9624 views/);
 });
 
-test('el guion de un largo no los lleva', async () => {
+test('a long video\'s script doesn\'t', async () => {
   const p = await promptDe({ contentFormat: 'long', ejemplosQueFuncionan: EJEMPLOS });
   assert.doesNotMatch(p, /9624/);
 });
 
-// 12/10/2026: el Short del 13/10 salió con 220 palabras habladas (el objetivo es 150-190 y los
-// mejores tuvieron 168-199); con la voz de los Shorts serían ~1:55. El tope va solo en el prompt:
-// recortar secciones, como en los largos, le quitaría al Short su única sección.
-test('el prompt de un Short lleva un tope duro de 190 palabras habladas', async () => {
+// 12/10/2026: the 13/10 Short came out with 220 spoken words (the target is 150-190 and the best
+// ones had 168-199); with the Shorts voice that'd be ~1:55. The cap only goes in the prompt:
+// trimming sections, as with long videos, would take away the Short's only section.
+test('a Short\'s prompt carries a hard cap of 190 spoken words', async () => {
   const p = await promptDe({ contentFormat: 'short' });
   assert.match(p, /HARD LIMIT: at most 190 spoken words/);
 });
 
-test('el tope de un largo sigue saliendo de su duración', async () => {
+test('a long video\'s cap still comes from its duration', async () => {
   const p = await promptDe({ contentFormat: 'long', requestedLength: '5-6 minutes' });
   assert.match(p, /HARD LIMIT: at most 780 spoken words/);
   assert.doesNotMatch(p, /at most 190 spoken words/);

@@ -1,19 +1,20 @@
 /**
- * Historia diaria en Instagram y Facebook que anuncia el vídeo largo de YouTube
- * (pedido del autor, 05/10/2026; formato de @oraconfe y @oracionparahoy:
- * "Oración para hoy 5 de octubre" + la miniatura + "VER VÍDEO").
+ * Daily story on Instagram and Facebook announcing the long YouTube video (requested by the owner,
+ * 05/10/2026; format from @oraconfe and @oracionparahoy: "Oración para hoy 5 de octubre" + the
+ * thumbnail + "VER VÍDEO").
  *
- * Cada vídeo largo que ya es público en YouTube (últimas 24 h) sale UNA vez
- * como historia 9:16 con su miniatura, la fecha y el título.
- * ⚠ La API de Meta NO deja poner stickers (ni el de enlace ni GIFs) en una
- * historia. Por eso (el autor, 05/10/2026):
- * - Facebook: sale sola (sin enlace; manda al perfil).
- * - Instagram: la sube el autor desde la app con el sticker de enlace escondido
- *   detrás de "VER ORACIÓN COMPLETA" (y la manito de "toca aquí" la pone él).
- *   El sistema le deja en el panel (/historia) la imagen y el enlace fijo /hoy. historia_ig_auto='true' vuelve a publicarla sola.
+ * Every long video that's already public on YouTube (last 24 h) goes out ONCE as a 9:16 story with
+ * its thumbnail, the date and the title.
+ * ⚠ Meta's API does NOT allow stickers (neither the link one nor GIFs) on a story. So (the owner,
+ * 05/10/2026):
+ * - Facebook: goes out on its own (no link; it points to the profile).
+ * - Instagram: the owner uploads it from the app with the link sticker hidden behind "VER ORACIÓN
+ *   COMPLETA" (and adds the "tap here" hand themselves).
+ *   The system leaves the image and the fixed /hoy link in the panel (/historia).
+ *   historia_ig_auto='true' publishes it on its own again.
  *
- * Settings: historia_diaria_enabled ('false' la apaga), historia_ig_auto,
- * historia_hechas (JSON { youtubeId: { instagram, facebook, panel } }).
+ * Settings: historia_diaria_enabled ('false' turns it off), historia_ig_auto, historia_hechas
+ * (JSON { youtubeId: { instagram, facebook, panel } }).
  */
 const fs = require('fs');
 const os = require('os');
@@ -25,14 +26,14 @@ const ANCHO = 1080;
 const ALTO = 1920;
 const MAX_INTENTOS = 3;
 const FUENTES = path.join(__dirname, '..', 'assets', 'fonts');
-const ENLACE_HOY = 'https://panel.tu-dominio.com/hoy';
+const ENLACE_HOY = 'https://panel.your-domain.com/hoy';
 
-/** "5 de octubre" en la zona del canal. */
+/** "5 de octubre" in the channel's time zone. */
 function fechaCorta(now, tz = DEFAULT_TZ) {
   return new Intl.DateTimeFormat('es', { day: 'numeric', month: 'long', timeZone: tz }).format(now);
 }
 
-/** Título legible: sin "| Isaías 26:3" ni emojis, y en minúsculas si viene todo en MAYÚSCULAS. */
+/** Readable title: without "| Isaías 26:3" or emojis, and in lower case if it comes all in CAPITALS. */
 function tituloHistoria(titulo) {
   let t = String(titulo || '').replace(/\s*\|\s*[^|]*\d+:\d+.*$/, '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim();
   if (t && t === t.toUpperCase()) t = t.toLowerCase().replace(/(^|[.:!?|]\s*)(\p{L})/gu, (_m, a, b) => a + b.toUpperCase());
@@ -72,7 +73,7 @@ function htmlHistoria({ miniatura, fecha, titulo }) {
   <div class="titulo">${esc(titulo)}</div>
   <div class="boton">VER ORACIÓN COMPLETA 🙏</div>
   <div class="nota">En YouTube · enlace en el perfil</div>
-  <div class="marca">@tu_cuenta</div>
+  <div class="marca">@your_account</div>
   <script>document.fonts.ready.then(() => { const t = document.querySelector('.titulo'); let g = 30;
     while (t.scrollHeight > 300 && g-- > 0) t.style.fontSize = (parseFloat(getComputedStyle(t).fontSize) * 0.95) + 'px';
     const i = new Image(); i.onload = i.onerror = () => { document.body.dataset.listo = '1'; }; i.src = '${img}'; });</script>
@@ -96,7 +97,7 @@ async function renderizaHistoria(datos, salida, { chromium = require('playwright
   }
 }
 
-/** Deja en data/historias la historia de hoy para el panel: hoy.jpg y hoy.json (la manito la pone el autor en la app). */
+/** Leaves today's story in data/historias for the panel: hoy.jpg and hoy.json (the owner adds the hand in the app). */
 async function preparaPanel({ jpg, video, dir }) {
   await fs.promises.mkdir(dir, { recursive: true });
   await fs.promises.copyFile(jpg, path.join(dir, 'hoy.jpg'));
@@ -107,7 +108,7 @@ async function preparaPanel({ jpg, video, dir }) {
   }));
 }
 
-/** Vídeos largos ya públicos en YouTube en las últimas 24 h, con miniatura. */
+/** Long videos already public on YouTube in the last 24 h, with a thumbnail. */
 async function videosPendientes({ db, now, hechas, redes = ['instagram', 'facebook'] }) {
   const desde = new Date(now.getTime() - 24 * 3600000).toISOString();
   const entradas = (await db.getRecentPublishedForSocial?.(desde)) || [];
@@ -119,7 +120,7 @@ async function videosPendientes({ db, now, hechas, redes = ['instagram', 'facebo
   });
 }
 
-/** Publica la historia de cada vídeo largo nuevo (Instagram y Facebook, cada red aparte). */
+/** Publishes the story for every new long video (Instagram and Facebook, each network separately). */
 async function publicaHistorias({ db, logger, env = process.env, now = new Date(), dataDir = path.join(process.cwd(), 'data'), deps = {} }) {
   if (await db.getSetting('historia_diaria_enabled') === 'false') return [];
   const ig = require('./instagram-reels');
@@ -173,12 +174,12 @@ async function publicaHistorias({ db, logger, env = process.env, now = new Date(
           logger?.success?.(`Historia de ${video.youtubeUrl} → ${red}`);
         } catch (error) {
           estado[red] = { status: 'failed', error: error.message, intentos };
-          logger?.warn?.(`Historia → ${red} falló (intento ${intentos}): ${error.message}`);
+          logger?.warn?.(`Story → ${red} failed (attempt ${intentos}): ${error.message}`);
         }
       }
     } catch (error) {
       for (const r of tareas) estado[r] = { status: 'failed', error: error.message, intentos: (estado[r]?.intentos || 0) + 1 };
-      logger?.warn?.(`Historia de ${video.youtubeId} falló: ${error.message}`);
+      logger?.warn?.(`Story for ${video.youtubeId} failed: ${error.message}`);
     } finally {
       if (copia && d.enlace) await d.borraCopia(copia.nombre, d.enlace);
       await fs.promises.rm(tmp, { recursive: true, force: true }).catch(() => {});

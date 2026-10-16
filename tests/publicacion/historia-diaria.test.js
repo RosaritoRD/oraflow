@@ -1,4 +1,4 @@
-// 05/10/2026: historia en Instagram y Facebook que anuncia el vídeo largo de YouTube.
+// 05/10/2026: an Instagram and Facebook story announcing the long YouTube video.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
@@ -6,20 +6,20 @@ const os = require('os');
 const path = require('path');
 const h = require('../../utils/historia-diaria');
 
-test('fecha corta y título legible para la historia', () => {
+test('short date and readable title for the story', () => {
   assert.equal(h.fechaCorta(new Date('2026-10-05T12:00:00Z'), 'America/New_York'), '5 de octubre');
   assert.equal(h.tituloHistoria('ORACIÓN DE LA MAÑANA | DIOS CUIDA DE TI: ENTREGA TUS PREOCUPACIONES | Isaías 26:3'),
     'Oración de la mañana · Dios cuida de ti: Entrega tus preocupaciones');
   assert.equal(h.tituloHistoria('Si tu mente no descansa, haz esta oración 🙏'), 'Si tu mente no descansa, haz esta oración');
 });
 
-test('html: fecha, título escapado, botón y marca', () => {
+test('html: date, escaped title, button and brand', () => {
   const html = h.htmlHistoria({ miniatura: '/x/m.jpg', fecha: '5 de octubre', titulo: 'Paz <b>' });
   assert.match(html, /Oración de hoy/);
   assert.match(html, /5 de octubre/);
   assert.match(html, /Paz &lt;b&gt;/);
   assert.match(html, /VER ORACIÓN COMPLETA/);
-  assert.match(html, /@tu_cuenta/);
+  assert.match(html, /@your_account/);
 });
 
 function dbFalsa(entradas, inicial = {}) {
@@ -30,7 +30,7 @@ function dbFalsa(entradas, inicial = {}) {
 const largo = (id, hora) => ({ youtubeId: id, youtubeUrl: `https://youtu.be/${id}`, publishTime: hora, title: 'Oración',
   metadata: { contentFormat: 'long', thumbnail: { path: '/m.jpg' }, seo: { title: 'Oración de la mañana' } } });
 
-test('publicaHistorias: una vez por vídeo largo público, IG y FB por separado, sin Shorts ni futuros', async () => {
+test('publicaHistorias: once per public long video, IG and FB separately, no Shorts or future ones', async () => {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'historia-'));
   const entradas = [
     largo('A', '2026-10-05T08:00:00Z'),
@@ -58,12 +58,12 @@ test('publicaHistorias: una vez por vídeo largo público, IG y FB por separado,
   assert.equal(r1[0].facebook.status, 'failed');
   fbFalla = false;
   await h.publicaHistorias({ db, env, now, dataDir, deps });
-  assert.deepEqual(llamadas, ['ig', 'fb', 'panel', 'fb']); // el reintento no repite Instagram ni el panel
+  assert.deepEqual(llamadas, ['ig', 'fb', 'panel', 'fb']); // the retry doesn't repeat Instagram or the panel
   assert.deepEqual(await h.publicaHistorias({ db, env, now, dataDir, deps }), []);
   assert.equal(JSON.parse(db.s.historia_hechas).A.facebook.status, 'published');
 });
 
-test('por defecto Instagram NO se publica solo (lo sube el autor con el enlace): Facebook + panel', async () => {
+test('by default Instagram is NOT published automatically (the owner uploads it with the link): Facebook + panel', async () => {
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'historia-'));
   const db = dbFalsa([largo('B', '2026-10-05T08:00:00Z')]);
   const llamadas = [];
@@ -78,7 +78,7 @@ test('por defecto Instagram NO se publica solo (lo sube el autor con el enlace):
   assert.equal(r[0].panel.status, 'listo');
 });
 
-test('panel: deja la imagen limpia (sin vídeo) y el enlace fijo', async () => {
+test('panel: leaves the clean image (no video) and the fixed link', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'panel-'));
   const jpg = path.join(dir, 'origen.jpg');
   fs.writeFileSync(jpg, 'x');

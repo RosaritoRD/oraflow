@@ -1,13 +1,13 @@
 /**
- * Portada de los Shorts (02/10/2026, imágenes del autor en
- * data/assets/portadas-short/). YouTube no deja subir miniatura propia a un
- * Short: toma un fotograma. Por eso la portada va DENTRO del vídeo, como primer
- * plano (SHORT_COVER_SECONDS, 1,5 s por defecto) con el título encima, y se
- * funde con el resto mientras la voz arranca.
+ * Shorts cover (02/10/2026, the owner's images in data/assets/portadas-short/).
+ * YouTube doesn't allow uploading a custom thumbnail for a Short: it takes a
+ * frame. So the cover goes INSIDE the video, as the first shot
+ * (SHORT_COVER_SECONDS, 1.5 s by default) with the title on top, and blends into
+ * the rest while the voice starts.
  *
- * Las imágenes son 9:16 con el cielo de arriba despejado y el logo (la cruz)
- * arriba al centro; el logo se pinta otra vez en ese mismo sitio para que
- * quede nítido y para que la que no lo trae también lo lleve.
+ * The images are 9:16 with clear sky at the top and the logo (the cross) top
+ * center; the logo is painted again in that same spot so it stays sharp and so the
+ * one that doesn't have it gets it too.
  */
 const fs = require('fs').promises;
 const path = require('path');
@@ -17,7 +17,7 @@ const { titular, reparteTitular, etiquetaFormato } = require('./miniatura-oracio
 const W = 1080;
 const H = 1920;
 const EXT = /\.(jpe?g|png|webp)$/i;
-// Donde las imágenes del autor traen el logo (941x1672 → 1080x1920): centro y diámetro.
+// Where the owner's images carry the logo (941x1672 → 1080x1920): center and diameter.
 const LOGO = { cx: 540, cy: 138, d: 128 };
 
 function carpetaPortadas() {
@@ -25,9 +25,9 @@ function carpetaPortadas() {
 }
 
 /**
- * Segundos que se ve la portada DENTRO del vídeo. 11/10/2026 (el autor): por
- * defecto 0 — el Short empieza hablando y la portada se pone a mano desde
- * /portadas. SHORT_COVER_SECONDS=1.5 la vuelve a pegar. Tope 3 s.
+ * Seconds the cover shows INSIDE the video. 11/10/2026 (the owner): 0 by
+ * default — the Short starts talking and the cover is set by hand from
+ * /portadas. SHORT_COVER_SECONDS=1.5 glues it in again. Max 3 s.
  */
 function segundosPortada(env = process.env) {
   const raw = String(env.SHORT_COVER_SECONDS ?? '').trim().toLowerCase();
@@ -37,7 +37,7 @@ function segundosPortada(env = process.env) {
   return Math.max(0, Math.min(3, v));
 }
 
-/** La menos usada (sin repetir la última). Estado en _rotacion.json de la carpeta. */
+/** The least used one (without repeating the last). State in the folder's _rotacion.json. */
 async function eligePortada({ raiz = carpetaPortadas(), logger = console } = {}) {
   const nombres = (await fs.readdir(raiz).catch(() => [])).filter(n => EXT.test(n)).sort();
   if (!nombres.length) return null;
@@ -51,13 +51,13 @@ async function eligePortada({ raiz = carpetaPortadas(), logger = console } = {})
   estado[nombre] = { usos: (estado[nombre]?.usos || 0) + 1, en: new Date().toISOString() };
   estado._ultimo = nombre;
   await fs.writeFile(rutaEstado, JSON.stringify(estado, null, 1)).catch(() => {});
-  logger.info?.(`Portada del Short: ${nombre}`);
+  logger.info?.(`Short cover: ${nombre}`);
   return path.join(raiz, nombre);
 }
 
 const escapa = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-// Liberation Sans Bold en mayúsculas ≈ 0,68 em por letra.
-// 03/10/2026: Oswald Bold (condensada) en mayúsculas ≈ 0,52 em por letra.
+// Liberation Sans Bold in capitals ≈ 0.68 em per letter.
+// 03/10/2026: Oswald Bold (condensed) in capitals ≈ 0.52 em per letter.
 const cuerpoQueCabe = (texto, maximo, ancho) => Math.min(maximo, Math.floor(ancho / (Math.max(1, texto.length) * 0.52)));
 
 function portadaSvg({ lineas, dorada, etiqueta, logo }) {
@@ -67,7 +67,7 @@ function portadaSvg({ lineas, dorada, etiqueta, logo }) {
   y += 40;
   lineas.forEach((linea, i) => {
     const oro = i === dorada;
-    // 03/10/2026 (el autor): letras más grandes (antes 120/96 en 960 px).
+    // 03/10/2026 (the owner): bigger letters (before 120/96 at 960 px).
     const cuerpo = cuerpoQueCabe(linea, oro ? 190 : 160, 960);
     y += Math.round(cuerpo * 1.02);
     piezas.push(`<text x="${W / 2}" y="${y}" class="${oro ? 'oro' : 'blanco'}" font-size="${cuerpo}">${escapa(linea)}</text>`);
@@ -97,7 +97,7 @@ function portadaSvg({ lineas, dorada, etiqueta, logo }) {
 </svg>`;
 }
 
-/** Sin emojis ni la cita entre paréntesis: en letra grande ensucian el titular. */
+/** No emojis or the reference in parentheses: in big letters they clutter the headline. */
 function tituloDePortada(titulo = '') {
   return String(titulo)
     .replace(/\p{Extended_Pictographic}|\uFE0F|\u200D/gu, '')
@@ -105,7 +105,7 @@ function tituloDePortada(titulo = '') {
     .replace(/\s+/g, ' ').trim();
 }
 
-/** Portada 1080x1920: la imagen + etiqueta (mañana/noche) + titular + logo. */
+/** 1080x1920 cover: the image + label (morning/night) + headline + logo. */
 async function componePortadaShort({ sharp, fondo, logoPath = null, titulo = '', topic = '', salida }) {
   const { lineas, dorada } = reparteTitular(titular({ topic, title: tituloDePortada(titulo) }));
   const logo = logoPath
@@ -119,8 +119,8 @@ async function componePortadaShort({ sharp, fondo, logoPath = null, titulo = '',
 }
 
 /**
- * Pone la portada encima de los primeros `segundos` del vídeo (sin audio, se
- * llama antes de mezclar la voz) y la funde. El vídeo dura lo mismo.
+ * Lays the cover over the video's first `segundos` (no audio, called before mixing the voice)
+ * and fades it. The video keeps the same duration.
  */
 async function aplicaPortada({ video, portada, segundos = segundosPortada(), logger = console }) {
   if (!segundos) return video;
@@ -132,7 +132,7 @@ async function aplicaPortada({ video, portada, segundos = segundosPortada(), log
     `[0:v][p]overlay=0:0:eof_action=pass:shortest=0[v]`,
     '-map', '[v]', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18', '-pix_fmt', 'yuv420p', '-an', tmp]);
   await fs.rename(tmp, video);
-  logger.info?.(`Portada puesta en los primeros ${segundos}s del Short`);
+  logger.info?.(`Cover laid over the Short's first ${segundos}s`);
   return video;
 }
 

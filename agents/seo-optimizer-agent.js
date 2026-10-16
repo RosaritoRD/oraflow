@@ -5,7 +5,7 @@ const { tituloEstiloOracion, usaEstiloOracion } = require('../utils/titulo-oraci
 const { AITextService } = require('../utils/ai-text-service');
 const { hashtagsDelGuion } = require('../utils/hashtags-guion');
 
-/** Escapa los saltos de línea que quedan DENTRO de los textos de un JSON (fuera no se tocan). */
+/** Escapes the line breaks left INSIDE a JSON's strings (outside them, nothing is touched). */
 function escapaSaltosEnTextos(json) {
   let dentro = false;
   let escapado = false;
@@ -68,19 +68,20 @@ class SEOOptimizerAgent {
         tags = await this.generateTags(script, strategy);
       }
       
-      // Red de seguridad (02/10/2026): venga de la IA o del respaldo, sin fecha,
-      // sin «para hoy» y sin gritar en mayúsculas (utils/titulo-limpio.js).
+      // Safety net (02/10/2026): whether it comes from the AI or the fallback,
+      // no date, no «para hoy» and no shouting in capitals
+      // (utils/titulo-limpio.js).
       title = require('../utils/titulo-limpio').tituloLimpio(title);
-      // 03/10/2026: los largos del canal de oración, con el formato de los canales
-      // grandes («ORACIÓN DE LA MAÑANA | PROMESA: ACCIÓN | Salmo 27»), venga de la
-      // IA o del respaldo (utils/titulo-oracion.js).
+      // 03/10/2026: the prayer channel's long videos, in the format of the big
+      // channels («ORACIÓN DE LA MAÑANA | PROMESA: ACCIÓN | Salmo 27»), whether from
+      // the AI or the fallback (utils/titulo-oracion.js).
       if (usaEstiloOracion(strategy)) {
         const { franjaDelContenido } = require('../utils/franja');
         title = tituloEstiloOracion({
           titulo: aiSEO ? aiSEO.title : title,
           franja: franjaDelContenido(script, strategy),
           referencia: (script.scriptures || [])[0]?.reference || null,
-          // 05/10/2026: fecha del día en que se publica (hueco de la cola).
+          // 05/10/2026: the date of the day it's published (the queue slot).
           fecha: strategy.publishSlot || null,
           tz: process.env.CHANNEL_TIMEZONE || 'America/New_York'
         });
@@ -92,9 +93,9 @@ class SEOOptimizerAgent {
         hashtags = hashtagsDelGuion(await this.generateHashtags(strategy), script, strategy);
       }
 
-      // La descripción se arma por capas: bienvenida fija del canal + lo que
-      // escribió la IA + hashtags + pie legal de la música.
-      // 05/10/2026 (formato del autor): el versículo del vídeo, citado, tras el texto.
+      // The description is built in layers: the channel's fixed welcome + what the AI
+      // wrote + hashtags + the music's legal footer.
+      // 05/10/2026 (the channel's format): the video's verse, quoted, after the text.
       const verso = (script.scriptures || []).find(v => v?.text && v?.reference);
       if (verso && !String(description || '').includes(verso.reference)) {
         description = `${String(description || '').trim()}\n\n“${String(verso.text).trim().replace(/^[“"«]|[”"»]$/g, '')}” ${verso.reference}`;
@@ -149,9 +150,9 @@ class SEOOptimizerAgent {
 
     const escritura = (script.scriptures || [])[0];
     const pasaje = escritura?.reference ? `The script quotes ${escritura.reference}. Add the passage at the end only if the title stays under 70 characters.` : '';
-    // 30/09/2026: fuera la fecha y las mayúsculas. Un título con fecha envejece al
-    // día siguiente; uno por NECESIDAD se sigue buscando meses después
-    // ("oración para dormir en paz", "oración para los días de cargas").
+    // 30/09/2026: no more date or capitals. A title with a date ages the next day;
+    // one built on a NEED keeps being searched months later ("oración para dormir
+    // en paz", "oración para los días de cargas").
     const franjaTxt = String(strategy.franja || 'mañana').toLowerCase();
     const emoji = franjaTxt === 'noche' ? '🌙🙏' : '☀️🙏';
 
@@ -219,7 +220,8 @@ Keep tags under YouTube's 500 character total guidance. Avoid fabricated statist
 Bible hashtags use the BOOK AND CHAPTER from the script reference, never the verse: Salmo 4:8 → #salmo4; Proverbios 3:5-6 → #proverbios3; 1 Pedro 5:7 → #1pedro5. Never invent a passage.`;
 
     try {
-      // Un JSON ilegible se pide UNA vez más antes de caer en la plantilla (07/10/2026).
+      // An unreadable JSON is requested ONE more time before falling back to the template
+      // (07/10/2026).
       let parsed;
       let tags;
       for (let intento = 1; ; intento += 1) {
@@ -236,21 +238,21 @@ Bible hashtags use the BOOK AND CHAPTER from the script reference, never the ver
           break;
         } catch (error) {
           if (intento >= 2) throw error;
-          this.logger.info(`AI SEO: respuesta ilegible (${error.message}); se pide otra vez`);
+          this.logger.info(`AI SEO: unreadable response (${error.message}); asking again`);
         }
       }
 
       this.logger.info(`Using AI SEO optimization via ${this.aiTextService.providerName}`);
       return {
-        // La franja la manda el guion, no TITLE_FORMULA (utils/franja.js, 27/09/2026).
+        // The time of day is set by the script, not TITLE_FORMULA (utils/franja.js, 27/09/2026).
         title: (() => {
           const { corrigeFranja, franjaDelContenido } = require('../utils/franja');
           return cortaTitulo(corrigeFranja(String(parsed.title).trim(), franjaDelContenido(script, strategy)), 100);
         })(),
         description: String(parsed.description).trim().slice(0, 5000),
         tags,
-        // Sin esto se colaban los de la plantilla, que salen del título entero
-        // pegado: "#OracióncortaparapediraDiosprotecciónsobremifamiliahoy".
+        // Without this the template's hashtags slipped in, made from the whole title glued
+        // together: "#OracióncortaparapediraDiosprotecciónsobremifamiliahoy".
         hashtags: Array.isArray(parsed.hashtags)
           ? parsed.hashtags.map((h) => String(h).trim()).filter(Boolean).slice(0, 3)
           : null
@@ -278,7 +280,7 @@ Bible hashtags use the BOOK AND CHAPTER from the script reference, never the ver
       try {
         return JSON.parse(match[0]);
       } catch (_e) {
-        // La IA a veces deja saltos de línea crudos dentro de la descripción.
+        // The AI sometimes leaves raw line breaks inside the description.
         return JSON.parse(escapaSaltosEnTextos(match[0]));
       }
     }
@@ -754,13 +756,13 @@ Bible hashtags use the BOOK AND CHAPTER from the script reference, never the ver
 
 
 /**
- * Descripción por capas. Las partes fijas viven en el .env para que el canal las
- * cambie sin tocar código:
- *   DESCRIPTION_INTRO   bienvenida del canal (2-3 líneas)
- *   DESCRIPTION_FOOTER  pie legal (atribución de la música)
- * Un "\\n" en el .env se convierte en salto de línea real.
+ * Description in layers. The fixed parts live in .env so the channel can change them without
+ * touching code:
+ *   DESCRIPTION_INTRO   the channel's welcome (2-3 lines)
+ *   DESCRIPTION_FOOTER  legal footer (music attribution)
+ * A "\\n" in .env becomes a real line break.
  */
-/** "MIÉRCOLES 23 DE SEPTIEMBRE" en la zona horaria del canal. */
+/** "MIÉRCOLES 23 DE SEPTIEMBRE" in the channel's time zone. */
 function fechaDeHoy(fecha = new Date()) {
   const zona = process.env.CHANNEL_TIMEZONE || 'America/New_York';
   const idioma = (process.env.CONTENT_LANGUAGE || 'es').startsWith('es') ? 'es-ES' : 'en-US';
@@ -770,8 +772,10 @@ function fechaDeHoy(fecha = new Date()) {
   return (idioma === 'es-ES' ? `${dia} ${numero} de ${mes}` : `${dia}, ${mes} ${numero}`).toUpperCase();
 }
 
-/** Una frase por párrafo (formato pedido el 30/09). Solo corta tras . ! ? seguido
-    de mayúscula, así "Salmo 121:7-8" o "4:00 a. m." quedan enteros. */
+/**
+ * One sentence per paragraph (format requested on 30/09). It only cuts after . ! ? followed by a
+ * capital, so "Salmo 121:7-8" or "4:00 a. m." stay whole.
+ */
 function enParrafos(texto) {
   return String(texto || '')
     .split(/\n+/)
@@ -781,7 +785,7 @@ function enParrafos(texto) {
     .join('\n\n');
 }
 
-/** Recorta a `max` sin partir palabras ni dejar un separador colgando ("… PARA TODO EL D" → "… PARA TODO EL"). */
+/** Trims to `max` without splitting words or leaving a dangling separator ("… PARA TODO EL D" → "… PARA TODO EL"). */
 function cortaTitulo(titulo, max = 100) {
   let t = String(titulo || '').trim();
   if ([...t].length > max) {
@@ -795,8 +799,9 @@ const INVITA = '¡Te invitamos a ver la siguiente oración! 🙏';
 const VER = 'Tienes que ver este vídeo:';
 
 /**
- * `destacados` = { invita: {url}, ver: {url} } (utils/destacados.js): arriba el
- * largo más visto y, tras la raya del pie, el Short más visto (05/10/2026).
+ * `destacados` = { invita: {url}, ver: {url} } (utils/destacados.js): the
+ * most-watched long video at the top and, after the footer rule, the most-watched
+ * Short (05/10/2026).
  */
 function componeDescripcion(cuerpo, hashtags = [], destacados = null) {
   const real = (texto) => String(texto || '').replace(/\\n/g, '\n').trim();
@@ -807,7 +812,7 @@ function componeDescripcion(cuerpo, hashtags = [], destacados = null) {
   const etiquetas = (Array.isArray(hashtags) ? hashtags : [])
     .map((h) => String(h).trim()).filter(Boolean)
     .map((h) => (h.startsWith('#') ? h : `#${h}`)).slice(0, 3);
-  // 05/10/2026 (formato del autor): los hashtags del vídeo van al final, tras el pie.
+  // 05/10/2026 (the channel's format): the video's hashtags go at the end, after the footer.
   const pieEditado = String(require('../utils/textos-canal').texto('pie_youtube') || '').trim();
   if (pieEditado || process.env.DESCRIPTION_FOOTER) {
     let pie = pieEditado || real(process.env.DESCRIPTION_FOOTER);

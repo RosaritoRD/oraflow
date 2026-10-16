@@ -24,19 +24,19 @@ const { normalizeReference } = require('./bible-reference');
 const { esShort } = require('./formato');
 const { momentoDe, consultaPaisaje, ajustePaisaje } = require('./paisaje-franja');
 
-// Un Short de 60-90 s con planos de 14 s serían 5 fotos: en vertical se corta más.
+// A 60-90 s Short with 14 s shots would be 5 pictures: vertical cuts more often.
 const SHORT_SHOTS = { image: { min: 3, target: 5, max: 7 }, video: { min: 3, target: 5, max: 8 }, hero: { min: 4, target: 6, max: 9 } };
-// Largo de clip en los Shorts (02/10/2026): SHORT_SHOT_SECONDS=15 → clips de ~15 s
-// como en los largos. Sin la variable, los 5 s rápidos de siempre.
+// Clip length in Shorts (02/10/2026): SHORT_SHOT_SECONDS=15 → ~15 s clips like in long
+// videos. Without the variable, the usual fast 5 s.
 function shortShots(env = process.env) {
   const t = Number(env.SHORT_SHOT_SECONDS);
   if (!Number.isFinite(t) || t < 3) return SHORT_SHOTS;
   return rangosDeClip(Math.min(40, t));
 }
-// 1080 px de ancho: frases de 3-4 palabras o libass parte las líneas a su manera.
+// 1080 px wide: 3-4 word phrases, or libass breaks the lines its own way.
 const SHORT_CAPTIONS = { maxWords: 4, maxCharsPerLine: 16 };
-// Largos con letra ×1,5 (caption-service longScale): frases más cortas para que
-// cada línea quepa centrada sin tocar los bordes.
+// Long videos with ×1.5 letters (caption-service longScale): shorter phrases so
+// each line fits centered without touching the edges.
 const LONG_CAPTIONS = { maxWords: 4, maxCharsPerLine: 20 };
 
 const norm = word => String(word || '').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
@@ -45,8 +45,8 @@ const norm = word => String(word || '').toLowerCase().replace(/[^\p{L}\p{N}]/gu,
 // (STOCK_BLOCKLIST adds terms, comma-separated). Best effort: stock metadata is
 // the only signal we have without looking at the pixels.
 const DEFAULT_BLOCKLIST = ['kiss', 'kissing', 'besos', 'beso', 'lgbt', 'gay', 'lesbian', 'same-sex', 'same sex', 'pride parade', 'romantic couple', 'lovers', 'lingerie', 'bikini', 'nude', 'sexy', 'alcohol', 'cocktail', 'casino', 'horror', 'halloween', 'tarot', 'witch'];
-// El canal es de oración: los planos son lugares naturales. Estas palabras
-// delatan el falso positivo típico de "morning light" → gente en una oficina.
+// It's a prayer channel: the shots are natural places. These words give away the
+// typical "morning light" false positive → people in an office.
 const NO_NATURAL = ['office', 'desk', 'laptop', 'computer', 'meeting', 'business', 'coworking',
   'startup', 'city street', 'traffic', 'urban', 'shopping', 'gym', 'bar', 'party',
   'oficina', 'escritorio', 'ordenador', 'reunión'];
@@ -59,7 +59,7 @@ function assetText(asset) {
 
 function blocklist() {
   const extra = String(process.env.STOCK_BLOCKLIST || '').split(',').map(term => term.trim().toLowerCase()).filter(Boolean);
-  // ONLY_NATURE=on (por defecto en el tema de oración): fuera oficinas y ciudad.
+  // ONLY_NATURE=on (the default in the prayer theme): no offices or city.
   const soloNaturaleza = String(process.env.ONLY_NATURE || (preferLandscapes() ? 'on' : 'off')).toLowerCase() === 'on';
   return [...new Set([...DEFAULT_BLOCKLIST, ...(soloNaturaleza ? NO_NATURAL : []), ...extra])];
 }
@@ -127,9 +127,9 @@ class StoryboardPipeline {
     const audioPath = path.join(this.dataRoot, 'audio', `${production.id}_narration.mp3`);
     await fs.mkdir(path.dirname(audioPath), { recursive: true });
 
-    // Varias voces (03/10/2026): cada vídeo la suya, estable por su id
-    // (utils/voces.js). Sin lista, la de ELEVENLABS_VOICE_ID.
-    // 07/10/2026: calendario de voces (principal / secundaria / mujer).
+    // Several voices (03/10/2026): each video its own, stable by its id
+    // (utils/voces.js). Without a list, the ELEVENLABS_VOICE_ID one.
+    // 07/10/2026: voice calendar (main / secondary / woman).
     const voiceId = vozPara(production.id, process.env, {
       fecha: production.scheduledPublishTime || null,
       short: esShort(production.strategy || {})
@@ -138,7 +138,7 @@ class StoryboardPipeline {
     // never pays the TTS provider again, and keeps the word alignment too. The
     // pacing is in the key so a calmer setting really re-narrates.
     const crypto = require('crypto');
-    const propio = ajusteCorto(ttsText); // modelo y velocidad propios de los Shorts (12/10/2026)
+    const propio = ajusteCorto(ttsText); // the Shorts' own model and speed (12/10/2026)
     const cacheKey = crypto.createHash('sha1').update(`${voiceId || ''}|${pacing.speed}|${pacing.stability}|${pacing.style}|${ttsText}${propio ? `|${propio}` : ''}`).digest('hex');
     const cacheDir = path.join(this.dataRoot, 'audio', 'cache');
     const cachedAudio = path.join(cacheDir, `${cacheKey}.mp3`);
@@ -221,15 +221,16 @@ class StoryboardPipeline {
     const stockAvailable = await this.stockMedia.isAvailable().catch(() => false);
     const maxQueries = Math.max(1, Number(process.env.STOCK_QUERIES_PER_SCENE) || 2);
     const landscapes = preferLandscapes();
-    // Mañana / tarde / noche del contenido: paisajes de esa hora (02/10/2026).
+    // The content's morning / afternoon / night: landscapes from that time (02/10/2026).
     const momento = momentoDe(production);
     let searches = 0;
     let failures = 0;
-    // Biblioteca (30/09): clips ya descargados con ficha. Se buscan primero y, al
-    // repetirse, van con otra variante (utils/biblioteca-stock.js).
+    // Library (30/09): clips already downloaded with a record. They're looked up
+    // first and, when repeated, go with another variant
+    // (utils/biblioteca-stock.js).
     const fichas = await leeFichas(cacheDir).catch(() => []);
-    const usosEnVideo = new Map();       // assetId → veces usado en ESTE vídeo
-    const elegidos = new Map();          // assetId → { chosen, asset } para repetir si faltan clips
+    const usosEnVideo = new Map();       // assetId → times used in THIS video
+    const elegidos = new Map();          // assetId → { chosen, asset } to repeat if clips run short
     let deBiblioteca = 0;
     let sinBuscar = 0;
     let repetidos = 0;
@@ -237,8 +238,8 @@ class StoryboardPipeline {
 
     for (const scene of storyboard.scenes) {
       const terms = blocklist();
-      // Con paisajes activados, una de las búsquedas de cada escena es un paisaje
-      // de la franja (rota por escena); la otra sigue siendo la del guion.
+      // With landscapes on, one of each scene's searches is a landscape for the
+      // time of day (rotating per scene); the other is still the script's.
       const consultas = [...(landscapes ? [consultaPaisaje(momento, scene.order ?? n)] : []), ...scene.stockQueries, scene.visualIntent].filter(Boolean);
       const biblioteca = busca(fichas, {
         queries: consultas,
@@ -248,7 +249,7 @@ class StoryboardPipeline {
         excluir: usedIds,
         limite: Math.max(6, scene.shots.length * 3)
       }).filter(asset => !isBlocked(asset, terms));
-      // Con material de sobra en la biblioteca no se busca en Pexels.
+      // With plenty of material in the library, Pexels isn't searched.
       const bastante = biblioteca.length >= scene.shots.length * 2;
       if (bastante) sinBuscar += 1;
       pool = [...biblioteca, ...pool.filter(asset => !biblioteca.some(item => item.id === asset.id))].slice(0, 40);
@@ -280,10 +281,10 @@ class StoryboardPipeline {
             .filter(asset => !usedIds.has(asset.id))
             .map(asset => ({ asset, score: this.stockMedia.score(asset, { visualIntent: scene.visualIntent, sceneQueries: scene.stockQueries, usedIds, aspectRatio: storyboard.aspectRatio })
               + (asset.type === shot.preferredAssetType ? 5 : 0)
-              + (asset.desdeBiblioteca ? 4 : 0)   // ya descargado: más rápido y sin gastar disco
+              + (asset.desdeBiblioteca ? 4 : 0)   // already downloaded: faster and no disk spent
               // calm channels: landscapes over people unless the scene asks for a person
               - (landscapes && showsPeople(asset) && !showsPeople({ title: scene.visualIntent }) ? 25 : 0)
-              // paisajes de la hora del contenido; lo que choca con ella (estrellas de mañana) se hunde
+              // landscapes from the content's time of day; what clashes with it (stars in the morning) sinks
               + (landscapes ? ajustePaisaje(asset, momento) : 0) }))
             .sort((a, b) => b.score - a.score);
           for (const pick of ranked) {
@@ -306,7 +307,7 @@ class StoryboardPipeline {
           chosen = { source: 'generated', assetId: `ai_${aiCursor}`, url: null, localPath, type: 'image', score: null, license: 'generated' };
         }
         if (!chosen) {
-          // Sin clips nuevos: repetir uno de este vídeo (el menos repetido), con otra variante.
+          // No new clips: repeat one from this video (the least repeated), with another variant.
           const otro = [...elegidos.values()]
             .filter(e => e.chosen.assetId !== lastAssetId && (e.chosen.type === shot.preferredAssetType || e.chosen.type === 'video'))
             .sort((a, b) => (usosEnVideo.get(a.chosen.assetId) || 0) - (usosEnVideo.get(b.chosen.assetId) || 0))[0];
@@ -355,10 +356,10 @@ class StoryboardPipeline {
   }
 
   /**
-   * Portada del Short (02/10/2026): una de data/assets/portadas-short con el
-   * título encima. Desde el 11/10/2026 solo se pega en el vídeo si
-   * SHORT_COVER_SECONDS > 0; si no, se compone igual y queda en /portadas para
-   * ponerla a mano. Nunca tumba el render.
+   * Short cover (02/10/2026): one from data/assets/portadas-short with the title
+   * on top. Since 11/10/2026 it's only glued into the video if
+   * SHORT_COVER_SECONDS > 0; otherwise it's composed anyway and stays in
+   * /portadas to be set by hand. Never takes down the render.
    */
   async portadaShort(production, visualPath) {
     const { eligePortada, componePortadaShort, aplicaPortada, segundosPortada } = require('./portada-short');
@@ -374,10 +375,10 @@ class StoryboardPipeline {
       const { eligeDeBiblioteca } = require('./biblioteca-miniaturas');
       const dePropias = await eligeDeBiblioteca({ title: titulo, topic, formato: 'short', logger: this.logger }).catch(() => null);
       if (dePropias) {
-        // 11/10/2026: las portadas que hace el autor (data/assets/portadas-propias) van primero.
+        // 11/10/2026: the covers the owner makes (data/assets/portadas-propias) go first.
         await sharp(dePropias.ruta).resize(1080, 1920, { fit: 'cover' }).jpeg({ quality: 92 }).toFile(portada);
       } else try {
-        // 11/10/2026: mismo diseño que la miniatura de los largos (referencia del autor).
+        // 11/10/2026: same design as the long videos' thumbnail (the owner's reference).
         const { titularesMiniatura } = require('./titular-miniatura');
         const { componeMiniaturaYeshua } = require('./miniatura-yeshua');
         const { titulares } = await titularesMiniatura({
@@ -385,13 +386,13 @@ class StoryboardPipeline {
         });
         await componeMiniaturaYeshua({ sharp, fondo, titular: titulares[0], formato: 'short', logoPath: await logoDelCanal(), salida: portada });
       } catch (error) {
-        this.logger.warn(`Portada nueva del Short no disponible (${error.message}); sale la de antes`);
+        this.logger.warn(`New Short cover unavailable (${error.message}); using the previous design`);
         await componePortadaShort({ sharp, fondo, logoPath: await logoDelCanal(), titulo, topic, salida: portada });
       }
       if (segundos) await aplicaPortada({ video: visualPath, portada, segundos, logger: this.logger });
       production.assets.shortCover = { path: portada, background: path.basename(fondo), seconds: segundos };
     } catch (error) {
-      this.logger.warn(`Portada del Short no aplicada (${error.message}); sigue sin portada`);
+      this.logger.warn(`Short cover not applied (${error.message}); still without a cover`);
     }
   }
 
@@ -403,10 +404,10 @@ class StoryboardPipeline {
     await fs.mkdir(path.dirname(finalVideoPath), { recursive: true });
     const largo = storyboard.format !== 'short';
     const marcaVideo = require('./marca-video');
-    // «Elementos del vídeo» (ajuste del panel, 03/10/2026): qué va encima y cuándo.
+    // «Video elements» (panel setting, 03/10/2026): what goes on top and when.
     const extras = this.db?.getSetting ? await this.db.getSetting('video_extras').catch(() => null) : null;
     const duracion = Number(production.assets?.audio?.durationSec) || null;
-    // Shorts: suscribirse también (03/10/2026), a 6 s del final.
+    // Shorts: subscribe too (03/10/2026), 6 s before the end.
     const marca = largo
       ? await marcaVideo.marcaCuerpo({ dataRoot: this.dataRoot, logger: this.logger, extras, duracion })
       : await marcaVideo.marcaShort({ dataRoot: this.dataRoot, logger: this.logger, extras, duracion });
@@ -421,7 +422,7 @@ class StoryboardPipeline {
     await this.videoGenerator.addAudioToVideo(visualPath, audioPath, finalVideoPath, {
       format: storyboard.format === 'short' ? 'short' : 'long', seed: production.id
     });
-    // Intro de marca delante del vídeo ya mezclado: voz, música y subtítulos no se mueven entre sí.
+    // Brand intro in front of the already mixed video: voice, music and captions don't shift against each other.
     rendered.introSec = 0;
     if (largo && marca) {
       const [width, height] = String(storyboard.resolution || '1920x1080').split('x').map(Number);
@@ -431,7 +432,7 @@ class StoryboardPipeline {
         momento: momentoDe(production), encode: ENCODE, logger: this.logger
       });
     }
-    // Volumen final a -14 LUFS (lo que pide YouTube), con voz, música e intro ya juntas.
+    // Final loudness at -14 LUFS (what YouTube asks for), with voice, music and intro already together.
     rendered.sonoridad = await require('./sonoridad').normalizaVideo(finalVideoPath, { logger: this.logger });
     await fs.rm(workDir, { recursive: true, force: true }).catch(() => {});
     await fs.unlink(visualPath).catch(() => {});

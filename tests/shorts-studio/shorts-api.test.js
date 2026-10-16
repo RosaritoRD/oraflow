@@ -26,7 +26,7 @@ async function servidor(t, { apiKey } = {}) {
   return { dir, base };
 }
 
-test('GET /api/shorts devuelve el estado', async t => {
+test('GET /api/shorts returns the status', async t => {
   const { base } = await servidor(t);
   const r = await (await fetch(`${base}/api/shorts`)).json();
   assert.equal(r.success, true);
@@ -34,7 +34,7 @@ test('GET /api/shorts devuelve el estado', async t => {
   assert.equal(r.result.outputs.shorts[0].name, 'juan-3-16.mp4');
 });
 
-test('subir pide confirmar permiso y guarda el archivo', async t => {
+test('uploading asks to confirm permission and stores the file', async t => {
   const { base, dir } = await servidor(t);
   const sin = await fetch(`${base}/api/shorts/files/fondos`, {
     method: 'PUT', body: 'abc', headers: { 'content-type': 'video/mp4', 'x-file-name': 'a.mp4' }
@@ -48,7 +48,7 @@ test('subir pide confirmar permiso y guarda el archivo', async t => {
   assert.equal(fs.readFileSync(path.join(dir, 'entrada/fondos/Cielo azul.mp4'), 'utf8'), 'abc');
 });
 
-test('las rutas que cambian cosas exigen la API key', async t => {
+test('routes that change things require the API key', async t => {
   const { base } = await servidor(t, { apiKey: 'secreta' });
   const r = await fetch(`${base}/api/shorts/lote`, {
     method: 'PUT', body: JSON.stringify({ lote: 'x' }), headers: { 'content-type': 'application/json' }
@@ -61,7 +61,7 @@ test('las rutas que cambian cosas exigen la API key', async t => {
   assert.equal(ok.status, 200);
 });
 
-test('media: sirve el short y no deja salir de la carpeta', async t => {
+test('media: serves the short and doesn\'t let paths escape the folder', async t => {
   const { base } = await servidor(t);
   const r = await fetch(`${base}/api/shorts/media/shorts/juan-3-16.mp4`);
   assert.equal(r.status, 200);
@@ -72,7 +72,7 @@ test('media: sirve el short y no deja salir de la carpeta', async t => {
   assert.equal(area.status, 400);
 });
 
-test('borrar un short y pedir uno que no existe', async t => {
+test('deleting a short and requesting one that doesn\'t exist', async t => {
   const { base, dir } = await servidor(t);
   const r = await fetch(`${base}/api/shorts/files/shorts/juan-3-16.mp4`, { method: 'DELETE' });
   assert.equal(r.status, 200);
@@ -81,7 +81,7 @@ test('borrar un short y pedir uno que no existe', async t => {
   assert.equal(otra.status, 404);
 });
 
-test('run con un tipo desconocido es 400, no 500', async t => {
+test('run with an unknown type is 400, not 500', async t => {
   const { base } = await servidor(t);
   const r = await fetch(`${base}/api/shorts/run`, {
     method: 'POST', body: JSON.stringify({ kind: 'nada' }), headers: { 'content-type': 'application/json' }

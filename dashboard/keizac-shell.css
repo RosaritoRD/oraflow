@@ -1,6 +1,6 @@
 /* ============================================================
-   KEIZAC — carcasa de panel.tu-dominio.com
-   Misma identidad que tu-dominio.com / el panel de Keizac (tema oscuro):
+   KEIZAC — carcasa de panel.your-domain.com
+   Misma identidad que your-domain.com / el panel de Keizac (tema oscuro):
    Keizac Blue #0C7BEB, negros del sistema, Sora + Inter + JetBrains Mono,
    y la navegación del panel (keizac-web css/meganav.css, modo body.sidenav).
    Va DESPUÉS de styles.css y solo sobreescribe.
@@ -11,7 +11,7 @@
 @font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 100 800; font-display: swap; src: url('/assets/fonts/jetbrains-mono-latin-var.woff2') format('woff2'); }
 
 :root {
-  /* Tokens del tema oscuro de Keizac (keizac-web css/styles.css) */
+  /* Keizac dark theme tokens (keizac-web css/styles.css) */
   --bg: #05070C;
   --surface-1: #0D1119;
   --surface-2: #121724;
@@ -23,8 +23,8 @@
   --text-2: #C9D1DE;
   --muted: #97A1B4;
 
-  --brand: #0C7BEB;          /* Keizac Blue, el del logo */
-  --brand-hot: #3B9DFF;      /* el que se lee sobre negro */
+  --brand: #0C7BEB;          /* Keizac Blue, the logo's */
+  --brand-hot: #3B9DFF;      /* the one that reads on black */
   --brand-deep: #0A5FB8;
   --brand-soft: rgba(12, 123, 235, .14);
   --blue: #3B9DFF;
@@ -63,16 +63,16 @@
 body { background: var(--bg); font-family: var(--font-sans); }
 .aurora { opacity: .55; }
 
-/* Titulares en Sora, como tu-dominio.com: grandes, apretados. */
+/* Titulares en Sora, como your-domain.com: grandes, apretados. */
 h1, h2, .docs-article h2, .section-intro h2, .panel-heading h2 { font-family: var(--font-display); letter-spacing: -.025em; }
 h1 { font-weight: 700; letter-spacing: -.035em; }
 .eyebrow { color: var(--brand-hot); letter-spacing: .2em; }
 
-/* Botón principal: el azul de Keizac con su brillo. */
+/* Primary button: Keizac blue with its glow. */
 .button.primary { background: var(--brand); border-color: transparent; box-shadow: var(--shadow-cta); }
 .button.primary:hover:not(:disabled) { background: #1487FA; filter: none; box-shadow: 0 0 40px rgba(12, 123, 235, .45), 0 10px 26px -8px rgba(10, 95, 184, .7); }
 
-/* ── El menú viejo se queda oculto (app.js lo usa para el estado activo) ── */
+/* ── The old menu stays hidden (app.js uses it for the active state) ── */
 body.keizac-shell .sidebar > .brand,
 body.keizac-shell .sidebar > .sidebar-label,
 body.keizac-shell .sidebar > nav { display: none !important; }
@@ -86,7 +86,7 @@ body.keizac-shell .sidebar > nav { display: none !important; }
       radial-gradient(220px 180px at 16% 4%, rgba(12, 123, 235, .18), transparent 68%),
       var(--rail-bg);
     border-right: 1px solid var(--rail-line);
-    backdrop-filter: none;           /* con backdrop-filter, los hijos fixed se anclan a la columna */
+    backdrop-filter: none;           /* with backdrop-filter, fixed children anchor to the column */
     z-index: 62;
   }
   body.keizac-shell .sidebar-footer { margin: auto 12px 0; border-top-color: var(--rail-line); }
@@ -119,7 +119,7 @@ body.keizac-shell .sidebar > nav { display: none !important; }
 .rnav__tab:focus-visible { outline: 2px solid var(--brand-hot); outline-offset: -2px; box-shadow: none; border-radius: 0; }
 .rnav__chev { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.2; opacity: .55; flex: 0 0 auto; transition: transform .18s; }
 
-/* Panel que se abre AL LADO de la columna, a la altura de su fila. */
+/* Panel that opens BESIDE the column, at the height of its row. */
 .rnav__panels { position: fixed; left: var(--rail-w); top: 0; z-index: 61; }
 .rnav__panel {
   position: fixed; left: var(--rail-w); top: var(--rnav-top, 72px);
@@ -145,7 +145,7 @@ body.keizac-shell .sidebar > nav { display: none !important; }
 .rnav-opt.is-current { color: #fff; }
 .rnav-opt.is-current .rnav-opt__dot { background: var(--brand-hot); }
 
-/* ═══════════════ Barra superior (negra, como el panel) ═══════════════ */
+/* ═══════════════ Top bar (black, like the panel) ═══════════════ */
 .kbar {
   position: fixed; top: 0; left: var(--rail-w); right: 0; height: var(--bar-h); z-index: 56;
   display: flex; align-items: center; gap: 14px; padding: 0 22px; box-sizing: border-box;
@@ -160,7 +160,7 @@ body.keizac-shell .sidebar > nav { display: none !important; }
 .kbar__channel small { color: inherit; font: inherit; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .kbar__right { margin-left: auto; }
 .kbar .top-actions { gap: 10px; }
-/* El buscador con forma de caja, como el de Keizac. */
+/* The box-shaped search, like Keizac's. */
 .kbar .kbd-trigger {
   min-width: 260px; height: 38px; justify-content: flex-start; gap: 8px; padding: 0 11px;
   background: color-mix(in srgb, var(--rail-panel) 88%, transparent); border: 1px solid var(--rail-line);
@@ -171,21 +171,21 @@ body.keizac-shell .sidebar > nav { display: none !important; }
 .kbar .icon-button, .kbar .language-control select { background: var(--rail-panel); border-color: var(--rail-line); }
 .kbar .button.primary { height: 38px; padding-block: 0; }
 
-/* La cabecera de cada pantalla ya no lleva botones: queda solo el título, sin
-   caja ni pegajosa (la barra fija de arriba ya es la que se queda). */
+/* Each screen's header no longer has buttons: only the title remains, with no
+   box and not sticky (the fixed bar at the top is the one that stays). */
 body.keizac-shell main > .topbar {
   position: static; min-height: 0; margin: 0 0 4px; padding: 30px 0 18px;
   background: none; backdrop-filter: none; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; box-shadow: none;
 }
 body.keizac-shell main > .topbar h1 { font-size: clamp(24px, 2.3vw, 34px); }
-/* El texto del buscador lo escondía una regla vieja de styles.css para la barra estrecha. */
+/* An old styles.css rule for the narrow bar was hiding the search text. */
 @media (min-width: 901px) {
   .kbar .kbd-trigger span { display: inline; }
   .kbar .kbd-trigger kbd { display: inline-grid; }
 }
 body.keizac-shell .sidebar-footer #automation-toggle { font-size: 12.5px; padding-inline: 8px; white-space: nowrap; }
 
-/* ═══════════════ Móvil: barra con hamburguesa + cajón ═══════════════ */
+/* ═══════════════ Mobile: bar with hamburger + drawer ═══════════════ */
 .rnav__drawer[hidden], .rnav-acc__body[hidden] { display: none; }
 @media (max-width: 900px) {
   body.keizac-shell .rnav, body.keizac-shell .rnav__panels { display: none; }
@@ -221,21 +221,21 @@ body.keizac-shell .sidebar-footer #automation-toggle { font-size: 12.5px; paddin
 }
 .rnav-acc__h[aria-expanded="true"] .rnav__chev { transform: rotate(180deg); }
 .rnav-acc__body { padding: 4px 0 12px; border-bottom: 1px solid var(--rail-line); }
-.rnav-acc__body .rnav-opt { padding: 12px 14px; font-size: 15px; }   /* táctil: ≥44 px de alto */
+.rnav-acc__body .rnav-opt { padding: 12px 14px; font-size: 15px; }   /* touch: ≥44 px tall */
 
 @media (prefers-reduced-motion: reduce) {
   .rnav__panel.anim { animation: none; }
   .rnav__tab, .rnav-opt, .rnav__chev { transition: none; }
 }
 
-/* Idioma dentro del cajón del móvil (segmentado ES/EN, como el menú de cuenta de Keizac). */
+/* Language inside the mobile drawer (ES/EN segmented, like Keizac's account menu). */
 .rnav-lang { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 12px 0; color: var(--rail-text); font-size: 13px; }
 .rnav-lang__seg { display: inline-flex; border: 1px solid var(--rail-line); border-radius: 8px; overflow: hidden; }
 .rnav-lang__seg button { border: 0; background: transparent; color: var(--rail-text); font: 700 12px var(--font-sans); padding: 6px 14px; cursor: pointer; }
 .rnav-lang__seg button.is-on { background: var(--brand); color: #fff; }
 @media (max-width: 900px) { body.keizac-shell .sidebar-footer { border-top: 0; padding-top: 0; } }
 
-/* «← Panel principal»: vuelta a Keizac, en ámbar como en el modo producto de Fleet. */
+/* «← Main panel»: back to Keizac, in amber like Fleet's product mode. */
 .rnav__back { display: block; padding: 12px 16px 4px; color: var(--amber); font: 700 13.5px var(--font-sans); text-decoration: none; }
 .rnav__back:hover { color: var(--brand-hot); }
 .rnav__drawer .rnav__back { padding: 15px 12px; color: var(--amber); }

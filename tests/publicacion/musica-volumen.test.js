@@ -1,17 +1,17 @@
-// 02/10/2026 (el autor): el piano «un poquito más fuerte» en las oraciones, y en los
-// Shorts «en algunos, no en todos». Volumen por formato, decidido por el vídeo.
+// 02/10/2026: the piano «a little louder» on the prayers, and on the Shorts «on some,
+// not all». Volume per format, decided per video.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { musicGainFor } = require('../../utils/prayer-theme');
 
 const env = { BACKGROUND_MUSIC_DB: '-14' };
 
-test('los largos llevan el piano más alto que la base (por defecto 3 dB)', () => {
+test('long videos carry the piano louder than the base (3 dB by default)', () => {
   assert.equal(musicGainFor({ formato: 'long', semilla: 'x', env }), -11);
   assert.equal(musicGainFor({ formato: 'long', semilla: 'x', env: { ...env, BACKGROUND_MUSIC_DB_LONG: '-9' } }), -9);
 });
 
-test('Shorts: algunos más altos, la mayoría a la base, y siempre igual para el mismo vídeo', () => {
+test('Shorts: some louder, most at the base, and always the same for the same video', () => {
   const ids = Array.from({ length: 400 }, (_, i) => `prod_${i}`);
   const altos = ids.filter(id => musicGainFor({ formato: 'short', semilla: id, env }) === -11).length;
   const base = ids.filter(id => musicGainFor({ formato: 'short', semilla: id, env }) === -14).length;
@@ -22,16 +22,16 @@ test('Shorts: algunos más altos, la mayoría a la base, y siempre igual para el
   }
 });
 
-test('el porcentaje de Shorts altos se ajusta (0 = ninguno, 100 = todos)', () => {
+test('the percentage of loud Shorts is adjustable (0 = none, 100 = all)', () => {
   assert.equal(musicGainFor({ formato: 'short', semilla: 'a', env: { ...env, SHORT_MUSIC_LOUD_PCT: '0' } }), -14);
   assert.equal(musicGainFor({ formato: 'short', semilla: 'a', env: { ...env, SHORT_MUSIC_LOUD_PCT: '100' } }), -11);
 });
 
-test('nunca pasa de 0 dB ni baja de -40', () => {
+test('never goes above 0 dB or below -40', () => {
   assert.equal(musicGainFor({ formato: 'long', semilla: 'x', env: { BACKGROUND_MUSIC_DB_LONG: '6' } }), 0);
   assert.equal(musicGainFor({ formato: 'long', semilla: 'x', env: { BACKGROUND_MUSIC_DB_LONG: '-90' } }), -40);
 });
 
-test('sin formato (llamadas antiguas): la base de siempre', () => {
+test('without a format (old calls): the usual base', () => {
   assert.equal(musicGainFor({ env }), -14);
 });

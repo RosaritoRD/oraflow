@@ -1,10 +1,11 @@
 /**
- * Perfil y preferencias de cada usuario del panel (05/10/2026). El usuario lo
- * da oauth2-proxy (cabecera X-Forwarded-Email, ya validada con Google); en
- * local, sin cabecera, es "local". Se guarda en settings `prefs:<correo>`.
+ * Each dashboard user's profile and preferences (05/10/2026). The user comes
+ * from oauth2-proxy (X-Forwarded-Email header, already validated by Google);
+ * locally, with no header, it's "local". Stored in settings `prefs:<email>`.
+ * `idioma: null` = follow the browser's language until the user picks one.
  */
 const VISTAS = ['overview', 'redes', 'pipeline', 'calendar', 'shorts', 'analytics', 'engagement', 'research', 'operator', 'accounts', 'settings', 'readiness', 'docs'];
-const DEFECTO = { tema: 'oscuro', idioma: 'es', inicio: 'overview', compacto: false };
+const DEFECTO = { tema: 'oscuro', idioma: null, inicio: 'overview', compacto: false };
 
 function usuarioDe(req) {
   const correo = String(req.get?.('x-forwarded-email') || req.headers?.['x-forwarded-email'] || '').trim().toLowerCase();
@@ -12,7 +13,7 @@ function usuarioDe(req) {
   return { correo: /^[^@\s]+@[^@\s]+$/.test(correo) ? correo : 'local', nombre };
 }
 
-/** "tu.nombre@x" → "el autor"; iniciales "ER". */
+/** "jane.doe@x" → "Jane Doe"; initials "JD". */
 function nombreVisible(correo, nombre = '') {
   if (nombre) return nombre;
   if (correo === 'local') return 'Local';
@@ -23,9 +24,9 @@ const iniciales = n => n.split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).j
 
 function valida(cambios = {}) {
   const v = {};
-  if (cambios.tema !== undefined) { if (!['oscuro', 'claro', 'sistema'].includes(cambios.tema)) return { error: 'Tema no válido' }; v.tema = cambios.tema; }
-  if (cambios.idioma !== undefined) { if (!['es', 'en'].includes(cambios.idioma)) return { error: 'Idioma no válido' }; v.idioma = cambios.idioma; }
-  if (cambios.inicio !== undefined) { if (!VISTAS.includes(cambios.inicio)) return { error: 'Pantalla de inicio no válida' }; v.inicio = cambios.inicio; }
+  if (cambios.tema !== undefined) { if (!['oscuro', 'claro', 'sistema'].includes(cambios.tema)) return { error: 'Invalid theme' }; v.tema = cambios.tema; }
+  if (cambios.idioma !== undefined) { if (!['es', 'en'].includes(cambios.idioma)) return { error: 'Invalid language' }; v.idioma = cambios.idioma; }
+  if (cambios.inicio !== undefined) { if (!VISTAS.includes(cambios.inicio)) return { error: 'Invalid start screen' }; v.inicio = cambios.inicio; }
   if (cambios.compacto !== undefined) v.compacto = Boolean(cambios.compacto);
   return { valor: v };
 }

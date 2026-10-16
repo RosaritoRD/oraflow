@@ -184,21 +184,24 @@ function scriptFromEditable(script = {}, editable = {}) {
   return next;
 }
 
-/** Hasta este largo (caracteres hablados) la narración es de un Short y usa ELEVENLABS_TTS_MODEL_SHORT. */
+/**
+ * Up to this length (spoken characters) the narration is a Short's and uses
+ * ELEVENLABS_TTS_MODEL_SHORT.
+ */
 const LIMITE_CORTO = 1500;
 
 /**
- * Caracteres que se DICEN: las pausas <break …/> no cuentan. 12/10/2026: el Short del 13/10
- * tenía 1.230 hablados y 14 pausas (1.538 en total) y salió con el modelo de los largos.
+ * Characters that are SPOKEN: <break …/> pauses don't count. 12/10/2026: the 13/10 Short had
+ * 1,230 spoken and 14 pauses (1,538 total) and came out with the long-video model.
  */
 function largoHablado(texto) {
   return String(texto || '').replace(/<break\b[^>]*\/>/g, '').length;
 }
 
 /**
- * 12/10/2026: lo que la voz de un Short tiene propio (modelo y velocidad). Va en la clave de
- * la caché de narración para que cambiar ELEVENLABS_SPEED_SHORT vuelva a narrar de verdad;
- * '' en los largos y sin modelo de Shorts, así sus claves no cambian.
+ * 12/10/2026: what a Short's voice has of its own (model and speed). It goes in the narration
+ * cache key so changing ELEVENLABS_SPEED_SHORT really narrates again; '' for long videos and
+ * without a Shorts model, so their keys don't change.
  */
 function ajusteCorto(texto, env = process.env) {
   const modelo = String(env.ELEVENLABS_TTS_MODEL_SHORT || '').trim();

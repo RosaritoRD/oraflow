@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 /**
- * Ebook devocional de 30 días (05/10/2026, primer producto: ansiedad y paz).
+ * 30-day devotional ebook (05/10/2026, first product: anxiety and peace).
  *
- *   node scripts/ebook.js [salida]       (dentro del contenedor: /app/temp/ebook)
+ *   node scripts/ebook.js [output]       (inside the container: /app/temp/ebook)
  *
- * La IA escribe cada día (título, reflexión, oración y un paso práctico) y
- * ELIGE el versículo; el texto del versículo sale de la RV1909 y una cita que
- * no existe se descarta y se vuelve a pedir. Regla de fe del canal: cada
- * oración exalta a Jesús de Nazaret como Rey de reyes y termina en «Amén».
- * Salen: ebook.pdf (6×9 in), portada.jpg (1600×2400, para la tienda),
- * contenido.json (para revisar o regenerar) y tienda.txt (texto de venta).
+ * The AI writes each day (title, reflection, prayer and a practical step) and PICKS
+ * the verse; the verse text comes from the RV1909, and a reference that doesn't
+ * exist is discarded and requested again. The channel's faith rule: every prayer
+ * exalts Jesus of Nazareth as King of kings and ends in «Amén».
+ * Outputs: ebook.pdf (6×9 in), portada.jpg (1600×2400, for the store),
+ * contenido.json (to review or regenerate) and tienda.txt (sales copy).
  */
 const fs = require('fs');
 const path = require('path');
@@ -21,9 +21,9 @@ const LIBRO = {
   titulo: '30 días de paz',
   subtitulo: 'Devocional para cuando la ansiedad no te deja descansar',
   autor: 'Oraciones en Presencia de Yeshua',
-  // Hotmart exige el nombre del autor dentro del archivo (05/10/2026).
-  autorPersona: process.env.EBOOK_AUTOR || 'el autor',
-  usuario: '@tu_cuenta',
+  // Hotmart requires the author's name inside the file (05/10/2026).
+  autorPersona: process.env.EBOOK_AUTOR || 'the author',
+  usuario: '@your_account',
   publico: 'hispanos cristianos en Estados Unidos y Latinoamérica, 30-60 años, con ansiedad por el trabajo, la familia, el dinero o la salud',
   semanas: [
     { tema: 'Cuando la mente no se calla', dias: 'pensamientos que no paran, preocuparse por todo, insomnio, el miedo a lo que puede pasar, respirar en Dios, entregar el control, el descanso de la noche' },
@@ -78,13 +78,13 @@ async function escribeDias(ai, biblia, { dias = [], guarda = () => {} } = {}) {
           .slice(0, cuantos);
         for (const d of nuevos) dias.push({ ...d, semana: semana.tema });
         guarda(dias);
-        console.log(`  días escritos: ${dias.length}/30`);
+        console.log(`  days written: ${dias.length}/30`);
       } catch (error) {
         console.log(`  reintento (${error.message})`);
       }
     }
   }
-  if (dias.length < 30) throw new Error(`Solo ${dias.length} días válidos`);
+  if (dias.length < 30) throw new Error(`Only ${dias.length} valid days`);
   return dias;
 }
 
@@ -197,19 +197,19 @@ async function main() {
   let dias;
   if (fs.existsSync(contenido)) {
     dias = JSON.parse(fs.readFileSync(contenido, 'utf8'));
-    console.log(`Usando ${contenido} (bórralo para volver a escribir).`);
+    console.log(`Using ${contenido} (delete it to write again).`);
   } else {
-    // Se guarda tras cada tanda: si el contenedor se reinicia, se retoma desde ahí.
+    // Saved after every batch: if the container restarts, it picks up from there.
     const parcial = path.join(salida, 'contenido.parcial.json');
     const previos = fs.existsSync(parcial) ? JSON.parse(fs.readFileSync(parcial, 'utf8')) : [];
-    if (previos.length) console.log(`Retomando desde el día ${previos.length + 1}`);
+    if (previos.length) console.log(`Resuming from day ${previos.length + 1}`);
     dias = await escribeDias(new AITextService({}), biblia, { dias: previos, guarda: d => fs.writeFileSync(parcial, JSON.stringify(d, null, 2)) });
     fs.writeFileSync(contenido, JSON.stringify(dias, null, 2));
   }
   const { chromium } = require('playwright');
   const browser = await chromium.launch();
   try {
-    // Desde un archivo (no setContent): si no, Chromium bloquea las fuentes file:// y sale Times.
+    // From a file (not setContent): otherwise Chromium blocks file:// fonts and you get Times.
     const abre = async (pagina, html, nombre) => {
       const ruta = path.join(salida, nombre);
       fs.writeFileSync(ruta, html);
@@ -228,7 +228,7 @@ async function main() {
     await browser.close();
   }
   fs.writeFileSync(path.join(salida, 'tienda.txt'), textoTienda(dias));
-  console.log(`Listo: ${salida}/ebook.pdf, portada.jpg, tienda.txt`);
+  console.log(`Done: ${salida}/ebook.pdf, portada.jpg, tienda.txt`);
 }
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });

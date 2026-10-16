@@ -1,16 +1,17 @@
 /**
- * Texto para Facebook e Instagram (04/10/2026). Cada red premia otra cosa:
+ * Text for Facebook and Instagram (04/10/2026). Each network rewards something
+ * else:
  *
- * - instagram: Reel. Tope de 5 hashtags (Instagram, dic. 2025) y las palabras
- *   del texto cuentan para su buscador. La señal que más empuja son los envíos
- *   por mensaje, así que la invitación es "envíala a alguien".
- * - facebook: Reel. Paga por vistas que se quedan y por compartir/comentar
- *   rápido; los hashtags pesan poco (3).
- * - facebook_video: vídeo largo de la Página (lleva título aparte). A partir
- *   de 3 min entra en anuncios dentro del vídeo; se invita a seguir la página.
+ * - instagram: Reel. A cap of 5 hashtags (Instagram, Dec. 2025) and the text's
+ *   words count for its search. The strongest signal is sends by message, so the
+ *   invitation is "send it to someone".
+ * - facebook: Reel. Pays for views that stay and for quick shares/comments;
+ *   hashtags weigh little (3).
+ * - facebook_video: a long Page video (with a separate title). From 3 min on it's
+ *   eligible for in-video ads; it invites people to follow the page.
  *
- * Sale de la descripción de YouTube, sin lo que solo vale allí (#shorts, la
- * línea 🔔 del canal, capítulos con minuto).
+ * It comes from the YouTube description, without what only makes sense there
+ * (#shorts, the channel's 🔔 line, chapters with timestamps).
  */
 
 const { lineaLibro } = require('./libro');
@@ -19,16 +20,16 @@ const TOPE_TEXTO = 2200;
 const HASHTAGS_MARCA = ['#oracion', '#fe', '#oraciondiaria', '#Dios', '#Jesus'];
 const CUANTOS = { instagram: 5, facebook: 3, facebook_video: 3 };
 const INVITACION = {
-  // Intercesión (04/10/2026): copiado de @misteriosdivinos05, la cuenta con más
-  // comentarios del nicho (10-25 % de las reproducciones).
-  // 07/10/2026: Instagram es la palanca de YouTube (la oración larga) y del libro.
+  // Intercession (04/10/2026): copied from @misteriosdivinos05, the account with the
+  // most comments in the niche (10-25 % of views).
+  // 07/10/2026: Instagram is the lever for YouTube (the long prayer) and for the book.
   instagram: '🙏 Escribe «Amén» y el nombre de alguien por quien quieres orar: hoy oramos por ti.\n📩 Envía esta oración a alguien que la necesite hoy.\n▶️ La oración completa, cada mañana y cada noche, en YouTube: en el enlace del perfil.',
   facebook: '🙏 Escribe «Amén» y el nombre de alguien por quien quieres orar: hoy oramos por ti.\n🤍 Comparte esta oración con alguien que la necesite.\n👉 Sigue la página: una oración nueva cada mañana y cada noche.',
   facebook_video: '👉 Sigue la página para orar con nosotros cada mañana y cada noche.\n🙏 Escribe "Amén" en los comentarios si esta oración te bendijo.'
 };
 const VARIABLE_ENV = { instagram: 'INSTAGRAM_REEL_CTA', facebook: 'FACEBOOK_REEL_CTA', facebook_video: 'FACEBOOK_VIDEO_CTA' };
 
-const esDeYouTube = linea => /🔔|suscr[ií]b|youtube|youtu\.be|#shorts|\/libro|^¡Te invitamos a ver/i.test(linea); // /libro: el libro va en su propia línea (utils/libro.js)
+const esDeYouTube = linea => /🔔|suscr[ií]b|youtube|youtu\.be|#shorts|\/libro|^¡Te invitamos a ver/i.test(linea); // /libro: the book goes on its own line (utils/libro.js)
 const soloHashtags = linea => /^(#\S+\s*)+$/.test(linea.trim());
 const esCapitulo = linea => /^\d{1,2}:\d{2}(:\d{2})?\s/.test(linea.trim());
 
@@ -46,15 +47,15 @@ function hashtagsPara(seo = {}, red = 'facebook') {
     vistos.add(clave);
     lista.push(tag);
   }
-  // Siempre cabe al menos uno de marca (#oracion) aunque el vídeo traiga muchos.
+  // There's always room for at least one brand hashtag (#oracion) even if the video brings many.
   const cuantos = CUANTOS[red] || 3;
   const propios = lista.filter(t => !HASHTAGS_MARCA.some(m => m.toLowerCase() === t.toLowerCase()));
   const marca = lista.filter(t => !propios.includes(t));
   return [...propios.slice(0, cuantos - 1), ...marca].slice(0, cuantos);
 }
 
-// Lo que va desde esta raya es el pie de YouTube (libro, suscribirse, redes):
-// en Instagram y Facebook no tiene sentido (05/10/2026).
+// What goes from this rule on is the YouTube footer (book, subscribe, networks):
+// it makes no sense on Instagram and Facebook (05/10/2026).
 const RAYA_PIE = /^\s*━{3,}/m;
 
 function cuerpoDe(seo = {}) {
@@ -68,7 +69,7 @@ function cuerpoDe(seo = {}) {
 }
 
 function textoParaRed(seo = {}, red = 'facebook', env = process.env) {
-  // El vídeo largo de Facebook lleva el título en su propio campo.
+  // The long Facebook video carries the title in its own field.
   const titulo = red === 'facebook_video' ? '' : String(seo.title || '').trim();
   const cuerpo = cuerpoDe(seo);
   const invitacion = env[VARIABLE_ENV[red]] || INVITACION[red] || '';

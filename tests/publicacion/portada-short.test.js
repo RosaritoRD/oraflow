@@ -1,6 +1,6 @@
-// 11/10/2026 (el autor): la portada del Short ya no va pegada dentro del vídeo (bajaba
-// las vistas). Ahora se pone como miniatura en YouTube y como portada del Reel en
-// Instagram, por la API. Probado ese día a mano con un Short del canal en las dos.
+// 11/10/2026: the Short's cover no longer goes glued inside the video (it lowered
+// views). Now it's set as the thumbnail on YouTube and as the Reel cover on Instagram,
+// through the API. Tested by hand that day with one of the channel's Shorts on both.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
@@ -40,32 +40,32 @@ const entrada = (metadata = {}, extra = {}) => ({
   metadata: { seo: SEO, video: { path: VIDEO }, contentFormat: 'short', thumbnail: null, ...metadata }, ...extra
 });
 
-test('YouTube: un Short recién subido lleva su portada como miniatura', async () => {
+test('YouTube: a freshly uploaded Short carries its cover as the thumbnail', async () => {
   const { a, miniaturas } = agente();
   await a.uploadToYouTube(entrada({ shortCover: { path: PORTADA } }));
   assert.deepEqual(miniaturas, [['yt1', PORTADA]]);
 });
 
-test('YouTube: un Short programado antes del cambio busca la portada en su producción', async () => {
+test('YouTube: a Short scheduled before the change looks for the cover in its production', async () => {
   const { a, miniaturas } = agente({ producciones: { prod_s1: { shortCover: { path: PORTADA } } } });
   await a.uploadToYouTube(entrada());
   assert.deepEqual(miniaturas, [['yt1', PORTADA]]);
 });
 
-test('YouTube: sin portada (o con la ruta rota) no se intenta ni queda pendiente', async () => {
+test('YouTube: without a cover (or with a broken path) it isn\'t tried and doesn\'t stay pending', async () => {
   const { a, miniaturas, guardadas } = agente();
   await a.uploadToYouTube(entrada({ shortCover: { path: path.join(dir, 'no-existe.jpg') } }));
   assert.deepEqual(miniaturas, []);
   assert.equal(guardadas.at(-1).metadata.pendientesYouTube, undefined, 'reintentar no crearía el archivo');
 });
 
-test('YouTube: un vídeo largo sigue usando su miniatura, no la portada', async () => {
+test('YouTube: a long video still uses its thumbnail, not the cover', async () => {
   const { a, miniaturas } = agente();
   await a.uploadToYouTube(entrada({ contentFormat: 'long', thumbnail: { path: '/m.jpg' }, shortCover: { path: PORTADA } }));
   assert.deepEqual(miniaturas, [['yt1', '/m.jpg']]);
 });
 
-test('YouTube: si la portada falló (cuota), el reintento la vuelve a subir', async () => {
+test('YouTube: if the cover failed (quota), the retry uploads it again', async () => {
   const { a, miniaturas } = agente();
   const fila = { ...entrada({ shortCover: { path: PORTADA }, pendientesYouTube: { thumbnail: true } }), youtube_id: 'yt1' };
   a.db.getAllRows = async (sql) => (/publish_schedule/.test(sql) ? [fila] : []);
@@ -74,7 +74,7 @@ test('YouTube: si la portada falló (cuota), el reintento la vuelve a subir', as
   assert.deepEqual(miniaturas, [['yt1', PORTADA]]);
 });
 
-test('Instagram: el Reel se crea con su portada y las dos copias públicas se borran al publicar', async () => {
+test('Instagram: the Reel is created with its cover and both public copies are deleted on publishing', async () => {
   const { a } = agente();
   const e = entrada({ shortCover: { path: PORTADA } }, { status: 'published', publishTime: '2026-10-12T09:00:00.000Z' });
   const env = { INSTAGRAM_TOKEN: 'I' };
@@ -102,7 +102,7 @@ test('Instagram: el Reel se crea con su portada y las dos copias públicas se bo
   assert.deepEqual(borradas, ['v1.mp4', 'p1.jpg']);
 });
 
-test('Instagram: si la copia de la portada falla, el Reel sale igual, sin portada', async () => {
+test('Instagram: if copying the cover fails, the Reel goes out anyway, without a cover', async () => {
   const { a } = agente();
   const e = entrada({ shortCover: { path: PORTADA } }, { status: 'published', publishTime: '2026-10-12T09:00:00.000Z' });
   const copias = {

@@ -15,7 +15,7 @@ function production(generationSource) {
 
 const gate = checks => checks.find(c => c.id === 'ai_script');
 
-test('un guion de plantilla (la IA falló) bloquea la publicación', async () => {
+test('a template script (the AI failed) blocks publishing', async () => {
   const r = await new OperatorService(db).runQualityChecks(production(undefined));
   assert.equal(gate(r.checks).passed, false);
   assert.equal(gate(r.checks).blocking, true);
@@ -23,12 +23,12 @@ test('un guion de plantilla (la IA falló) bloquea la publicación', async () =>
   assert.ok(r.blockingFailures.includes('ai_script'));
 });
 
-test('un guion escrito por la IA pasa el control', async () => {
+test('a script written by the AI passes the check', async () => {
   const r = await new OperatorService(db).runQualityChecks(production('ai'));
   assert.equal(gate(r.checks).passed, true);
 });
 
-test('ALLOW_TEMPLATE_CONTENT=on lo desactiva', async () => {
+test('ALLOW_TEMPLATE_CONTENT=on disables it', async () => {
   process.env.ALLOW_TEMPLATE_CONTENT = 'on';
   try {
     const r = await new OperatorService(db).runQualityChecks(production(undefined));

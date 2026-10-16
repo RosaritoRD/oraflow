@@ -1,36 +1,36 @@
-// 03/10/2026: el autor pidió voces distintas en los vídeos. Hay una lista
-// (ELEVENLABS_VOICE_IDS) y cada vídeo usa una, siempre la misma para el mismo
-// vídeo: un reintento no puede cambiar de voz ni volver a pagar la narración.
+// 03/10/2026: the owner asked for different voices across videos. There's a list
+// (ELEVENLABS_VOICE_IDS) and each video uses one, always the same for the same
+// video: a retry can't switch voices or pay for the narration again.
 const test = require('node:test');
 const assert = require('node:assert');
 const { listaDeVoces, vozPara } = require('../../utils/voces');
 
-test('la lista sale de ELEVENLABS_VOICE_IDS, sin huecos ni repetidas', () => {
+test('the list comes from ELEVENLABS_VOICE_IDS, without blanks or repeats', () => {
   assert.deepStrictEqual(listaDeVoces({ ELEVENLABS_VOICE_IDS: ' a1, b2,,a1 , c3 ' }), ['a1', 'b2', 'c3']);
 });
 
-test('sin lista, la voz de siempre', () => {
+test('without a list, the usual voice', () => {
   assert.deepStrictEqual(listaDeVoces({ ELEVENLABS_VOICE_ID: 'unica' }), ['unica']);
   assert.deepStrictEqual(listaDeVoces({}), []);
 });
 
-test('el mismo vídeo siempre con la misma voz', () => {
+test('the same video always with the same voice', () => {
   const env = { ELEVENLABS_VOICE_IDS: 'a,b,c,d' };
   assert.strictEqual(vozPara('1791021627333', env), vozPara('1791021627333', env));
 });
 
-test('con muchos vídeos se usan todas las voces de la lista', () => {
+test('with many videos all the voices on the list get used', () => {
   const env = { ELEVENLABS_VOICE_IDS: 'a,b,c,d,e,f' };
   const usadas = new Set();
   for (let i = 0; i < 120; i++) usadas.add(vozPara(String(1791000000000 + i * 7919), env));
   assert.strictEqual(usadas.size, 6);
 });
 
-test('sin voces configuradas devuelve null (el proveedor decide)', () => {
+test('without configured voices it returns null (the provider decides)', () => {
   assert.strictEqual(vozPara('x', {}), null);
 });
 
-test('la narración pide a ElevenLabs la voz de ese vídeo y la anota', async () => {
+test('the narration asks ElevenLabs for that video\'s voice and records it', async () => {
   const os = require('os');
   const fs = require('fs');
   const path = require('path');
@@ -52,47 +52,47 @@ test('la narración pide a ElevenLabs la voz de ese vídeo y la anota', async ()
   assert.strictEqual(produccion.assets.audio.voiceId, pedida);
 });
 
-/* 07/10/2026 — el calendario del autor: la voz grave es la principal, la segunda
-   voz de hombre 3 noches por semana y la de mujer 2 veces al mes. */
+/* 07/10/2026 — the owner's calendar: the deep voice is the main one, the second
+   male voice 3 nights a week and the female voice twice a month. */
 const { vozDelCalendario } = require('../../utils/voces');
 const CAL = { ELEVENLABS_VOICE_PRINCIPAL: 'faraon', ELEVENLABS_VOICE_SECUNDARIA: 'andre', ELEVENLABS_VOICE_MUJER: 'maria', ELEVENLABS_VOICE_IDS: 'x,y,z' };
-// Fechas en hora de Nueva York (EDT = UTC-4 en octubre).
+// Dates in New York time (EDT = UTC-4 in October).
 const ny = (fecha, hora) => new Date(`${fecha}T${String(hora).padStart(2, '0')}:00:00-04:00`).toISOString();
 
-test('sin calendario, todo sigue como antes (lista)', () => {
+test('without a calendar, everything stays as before (list)', () => {
   assert.strictEqual(vozDelCalendario('1791021627333', { ELEVENLABS_VOICE_IDS: 'a,b' }), null);
 });
 
-test('un día normal: la voz principal en todo', () => {
-  // Miércoles 07/10/2026
+test('a normal day: the main voice everywhere', () => {
+  // Wednesday 07/10/2026
   assert.strictEqual(vozPara('p1', CAL, { fecha: ny('2026-10-07', 23), short: true }), 'faraon');
   assert.strictEqual(vozPara('p1', CAL, { fecha: ny('2026-10-07', 9), short: true }), 'faraon');
   assert.strictEqual(vozPara('p1', CAL, { fecha: ny('2026-10-07', 8), short: false }), 'faraon');
 });
 
-test('martes, jueves y sábado: la secundaria en el Short de la noche, no en el de la mañana', () => {
-  for (const dia of ['2026-10-06', '2026-10-08', '2026-10-10']) { // mar, jue, sáb
+test('Tuesday, Thursday and Saturday: the secondary voice on the evening Short, not the morning one', () => {
+  for (const dia of ['2026-10-06', '2026-10-08', '2026-10-10']) { // Tue, Thu, Sat
     assert.strictEqual(vozPara('p', CAL, { fecha: ny(dia, 23), short: true }), 'andre', dia);
     assert.strictEqual(vozPara('p', CAL, { fecha: ny(dia, 9), short: true }), 'faraon', dia);
   }
   assert.strictEqual(vozPara('p', CAL, { fecha: ny('2026-10-11', 23), short: true }), 'faraon'); // domingo
 });
 
-test('sin hora de publicación, la secundaria va al largo de ese día', () => {
+test('without a publish time, the secondary voice goes to that day\'s long video', () => {
   const martes = String(new Date(ny('2026-10-06', 4)).getTime());
   assert.strictEqual(vozPara(martes, CAL, { short: false }), 'andre');
   assert.strictEqual(vozPara(martes, CAL, { short: true }), 'faraon');
 });
 
-test('la voz de mujer: días 1 y 15, solo en el largo (2 al mes)', () => {
+test('the female voice: the 1st and 15th, only on the long video (twice a month)', () => {
   assert.strictEqual(vozPara('p', CAL, { fecha: ny('2026-10-15', 8), short: false }), 'maria');
   assert.strictEqual(vozPara('p', CAL, { fecha: ny('2026-11-01', 8), short: false }), 'maria');
-  // El 15/10 es jueves: su Short de la noche lleva la secundaria, nunca la de mujer.
+  // 15/10 is a Thursday: its evening Short gets the secondary voice, never the female one.
   assert.strictEqual(vozPara('p', CAL, { fecha: ny('2026-10-15', 23), short: true }), 'andre');
   assert.strictEqual(vozPara('p', CAL, { fecha: ny('2026-10-15', 9), short: true }), 'faraon');
 });
 
-test('en un mes: secundaria 2-3 veces por semana y mujer 2 veces', () => {
+test('over a month: secondary 2-3 times a week and female twice', () => {
   const cuenta = {};
   for (let d = 1; d <= 31; d++) {
     const dia = `2026-10-${String(d).padStart(2, '0')}`;

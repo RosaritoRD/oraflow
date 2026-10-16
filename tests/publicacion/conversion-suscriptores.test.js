@@ -12,7 +12,7 @@ function analytics(rows) {
   return agent;
 }
 
-test('consulta juntos vistas, interesadas y suscriptores, y conserva los días realmente devueltos', async () => {
+test('queries views, engaged views and subscribers together, and keeps the days actually returned', async () => {
   const a = analytics();
   let request;
   a.youtubeAnalytics.reports.query = async query => {
@@ -31,7 +31,7 @@ test('consulta juntos vistas, interesadas y suscriptores, y conserva los días r
   assert.deepEqual(result.conversion.requestedPeriod, { startDate: '2026-10-01', endDate: '2026-10-03' });
 });
 
-test('una fila medida con ceros se distingue de filas ausentes o inválidas', async () => {
+test('a row measured with zeros is told apart from missing or invalid rows', async () => {
   const zero = await analytics([['2026-10-01', 100, 50, 0, 0]]).getOutcomeAnalytics('id', '2026-10-01', '2026-10-03');
   assert.equal(zero.subscribersAvailable, true);
   assert.equal(zero.subscribersGained, 0);
@@ -53,7 +53,7 @@ const conversion = (gained = 4, engagedViews = 200) => ({
   period: { startDate: '2026-10-01', endDate: '2026-10-02' }
 });
 
-test('separa formatos y calcula con la consulta conjunta, nunca con vistas públicas ni de otro informe', async () => {
+test('separates formats and computes with the joint query, never with public views or another report\'s', async () => {
   const a = analytics();
   for (const r of [report('short', 'short', conversion()), report('long', 'long_form', conversion()), report('unknown', null, conversion())]) a.performanceData.set(r.videoId, r);
   const growth = (await a.getRecentAnalytics()).subscriberGrowth;
@@ -63,7 +63,7 @@ test('separa formatos y calcula con la consulta conjunta, nunca con vistas públ
   assert.equal(growth.groups.find(g => g.format === 'unknown').videos.length, 1);
 });
 
-test('conserva el cero real y deja pendientes históricos, simulaciones y Shorts sin interesadas', async () => {
+test('keeps the real zero and leaves history, simulations and Shorts without engaged views pending', async () => {
   const a = analytics();
   const rows = [report('zero', 'short', conversion(0)), report('old', 'short', null), report('no-engaged', 'short', conversion(4, 0)), report('simulated', 'short', conversion())];
   rows[3].analytics.simulated = true;
@@ -85,20 +85,20 @@ function contextDb(metadata, strategy = {}) {
   return db;
 }
 
-test('el Short nativo se reconoce aunque contentType sea long_form', async () => {
+test('a native Short is recognized even if contentType is long_form', async () => {
   const context = await contextDb({ contentType: 'long_form', contentFormat: 'short' }).getPublishedContentContext('id');
   assert.equal(context.contentFormat, 'short');
   assert.equal(context.strategy.requestedStyle, 'shorts');
   assert.equal(context.retentionDuration, 90);
 });
 
-test('el formato de estrategia sirve como respaldo y un clip mantiene su duración recortada', async () => {
+test('the strategy format serves as a fallback and a clip keeps its trimmed duration', async () => {
   assert.equal((await contextDb({}, { contentFormat: 'short' }).getPublishedContentContext('id')).contentFormat, 'short');
   assert.equal((await contextDb({ contentType: 'short', shortClipId: 'clip' }).getPublishedContentContext('id')).retentionDuration, 25);
   assert.equal((await contextDb({ contentFormat: 'long' }).getPublishedContentContext('id')).contentFormat, 'long_form');
 });
 
-test('al reiniciar carga el formato de los informes más recientes desde su publicación', async () => {
+test('on restart it loads the format of the latest reports from their publishing data', async () => {
   const a = analytics();
   a.db.getAnalyticsHistory = async () => [{ video_id: 'native-short', analyzed_at: new Date().toISOString(), analytics: { outcomes: { conversion: conversion() } } }];
   a.db.getPublishedContentContext = async () => ({ contentFormat: 'short' });

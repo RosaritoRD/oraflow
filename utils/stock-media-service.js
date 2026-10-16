@@ -115,7 +115,7 @@ class StockMediaService {
 
   score(asset, context) { return scoreAsset(asset, context); }
 
-  /** Ficha para reutilizar el clip en otros vídeos (utils/biblioteca-stock.js). Nunca bloquea la descarga. */
+  /** Record to reuse the clip in other videos (utils/biblioteca-stock.js). Never blocks the download. */
   async fichaBiblioteca(cachePath, asset) {
     if (asset.source === 'local') return;
     await guardaFicha(cachePath, asset).catch(error => this.logger.warn?.(`Stock library card failed: ${error.message}`));

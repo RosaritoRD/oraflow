@@ -18,7 +18,7 @@ async function add(db, { id = 'previous', title = 'ORACIÓN: para dormir en paz 
     [id, id, title, status, youtubeId, JSON.stringify(seo ? { seo: { title: seo } } : {})]);
 }
 
-test('bloquea el título final repetido, aunque cambien tildes, emojis o signos', async t => {
+test('blocks a repeated final title, even if accents, emojis or punctuation change', async t => {
   const db = await database(t);
   await add(db, { title: 'Título interno diferente', seo: 'ORACIÓN: para dormir en paz 🙏' });
   const quality = await new OperatorService(db).runQualityChecks({
@@ -28,7 +28,7 @@ test('bloquea el título final repetido, aunque cambien tildes, emojis o signos'
   assert.match(quality.checks.find(c => c.id === 'duplicate_title').message, /previous/);
 });
 
-test('excluye la misma producción y los intentos cancelados sin vídeo en YouTube', async t => {
+test('excludes the same production and cancelled attempts without a YouTube video', async t => {
   const db = await database(t);
   await add(db);
   await add(db, { id: 'cancelled', status: 'cancelled' });
@@ -36,13 +36,13 @@ test('excluye la misma producción y los intentos cancelados sin vídeo en YouTu
   assert.equal(await db.findDuplicatePublicationTitle('Oración para dormir en paz', 'previous'), null);
 });
 
-test('recuerda los publicados y los subidos aunque el estado local haya fallado', async t => {
+test('remembers published and uploaded ones even if local state failed', async t => {
   const db = await database(t);
   await add(db, { status: 'failed', youtubeId: 'youtube-existing' });
   assert.equal((await db.findDuplicatePublicationTitle('Oracion para dormir en paz')).productionId, 'previous');
 });
 
-test('no confunde capítulos, negaciones ni títulos SEO editados', async t => {
+test('doesn\'t confuse chapters, negations or edited SEO titles', async t => {
   const db = await database(t);
   await add(db, { title: 'Salmo 4:8', seo: 'Oración para no rendirte' });
   assert.equal(await db.findDuplicatePublicationTitle('Salmo 4:8'), null);
@@ -51,7 +51,7 @@ test('no confunde capítulos, negaciones ni títulos SEO editados', async t => {
   assert.equal(await db.findDuplicatePublicationTitle('Salmo 48'), null);
 });
 
-test('vuelve a comprobar duplicados antes de subir y no toca YouTube', async t => {
+test('checks duplicates again before uploading and doesn\'t touch YouTube', async t => {
   const db = await database(t);
   await add(db, { status: 'published' });
   const agent = new PublishingSchedulingAgent(db, {});

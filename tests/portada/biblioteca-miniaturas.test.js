@@ -1,4 +1,4 @@
-// 11/10/2026: las miniaturas y portadas que hace el autor se eligen por tema.
+// 11/10/2026: the thumbnails and covers the owner makes are picked by topic.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
@@ -16,7 +16,7 @@ function raiz(largos, cortos) {
   return r;
 }
 
-test('el tema del título elige la imagen; el respaldo solo si el tema no tiene', async () => {
+test('the title\'s topic picks the image; the fallback only if the topic has none', async () => {
   const r = raiz(['antes-de-dormir', 'oracion-de-la-manana', 'entrega-tu-ansiedad'], ['calma-mi-mente', 'buenos-dias-dios']);
   assert.equal((await eligeDeBiblioteca({ title: 'Oración de la noche para dormir', raiz: r, logger: silencio })).slug, 'antes-de-dormir');
   assert.equal((await eligeDeBiblioteca({ title: 'Oración para soltar la ansiedad', formato: 'short', raiz: r, logger: silencio })).slug, 'calma-mi-mente');
@@ -24,20 +24,20 @@ test('el tema del título elige la imagen; el respaldo solo si el tema no tiene'
   assert.equal(await eligeDeBiblioteca({ title: 'x', raiz: fs.mkdtempSync(path.join(os.tmpdir(), 'vacia-')), logger: silencio }), null);
 });
 
-test('rota dentro del tema sin repetir la última', async () => {
+test('rotates within the topic without repeating the last one', async () => {
   const r = raiz(['no-temas', 'dios-tiene-el-control'], []);
   const a = (await eligeDeBiblioteca({ title: 'Oración para vencer el miedo', raiz: r, logger: silencio })).slug;
   const b = (await eligeDeBiblioteca({ title: 'Oración para vencer el miedo', raiz: r, logger: silencio })).slug;
   assert.notEqual(a, b);
 });
 
-test('«milagro» y «sanidad» solo salen si el vídeo habla de eso', async () => {
+test('«milagro» and «sanidad» only come out if the video is about that', async () => {
   const r = raiz(['milagro-urgente', 'sanidad-poderosa', 'oracion-de-la-manana'], []);
   const { lista } = await candidatos({ title: 'Oración de la mañana para confiar tu día a Dios', raiz: r });
   assert.ok(!lista.includes('milagro-urgente') && !lista.includes('sanidad-poderosa'));
 });
 
-test('cada nombre del mapa existe en la biblioteca real (si está montada)', () => {
+test('every name in the map exists in the real library (if mounted)', () => {
   const real = path.join(__dirname, '..', '..', 'data', 'assets');
   if (!fs.existsSync(path.join(real, 'miniaturas-propias'))) return;
   for (const [idx, d, def] of [[1, 'miniaturas-propias', POR_DEFECTO.largo], [2, 'portadas-propias', POR_DEFECTO.short]]) {

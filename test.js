@@ -77,6 +77,7 @@ class SystemTest {
       { name: 'Jeshua Thumbnail Pipeline', test: () => this.testJeshuaThumbnails() },
       { name: 'Local Voice Client Fixtures', test: () => this.testLocalVoiceClient() },
       { name: 'Verse Shorts and Clipping Studio', test: () => this.testShortsStudio() },
+      { name: 'Outliers tab (YouTube)', test: () => this.testOutliers() },
       { name: 'Accounts and Command Search', test: () => this.testAccountsAndSearch() },
       { name: 'Autodeploy and Daily Hours', test: () => this.testAutodeployAndHours() },
       { name: 'Publication and Storyboard Suites', test: () => this.testPublicationAndStoryboard() }
@@ -3779,9 +3780,9 @@ class SystemTest {
     const fs = require('fs').promises;
     const vm = require('vm');
     const source = await fs.readFile(path.join(__dirname, 'dashboard', 'i18n.js'), 'utf8');
-    const load = language => {
+    const load = (language, browserLanguage = 'en-US') => {
       const selector = { value: '', addEventListener: () => {} };
-      const context = { window: { navigator: { language: 'en-US' }, NodeFilter: { SHOW_TEXT: 4 } },
+      const context = { window: { navigator: { language: browserLanguage }, NodeFilter: { SHOW_TEXT: 4 } },
         localStorage: { getItem: () => language },
         document: { documentElement: {}, createTreeWalker: () => ({ nextNode: () => false }),
           querySelectorAll: () => [], querySelector: () => selector } };
@@ -3801,6 +3802,9 @@ class SystemTest {
     const english = load('en').window.i18n;
     assert.equal(english.html`<h3>Visual intent</h3><p>${'Resumen'}</p>`, '<h3>Visual intent</h3><p>Resumen</p>');
     assert.equal(load('invalid').window.i18n.language, 'en');
+    // Nothing saved yet: the browser decides.
+    assert.equal(load(null, 'es-MX').window.i18n.language, 'es');
+    assert.equal(load(null, 'en-GB').window.i18n.language, 'en');
   }
 }
 
@@ -3827,6 +3831,13 @@ SystemTest.prototype.testShortsStudio = async function () {
     path.join(__dirname, 'tests/shorts-studio/shorts-api.test.js')], { timeout: 60000, maxBuffer: 1024 * 1024 });
 };
 
+SystemTest.prototype.testOutliers = async function () {
+  const { execFile } = require('child_process');
+  const { promisify } = require('util');
+  await promisify(execFile)(process.execPath, ['--test',
+    path.join(__dirname, 'tests/outliers/outliers.test.js')], { timeout: 60000, maxBuffer: 1024 * 1024 });
+};
+
 SystemTest.prototype.testAccountsAndSearch = async function () {
   const { execFile } = require('child_process');
   const { promisify } = require('util');
@@ -3838,18 +3849,20 @@ SystemTest.prototype.testAccountsAndSearch = async function () {
 SystemTest.prototype.testAutodeployAndHours = async function () {
   const { execFile } = require('child_process');
   const { promisify } = require('util');
-  await promisify(execFile)(process.execPath, ['--test',
-    path.join(__dirname, 'tests/autodeploy/core.test.js'),
-    path.join(__dirname, 'tests/publicacion/horas-diarias.test.js')], { timeout: 60000, maxBuffer: 1024 * 1024 });
+  const fsSync = require('fs');
+  // The autodeploy scripts are server-specific and may not ship with every copy.
+  const files = ['tests/autodeploy/core.test.js', 'tests/publicacion/horas-diarias.test.js']
+    .map(f => path.join(__dirname, f)).filter(f => fsSync.existsSync(f));
+  await promisify(execFile)(process.execPath, ['--test', ...files], { timeout: 60000, maxBuffer: 1024 * 1024 });
 };
 
-// Todo tests/publicacion y tests/storyboard (02/10/2026): antes no los corría
-// npm test, así que el despliegue automático no los vigilaba.
+// All of tests/publicacion and tests/storyboard (02/10/2026): npm test didn't run them before, so
+// the automatic deploy wasn't watching them.
 SystemTest.prototype.testPublicationAndStoryboard = async function () {
   const { execFile } = require('child_process');
   const { promisify } = require('util');
   const fsSync = require('fs');
-  const files = ['tests/publicacion', 'tests/storyboard', 'tests/portada', 'tests/thumbnail', 'tests/marca'].flatMap(dir =>
+  const files = ['tests/publicacion', 'tests/storyboard', 'tests/portada', 'tests/thumbnail', 'tests/marca', 'tests/mensajes'].filter(dir => fsSync.existsSync(path.join(__dirname, dir))).flatMap(dir =>
     fsSync.readdirSync(path.join(__dirname, dir)).filter(f => f.endsWith('.test.js')).map(f => path.join(__dirname, dir, f)));
   files.push(path.join(__dirname, 'tests/voz/voz-pulido.test.js'));
   files.push(path.join(__dirname, 'tests/voz/citas-biblicas.test.js'));

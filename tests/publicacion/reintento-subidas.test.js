@@ -1,9 +1,9 @@
-// 06/10/2026: miniatura y subtítulos que fallan (cuota) se reintentan después.
+// 06/10/2026: a thumbnail and captions that fail (quota) are retried later.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { PublishingSchedulingAgent } = require('../../agents/publishing-scheduling-agent');
 
-test('reintentaPendientes: sube lo pendiente, limpia la marca y no gasta si la cuota está agotada', async () => {
+test('reintentaPendientes: uploads what\'s pending, clears the flag and spends nothing if the quota is exhausted', async () => {
   const s = {};
   const filas = [{ id: 1, youtube_id: 'V1', metadata: { thumbnail: { path: '/t.jpg' }, captions: { path: '/c.srt' }, pendientesYouTube: { thumbnail: true, captions: true } } }];
   const guardadas = [];

@@ -1,14 +1,14 @@
 /**
- * Reels en la Página de Facebook (04/10/2026).
+ * Reels on the Facebook Page (04/10/2026).
  *
- * Cada Short que se publica en YouTube se sube también como Reel a la Página
- * "Oraciones en Presencia de Yeshua". La API de Meta solo publica en Páginas
- * (nunca en perfiles personales) y pide 3 pasos: start → subida a rupload →
- * finish. Docs: developers.facebook.com/docs/video-api/guides/reels-publishing
+ * Every Short published on YouTube is also uploaded as a Reel to the Page
+ * "Oraciones en Presencia de Yeshua". Meta's API only publishes to Pages (never
+ * personal profiles) and takes 3 steps: start → upload to rupload → finish. Docs:
+ * developers.facebook.com/docs/video-api/guides/reels-publishing
  *
- * ⚠ Facebook solo admite Reels de 3 a 90 s y los Shorts salen de 92-99 s.
- * En vez de cortar el final (ahí va el "Amén") la copia de Facebook se acelera
- * hasta 89,5 s, con un tope de ×1,12 para que la voz no suene apresurada.
+ * ⚠ Facebook only accepts Reels of 3 to 90 s and the Shorts come out at 92-99 s.
+ * Instead of cutting the end (that's where the "Amén" is) the Facebook copy is
+ * sped up to 89.5 s, capped at ×1.12 so the voice doesn't sound rushed.
  */
 const fs = require('fs');
 const os = require('os');
@@ -23,7 +23,7 @@ const DEFAULT_VERSION = 'v25.0';
 const OBJETIVO_SEGUNDOS = 89.5;
 const MIN_SEGUNDOS = 3;
 const VELOCIDAD_MAXIMA = 1.12;
-// Meta: programado = más de 10 min y menos de 29 días por delante.
+// Meta: scheduled = more than 10 min and less than 29 days ahead.
 const MIN_PROGRAMAR_MS = 11 * 60000;
 const MAX_PROGRAMAR_MS = 28 * 24 * 3600000;
 
@@ -35,7 +35,7 @@ function facebookConfig(env = process.env) {
   return { pageId, token, version: String(env.FACEBOOK_GRAPH_VERSION || DEFAULT_VERSION).trim() };
 }
 
-// Error que no se arregla reintentando (la duración del vídeo no va a cambiar).
+// An error that retrying won't fix (the video's duration isn't going to change).
 function permanente(mensaje) {
   const error = new Error(mensaje);
   error.permanent = true;
@@ -48,7 +48,7 @@ function planDeVelocidad(duracion) {
   const speed = Math.ceil((duracion / OBJETIVO_SEGUNDOS) * 1000) / 1000;
   if (speed > VELOCIDAD_MAXIMA) {
     const error = permanente(`El Short dura ${duracion.toFixed(1)}s: acelerarlo a 90s pasaría de ×${VELOCIDAD_MAXIMA}`);
-    error.code = 'reel_demasiado_largo'; // quien llama lo sube como vídeo normal de la Página
+    error.code = 'reel_demasiado_largo'; // the caller uploads it as a normal Page video
     throw error;
   }
   return { speed };
@@ -94,8 +94,8 @@ async function leeRespuesta(res, paso) {
 }
 
 /**
- * Sube un MP4 como Reel. Devuelve { videoId, state, speed }.
- * `fetchImpl`, `duracionDe` y `acelerar` se inyectan en las pruebas.
+ * Uploads an MP4 as a Reel. Returns { videoId, state, speed }.
+ * `fetchImpl`, `duracionDe` and `acelerar` are injected in the tests.
  */
 async function publicaReel({
   config, videoPath, description = '', publishAt = null, now = new Date(),
@@ -109,7 +109,7 @@ async function publicaReel({
 
     const inicio = await leeRespuesta(await fetchImpl(graph({ upload_phase: 'start' }), { method: 'POST' }), 'start');
     const videoId = inicio.video_id;
-    if (!videoId) throw new Error('Facebook (start): no devolvió video_id');
+    if (!videoId) throw new Error('Facebook (start): returned no video_id');
 
     const datos = await fs.promises.readFile(archivo);
     await leeRespuesta(await fetchImpl(
@@ -133,9 +133,9 @@ async function publicaReel({
 }
 
 /**
- * Subida por trozos a la Página (graph-video, fases start/transfer/finish).
- * ⚠ La subida de una sola vez da 413 con 330 MB (probado 04/10/2026), así que
- * todo vídeo de Página va por aquí. Devuelve el id del vídeo.
+ * Chunked upload to the Page (graph-video, start/transfer/finish phases).
+ * ⚠ The single-shot upload gives 413 with 330 MB (tested 04/10/2026), so every
+ * Page video goes through here. Returns the video id.
  */
 async function subeVideoPorTrozos({ config, videoPath, campos = {}, fetchImpl = fetch }) {
   const url = `https://graph-video.facebook.com/${config.version}/${config.pageId}/videos`;
@@ -170,8 +170,8 @@ async function subeVideoPorTrozos({ config, videoPath, campos = {}, fetchImpl = 
 }
 
 /**
- * Vídeo largo (horizontal, 6-7 min) en la Página, con su miniatura y
- * programado a la hora de YouTube. ≥3 min = entra en anuncios dentro del vídeo.
+ * Long video (horizontal, 6-7 min) on the Page, with its thumbnail and scheduled
+ * at the YouTube time. ≥3 min = eligible for in-video ads.
  */
 async function publicaVideoLargo({
   config, videoPath, title = '', description = '', thumbPath = null, publishAt = null,
@@ -191,7 +191,7 @@ async function publicaVideoLargo({
       form.append('is_preferred', 'true');
       form.append('source', new Blob([await fs.promises.readFile(thumbPath)], { type: 'image/jpeg' }), path.basename(thumbPath));
       await leeRespuesta(await fetchImpl(`https://graph.facebook.com/${config.version}/${videoId}/thumbnails`, { method: 'POST', body: form }), 'miniatura');
-    } catch (_e) { /* el vídeo ya está; sin miniatura Facebook elige un fotograma */ }
+    } catch (_e) { /* the video is already there; without a thumbnail Facebook picks a frame */ }
   }
   return { videoId, state: modo.video_state };
 }
@@ -203,18 +203,18 @@ async function borraVideo({ config, videoId, fetchImpl = fetch }) {
   ), 'borrar');
 }
 
-/** Foto en la Página (la imagen se baja de una URL pública). Devuelve el id de la publicación. */
+/** Photo on the Page (the image is downloaded from a public URL). Returns the post id. */
 async function publicaFoto({ config, imageUrl, message = '', fetchImpl = fetch }) {
   const res = await leeRespuesta(await fetchImpl(`https://graph.facebook.com/${config.version}/${config.pageId}/photos`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ url: imageUrl, message, published: 'true', access_token: config.token }).toString()
   }), 'foto');
-  if (!res.id) throw new Error('Facebook (foto): no devolvió id');
+  if (!res.id) throw new Error('Facebook (photo): returned no id');
   return { photoId: res.id, postId: res.post_id || res.id };
 }
 
-/** Historia de la Página: foto sin publicar + photo_stories. Devuelve el id de la historia. */
+/** Page story: unpublished photo + photo_stories. Returns the story id. */
 async function publicaHistoriaFB({ config, imageUrl, fetchImpl = fetch }) {
   const base = `https://graph.facebook.com/${config.version}/${config.pageId}`;
   const post = (ruta, campos, paso) => fetchImpl(`${base}/${ruta}`, {
@@ -223,7 +223,7 @@ async function publicaHistoriaFB({ config, imageUrl, fetchImpl = fetch }) {
     body: new URLSearchParams({ ...campos, access_token: config.token }).toString()
   }).then(res => leeRespuesta(res, paso));
   const foto = await post('photos', { url: imageUrl, published: 'false' }, 'foto de la historia');
-  if (!foto.id) throw new Error('Facebook (historia): la foto no devolvió id');
+  if (!foto.id) throw new Error('Facebook (story): the photo returned no id');
   const historia = await post('photo_stories', { photo_id: foto.id }, 'historia');
   return { postId: historia.post_id || historia.id || foto.id };
 }

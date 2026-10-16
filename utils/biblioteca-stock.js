@@ -1,14 +1,14 @@
 /**
- * Biblioteca de clips reutilizables (30/09/2026).
+ * Library of reusable clips (30/09/2026).
  *
- * Cada clip descargado de Pexels se guarda con una ficha al lado
- * (`<clip>.json`: título, etiquetas, tamaño, duración, URL y usos). Con ella,
- * los vídeos siguientes buscan primero aquí antes de descargar nada, y al
- * reutilizar un clip lo pasan con otra VARIANTE (otra parte del clip, espejo,
- * tono, movimiento, velocidad) para que no se vea dos veces igual.
+ * Every clip downloaded from Pexels is stored with a record next to it (`<clip>.json`:
+ * title, tags, size, duration, URL and uses). With it, the next videos look here first
+ * before downloading anything, and when they reuse a clip they pass it through another
+ * VARIANT (another part of the clip, mirror, tone, motion, speed) so it never looks
+ * the same twice.
  *
- * Los clips sin ficha (descargados antes de esto) no se pueden encontrar por
- * tema: son los primeros que borra la limpieza del disco (utils/limpieza-disco.js).
+ * Clips without a record (downloaded before this) can't be found by topic: they're the
+ * first ones the disk cleanup deletes (utils/limpieza-disco.js).
  */
 const fs = require('fs').promises;
 const path = require('path');
@@ -17,7 +17,7 @@ const { tokens, orientationMatches } = require('./stock-adapters/media');
 
 const EXT_FICHA = '.json';
 const MAX_USOS = 20;
-const RECIENTE_MS = 2 * 86400000;   // usado hace menos de 2 días → detrás
+const RECIENTE_MS = 2 * 86400000;   // used less than 2 days ago → to the back
 
 const rutaFicha = (media) => `${media}${EXT_FICHA}`;
 
@@ -35,7 +35,7 @@ async function leeJSON(ruta) {
   try { return JSON.parse(await fs.readFile(ruta, 'utf8')); } catch { return null; }
 }
 
-/** Escribe (o refresca) la ficha de un clip sin perder sus usos. */
+/** Writes (or refreshes) a clip's record without losing its uses. */
 async function guardaFicha(media, asset) {
   const previa = await leeJSON(rutaFicha(media));
   const ficha = fichaDe(asset, previa?.usos || []);
@@ -45,7 +45,7 @@ async function guardaFicha(media, asset) {
   return ficha;
 }
 
-/** Todas las fichas cuyo clip sigue en disco. */
+/** Every record whose clip is still on disk. */
 async function leeFichas(dir) {
   const nombres = await fs.readdir(dir).catch(() => []);
   const out = [];
@@ -60,7 +60,7 @@ async function leeFichas(dir) {
   return out;
 }
 
-/** Clips de la biblioteca que encajan con la escena, mejor primero. Deben compartir al menos una palabra. */
+/** Library clips that fit the scene, best first. They must share at least one word. */
 function busca(fichas, { queries = [], tipo = 'video', orientacion = 'landscape', minDuracion = 0, excluir = new Set(), limite = 12, ahora = Date.now() } = {}) {
   const buscadas = tokens(queries.join(' '));
   return fichas
@@ -83,7 +83,7 @@ function busca(fichas, { queries = [], tipo = 'video', orientacion = 'landscape'
     }));
 }
 
-/** Apunta que una producción usó el clip (y lo marca como usado para la limpieza). */
+/** Notes that a production used the clip (and marks it as used for the cleanup). */
 async function registraUso(media, produccion, en = new Date()) {
   const ficha = await leeJSON(rutaFicha(media));
   if (ficha) {
@@ -97,9 +97,9 @@ const TONOS = ['neutro', 'calido', 'frio', 'suave'];
 const MOVIMIENTOS = ['zoom-in', 'zoom-out', 'pan-left', 'pan-right'];
 
 /**
- * Variante para el uso nº `usosPrevios` de un clip (0 = primera vez → tal cual).
- * Determinista por `semilla`: volver a montar el mismo vídeo da la misma variante
- * y la caché de planos sigue sirviendo.
+ * Variant for use number `usosPrevios` of a clip (0 = first time → as is).
+ * Deterministic by `semilla`: re-editing the same video gives the same variant and
+ * the shot cache still works.
  */
 function elegirVariante(usosPrevios, semilla = '') {
   if (!(usosPrevios > 0)) return null;
@@ -108,7 +108,7 @@ function elegirVariante(usosPrevios, semilla = '') {
   return {
     espejo: n % 2 === 1,
     tono: TONOS[Math.floor(n / 2) % TONOS.length],
-    // Solo la mitad lleva movimiento: el zoompan multiplica x5 el tiempo de montaje del plano.
+    // Only half get motion: zoompan multiplies the shot's editing time by 5.
     movimiento: ((h >>> 3) + usosPrevios) % 2 === 0 ? MOVIMIENTOS[(h + usosPrevios * 3) % MOVIMIENTOS.length] : 'none',
     velocidad: (h + usosPrevios) % 3 === 2 ? 0.8 : 1,
     inicio: ((h >>> 5) + usosPrevios * 37) % 60 / 100

@@ -1,9 +1,9 @@
-// 05/10/2026: respuesta automática SOLO a los comentarios que son un «Amén».
+// 05/10/2026: automatic reply ONLY to comments that are an «Amén».
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const a = require('../../utils/amen-automatico');
 
-test('esSoloAmen: Amén y alabanzas cortas sí; peticiones, nombres y preguntas no', () => {
+test('esSoloAmen: Amén and short praise yes; requests, names and questions no', () => {
   for (const t of ['Amén', 'amen 🙏', 'AMÉN AMÉN!!!', 'Amennn', 'Amén, gloria a Dios', 'Amén Señor Jesús 🙌', 'Así sea, amén', 'Aleluya amén']) {
     assert.equal(a.esSoloAmen(t), true, t);
   }
@@ -13,7 +13,7 @@ test('esSoloAmen: Amén y alabanzas cortas sí; peticiones, nombres y preguntas 
   }
 });
 
-test('respuestas: varían, hablan de Jesús Rey y solo usan nombres que parecen nombres', () => {
+test('replies: they vary, speak of Jesus as King and only use names that look like names', () => {
   for (const r of a.RESPUESTAS) assert.match(r, /Jesús/);
   for (const r of a.RESPUESTAS) assert.match(r, /Rey/);
   assert.equal(a.nombreDePila('María López'), 'María');
@@ -29,7 +29,7 @@ function dbFalsa(inicial = {}) {
   return { s, getSetting: async k => s[k] ?? null, setSetting: async (k, v) => { s[k] = v; } };
 }
 
-test('respondeAmenes: solo Amén recientes, una vez, y si una red falla sigue con las demás', async () => {
+test('respondeAmenes: only recent Amén, once, and if one network fails it goes on with the others', async () => {
   const now = new Date('2026-10-05T15:00:00Z');
   const enviados = [];
   const red = (nombre, lista, falla = false) => ({
@@ -48,13 +48,13 @@ test('respondeAmenes: solo Amén recientes, una vez, y si una red falla sigue co
   assert.deepEqual(enviados.map(e => e[1]), ['1']);
   assert.match(enviados[0][2], /Rosa/);
   await db.setSetting('amen_proxima', null);
-  assert.equal((await a.respondeAmenes({ db, redes: [yt], now })).respondidos, 0); // no repite
+  assert.equal((await a.respondeAmenes({ db, redes: [yt], now })).respondidos, 0); // doesn't repeat
   await db.setSetting('amen_proxima', null);
   await db.setSetting('amen_auto_enabled', 'false');
   assert.equal((await a.respondeAmenes({ db, redes: [red('instagram', [{ id: '9', texto: 'Amén', fecha: '2026-10-05T14:00:00Z' }])], now })).respondidos, 0);
 });
 
-test('Amén + por quién orar: nombres y familia sí; salud, historias o palabras sueltas no', () => {
+test('Amén + who to pray for: names and family yes; health, stories or loose words no', () => {
   assert.equal(a.porQuienOrar('Amén, María'), 'María');
   assert.equal(a.porQuienOrar('Amén por mi hija Ana y Carlos'), 'tu hija Ana y Carlos');
   assert.equal(a.porQuienOrar('amen por mis hijos'), 'tus hijos');
@@ -64,7 +64,7 @@ test('Amén + por quién orar: nombres y familia sí; salud, historias o palabra
   assert.match(a.respuestaPara({ id: '1', texto: 'Amén, María' }), /Jesús/);
 });
 
-test('ritmo: entre 30 y 90 minutos; antes de tiempo no hace nada', async () => {
+test('pace: between 30 and 90 minutes; before time it does nothing', async () => {
   const now = new Date('2026-10-05T15:00:00Z');
   assert.equal(a.proximaVuelta(now, () => 0).getTime() - now.getTime(), 30 * 60000);
   assert.equal(a.proximaVuelta(now, () => 0.9999).getTime() - now.getTime(), 90 * 60000);
@@ -73,11 +73,11 @@ test('ritmo: entre 30 y 90 minutos; antes de tiempo no hace nada', async () => {
   const red = { nombre: 'youtube', comentarios: async () => [{ id: '1', texto: 'Amén', fecha: '2026-10-05T14:59:00Z' }], responde: async () => {} };
   assert.equal((await a.respondeAmenes({ db, redes: [red], now, azar: () => 0 })).respondidos, 1);
   const red2 = { ...red, comentarios: async () => [{ id: '2', texto: 'Amén', fecha: '2026-10-05T15:05:00Z' }] };
-  assert.equal((await a.respondeAmenes({ db, redes: [red2], now: new Date('2026-10-05T15:10:00Z') })).respondidos, 0); // aún no toca
+  assert.equal((await a.respondeAmenes({ db, redes: [red2], now: new Date('2026-10-05T15:10:00Z') })).respondidos, 0); // not due yet
   assert.equal((await a.respondeAmenes({ db, redes: [red2], now: new Date('2026-10-05T15:31:00Z') })).respondidos, 1);
 });
 
-test('sin permiso para leer comentarios: la red descansa 6 h en vez de fallar en cada vuelta (07/10/2026)', async () => {
+test('no permission to read comments: the network rests 6 h instead of failing every round (07/10/2026)', async () => {
   const db = dbFalsa();
   let lecturas = 0;
   const fb = {
@@ -88,7 +88,7 @@ test('sin permiso para leer comentarios: la red descansa 6 h en vez de fallar en
   const t0 = new Date('2026-10-07T10:00:00Z');
   await a.respondeAmenes({ db, redes: [fb], now: t0 });
   assert.equal(lecturas, 1);
-  assert.match(JSON.parse(db.s.amen_redes).errores.facebook, /pages_read_engagement/); // el panel sigue viendo la causa
+  assert.match(JSON.parse(db.s.amen_redes).errores.facebook, /pages_read_engagement/); // the panel still sees the cause
   await db.setSetting('amen_proxima', null);
   await a.respondeAmenes({ db, redes: [fb], now: new Date('2026-10-07T12:00:00Z') });
   assert.equal(lecturas, 1); // en pausa
@@ -97,7 +97,7 @@ test('sin permiso para leer comentarios: la red descansa 6 h en vez de fallar en
   await a.respondeAmenes({ db, redes: [fb], now: new Date('2026-10-07T16:30:00Z') });
   assert.equal(lecturas, 2); // pasadas 6 h, vuelve a probar
 
-  // un fallo de red (no de permisos) no pausa
+  // a network failure (not a permissions one) doesn't pause
   const db2 = dbFalsa();
   let n = 0;
   const caida = { nombre: 'instagram', comentarios: async () => { n += 1; throw new Error('fetch failed'); }, responde: async () => {} };
@@ -107,10 +107,10 @@ test('sin permiso para leer comentarios: la red descansa 6 h en vez de fallar en
   assert.equal(n, 2);
 });
 
-// 12/10/2026: el vídeo de mañana ya está subido (privado, sale a su hora) y YouTube dice que
-// tiene los comentarios desactivados. Antes ese error tumbaba la vuelta entera: 8 avisos en
-// un día y ningún Amén contestado en YouTube en esas vueltas.
-test('youtubeRed: no lee los vídeos que aún no han salido, y un vídeo sin comentarios no tumba a los demás', async () => {
+// 12/10/2026: tomorrow's video is already uploaded (private, it goes out at its time) and
+// YouTube says it has comments disabled. That error used to take down the whole round: 8
+// warnings in a day and no «Amén» answered on YouTube during those rounds.
+test('youtubeRed: doesn\'t read videos that haven\'t gone out yet, and a video without comments doesn\'t take down the others', async () => {
   const now = new Date('2026-10-12T12:00:00Z');
   const pedidos = [];
   const hilo = (id) => ({ id, snippet: { channelId: 'UCnuestro', totalReplyCount: 0,
@@ -131,7 +131,7 @@ test('youtubeRed: no lee los vídeos que aún no han salido, y un vídeo sin com
   assert.deepEqual(lista.map(c => c.id), ['c-ayer', 'c-hoy']);
 });
 
-test('youtubeRed: la cuota agotada o un permiso caído SÍ cortan la vuelta (los gestiona respondeAmenes)', async () => {
+test('youtubeRed: exhausted quota or a lost permission DO cut the round (respondeAmenes handles them)', async () => {
   const now = new Date('2026-10-12T12:00:00Z');
   const youtube = { commentThreads: { list: async () => { const e = new Error('quota'); e.errors = [{ reason: 'quotaExceeded' }]; throw e; } } };
   const db = { getRecentPublishedForSocial: async () => [{ youtubeId: 'ayer', publishTime: '2026-10-11T23:00:00.000Z' }] };

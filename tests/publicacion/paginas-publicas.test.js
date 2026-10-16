@@ -1,17 +1,17 @@
-// 05/10/2026: páginas públicas /libro y /enlaces.
+// 05/10/2026: public pages /libro and /enlaces.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const libro = require('../../utils/pagina-libro');
 const enlaces = require('../../utils/pagina-enlaces');
 
-test('libro: sin URL de pago el botón no lleva a ningún sitio; con URL, a Hotmart', () => {
+test('book: without a checkout URL the button goes nowhere; with a URL, to Hotmart', () => {
   assert.match(libro.paginaLibro({}), /Disponible muy pronto/);
   const html = libro.paginaLibro({ checkoutUrl: 'https://pay.hotmart.com/X123' });
   assert.match(html, /href="\/libro\/comprar"/);
   assert.match(html, /988/);
 });
 
-test('enlaces: botones con contador, destinos conocidos y nada de anuncios', async () => {
+test('links: buttons with a counter, known destinations and no ads', async () => {
   const html = enlaces.paginaEnlaces();
   for (const e of enlaces.ENLACES) assert.match(html, new RegExp(`/enlaces/ir/${e.id}`));
   assert.equal(enlaces.destino('hoy'), '/hoy');
@@ -23,7 +23,7 @@ test('enlaces: botones con contador, destinos conocidos y nada de anuncios', asy
   assert.equal(JSON.parse(s.enlaces_clics)['2026-10-05'].libro, 2);
 });
 
-test('contador: cuenta personas, no robots; resumen de hoy y de la semana', async () => {
+test('counter: counts people, not robots; summary for today and the week', async () => {
   const c = require('../../utils/contador');
   const s = {};
   const db = { getSetting: async k => s[k] ?? null, setSetting: async (k, v) => { s[k] = v; } };

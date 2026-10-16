@@ -1,17 +1,17 @@
 /**
- * "Oración del día": Reel corto (10-18 s) para Instagram y Facebook (04/10/2026).
+ * "Prayer of the day": a short Reel (10-18 s) for Instagram and Facebook (04/10/2026).
  *
- * Copiado del formato que más crece en el nicho (@graciasdios26, 178K
- * seguidores, 15-25K reproducciones por Reel, uno al día): vídeo vertical de
- * atardecer/mar/nubes + UNA oración corta en pantalla ("Dios. … Amén.") +
- * música suave. Corto a propósito: se lee entero y se vuelve a ver (bucle).
- * El texto invita a comentar a la manera de @misteriosdivinos05, la cuenta con
- * más comentarios del nicho ("Hoy oramos por ti… escribe Amén").
+ * Copied from the fastest-growing format in the niche (@graciasdios26, 178K followers,
+ * 15-25K views per Reel, one a day): a vertical sunset/sea/clouds video + ONE short
+ * prayer on screen ("Dios. … Amén.") + soft music. Short on purpose: it's read in full
+ * and watched again (loop).
+ * The text invites comments the way @misteriosdivinos05 does, the account with the most
+ * comments in the niche ("Hoy oramos por ti… escribe Amén").
  *
- * Fondos: vídeos de Pexels (licencia libre, sin crédito obligatorio) guardados
- * en data/assets/fondos-oracion; se rotan sin repetir los últimos.
- * Settings: oracion_corta_enabled ('false' lo apaga), oracion_corta_time
- * (09:00 hora del canal = 07:00 en México), oracion_corta_last, oracion_corta_fondos.
+ * Backgrounds: Pexels videos (free license, no credit required) stored in
+ * data/assets/fondos-oracion; rotated without repeating the latest ones.
+ * Settings: oracion_corta_enabled ('false' turns it off), oracion_corta_time (09:00
+ * channel time = 07:00 in Mexico), oracion_corta_last, oracion_corta_fondos.
  */
 const fs = require('fs');
 const os = require('os');
@@ -45,10 +45,10 @@ function validaOracion(crudo) {
   const saludo = ['Dios.', 'Señor.', 'Padre.'].includes(String(crudo?.saludo || '').trim()) ? crudo.saludo.trim() : 'Dios.';
   const crudoTexto = String(crudo?.texto || '').replace(/\s+/g, ' ').replace(/\s*am[eé]n\.?\s*$/i, '').trim();
   const largo = crudoTexto.split(' ').filter(Boolean).length;
-  if (largo < 22 || largo > 65) throw new Error(`Oración de ${largo} palabras`);
+  if (largo < 22 || largo > 65) throw new Error(`Prayer of ${largo} words`);
   const pie = String(crudo?.pie || '').trim().slice(0, 200);
-  if (TONO_PROHIBIDO.test(crudoTexto) || TONO_PROHIBIDO.test(pie)) throw new Error('Tono no permitido');
-  const texto = conJesusRey(crudoTexto); // regla de fe: Jesús de Nazaret, Rey de reyes
+  if (TONO_PROHIBIDO.test(crudoTexto) || TONO_PROHIBIDO.test(pie)) throw new Error('Tone not allowed');
+  const texto = conJesusRey(crudoTexto); // faith rule: Jesus of Nazareth, King of kings
   return { saludo, texto, pie, palabras: texto.split(' ').filter(Boolean).length };
 }
 
@@ -59,10 +59,10 @@ async function escribeOracion({ ai, momento, intentos = 3 }) {
       return { momento, ...validaOracion(extraeJson(await ai.generateText(promptOracion(momento), { maxTokens: 800, temperature: 0.8 }))) };
     } catch (error) { ultimo = error; }
   }
-  throw new Error(`No se pudo escribir la oración: ${ultimo?.message}`);
+  throw new Error(`Could not write the prayer: ${ultimo?.message}`);
 }
 
-/** Lo bastante para leerla con calma: ~3,2 palabras por segundo + 3 s, entre 10 y 18 s. */
+/** Enough to read it calmly: ~3.2 words per second + 3 s, between 10 and 18 s. */
 const duracion = palabras => Math.min(18, Math.max(10, Math.round(palabras / 3.2 + 3)));
 
 function textoPublicacion(o, credito = '') {
@@ -78,7 +78,7 @@ function textoPublicacion(o, credito = '') {
 
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-/** Capa transparente 1080×1920 con la oración (se pone encima del vídeo). */
+/** Transparent 1080×1920 layer with the prayer (laid over the video). */
 function htmlCapa(o) {
   const f = n => `file://${path.join(FUENTES, n)}`;
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><style>
@@ -98,7 +98,7 @@ function htmlCapa(o) {
     letter-spacing: .08em; color: rgba(255,255,255,.85); text-shadow: 0 1px 6px rgba(0,0,0,.6); }
   </style></head><body>
   <div class="caja"><div class="saludo">${esc(o.saludo)}</div><div class="texto">${esc(o.texto)}</div><div class="amen">Amén.</div></div>
-  <div class="marca">@tu_cuenta</div>
+  <div class="marca">@your_account</div>
   <script>document.fonts.ready.then(() => { const c = document.querySelector('.caja'); let g = 40;
     while (c.scrollHeight > c.clientHeight && g-- > 0) for (const el of c.children) el.style.fontSize = (parseFloat(getComputedStyle(el).fontSize) * 0.95) + 'px';
     document.body.dataset.listo = '1'; });</script></body></html>`;
@@ -139,7 +139,7 @@ function argumentosVideo({ fondo, capa, musica, segundos, salida }) {
   return args;
 }
 
-/** Asegura un surtido de fondos verticales de Pexels en disco. */
+/** Ensures an assortment of vertical Pexels backgrounds on disk. */
 async function aseguraFondos({ dir, adapter, fetchImpl = fetch, minimo = MIN_FONDOS }) {
   await fs.promises.mkdir(dir, { recursive: true });
   const actuales = (await fs.promises.readdir(dir)).filter(f => f.endsWith('.mp4'));
@@ -177,7 +177,7 @@ async function tocaHoy({ db, now = new Date() }) {
   return now.getTime() >= zonedToUtc({ year, month, day, ...reloj }, tz) ? hoy : null;
 }
 
-/** Hace y publica la oración del día en las redes disponibles (cada red se apunta aparte). */
+/** Makes and publishes the prayer of the day on the available networks (each network is noted separately). */
 async function publicaOracionDelDia({
   db, ai, logger, env = process.env, now = new Date(), dataDir = path.join(process.cwd(), 'data'), deps = {}
 }) {
@@ -212,16 +212,16 @@ async function publicaOracionDelDia({
   try {
     const recientes = JSON.parse(await db.getSetting('oracion_corta_fondos') || '[]');
     const fondos = await d.aseguraFondos({ dir: path.join(dataDir, 'assets', 'fondos-oracion'), adapter: d.adapter });
-    if (!fondos.length) throw new Error('No hay vídeos de fondo (¿PEXELS_API_KEY?)');
+    if (!fondos.length) throw new Error('No background videos (PEXELS_API_KEY?)');
     fondoUsado = eligeFondo(fondos, recientes);
     const oracion = await d.escribeOracion({ ai, momento });
     const capa = await d.dibujaCapa(oracion, path.join(tmp, 'capa.png'));
     const musicaDir = env.BACKGROUND_MUSIC_DIR;
-    const musica = eligeMusica(musicaDir, now.getTime() + 43200000); // otra pista que la del carrusel
+    const musica = eligeMusica(musicaDir, now.getTime() + 43200000); // a different track from the carousel's
     const segundos = duracion(oracion.palabras);
     const video = path.join(tmp, 'oracion.mp4');
     await d.runFFmpeg(argumentosVideo({ fondo: fondoUsado, capa, musica, segundos, salida: video }));
-    if (musica && !deps.runFFmpeg) await require('./sonoridad').normalizaVideo(video, { logger }); // música a -14 LUFS
+    if (musica && !deps.runFFmpeg) await require('./sonoridad').normalizaVideo(video, { logger }); // music at -14 LUFS
     const texto = textoPublicacion(oracion, musica ? creditoMusica(musicaDir) : '');
 
     for (const red of tareas) {
@@ -244,12 +244,12 @@ async function publicaOracionDelDia({
         logger?.success?.(`Oración del día → ${red}: ${redes[red].url || 'ok'}`);
       } catch (error) {
         redes[red] = { status: 'failed', error: error.message };
-        logger?.warn?.(`Oración del día → ${red} falló (intento ${intentos}): ${error.message}`);
+        logger?.warn?.(`Prayer of the day → ${red} failed (attempt ${intentos}): ${error.message}`);
       }
     }
   } catch (error) {
     for (const t of tareas) if (redes[t]?.status !== 'published') redes[t] = { status: 'failed', error: error.message };
-    logger?.warn?.(`Oración del día falló (intento ${intentos}): ${error.message}`);
+    logger?.warn?.(`Prayer of the day failed (attempt ${intentos}): ${error.message}`);
   } finally {
     if (copia) await d.borraCopia(copia.nombre, d.enlace);
     await fs.promises.rm(tmp, { recursive: true, force: true }).catch(() => {});

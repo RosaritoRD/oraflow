@@ -1,103 +1,103 @@
 # Jeshua Divine Dawn
 
-Identidad original de miniaturas para **Oraciones en Presencia de Jeshua**. El sistema parte del contenido del vídeo, propone una dirección visual y compone el texto mediante código sobre una ilustración o fotografía terminada sin letras.
+Original thumbnail identity for **Oraciones en Presencia de Jeshua**. The system starts from the video's content, proposes a visual direction and composes the text in code over a finished, letter-free illustration or photograph.
 
-Estado: planner, renderer, servicio, CLI e integración con Oraflow implementados y probados localmente. El diseñador guarda la portada terminada y producción la conserva sin volver a generarla. Las pruebas usan imágenes locales y proveedores simulados; no acreditan una generación en vivo ni un despliegue del laboratorio.
+Status: planner, renderer, service, CLI and Oraflow integration implemented and tested locally. The designer stores the finished thumbnail and production keeps it without generating it again. The tests use local images and simulated providers; they don't vouch for a live generation or a lab deployment.
 
-## Identidad y composición
+## Identity and composition
 
-| Elemento | Especificación |
+| Element | Specification |
 | --- | --- |
-| Lienzo | 1280 × 720 px, 16:9 |
-| Margen seguro | 64 px alrededor de todo texto y contenido esencial |
+| Canvas | 1280 × 720 px, 16:9 |
+| Safe margin | 64 px around all text and essential content |
 | Navy | `#091A31` |
-| Navy profundo | `#061020` |
-| Oro | `#E9B75D` |
-| Luz de amanecer | `#FFD783` |
-| Marfil | `#FFF4DF` |
-| Negro suave | `#080D14` |
-| Tipografía | Barlow Condensed ExtraBold; respetar acentos y signos del idioma |
-| Jerarquía | Máximo dos niveles: titular y apoyo opcional |
-| Titular | 3–7 palabras en total, aunque ocupe varias líneas |
+| Deep navy | `#061020` |
+| Gold | `#E9B75D` |
+| Dawn light | `#FFD783` |
+| Ivory | `#FFF4DF` |
+| Soft black | `#080D14` |
+| Typeface | Barlow Condensed ExtraBold; keep the language's accents and marks |
+| Hierarchy | Two levels at most: headline and optional support line |
+| Headline | 3–7 words in total, even across several lines |
 
-Mantener un sujeto principal claro, luz cálida y espacio negativo para el titular. El navy sostiene el contraste; marfil y oro organizan la lectura. Una miniatura nocturna conserva la paleta, pero reduce la luz y usa una atmósfera tranquila. Reservar la esquina inferior derecha para la duración de YouTube, sin palabras, rostros, manos u otros detalles esenciales.
+Keep one clear main subject, warm light and negative space for the headline. Navy carries the contrast; ivory and gold organize the reading. A night thumbnail keeps the palette but lowers the light and uses a calm atmosphere. Keep the lower-right corner free for YouTube's duration badge, with no words, faces, hands or other essential details.
 
-El renderer debe colocar el texto exacto aprobado: la imagen generada nunca es responsable de escribirlo. El apoyo es opcional y no introduce un tercer nivel de lectura. No reducir la letra hasta volver ilegible un titular demasiado largo: reformularlo conservando el sentido.
+The renderer must place the exact approved text: the generated image is never responsible for writing it. The support line is optional and doesn't add a third reading level. Don't shrink the letters until an over-long headline becomes illegible: rephrase it while keeping the meaning.
 
-La variedad puede cambiar encuadre, posición del sujeto, fondo, gesto y distribución de luz. Se mantienen paleta, tipografía, jerarquía y tratamiento devocional. El motivo puede ser una persona, silueta, Biblia, manos o luz según el tema; no se exige representar a Jeshua en cada imagen. Las referencias sirven para entender necesidades visuales, no para reproducir caras, composiciones, logotipos o miniaturas de otro canal. Un fondo degradado vacío no sustituye el artwork terminado.
+Variety may change framing, subject position, background, gesture and light distribution. Palette, typeface, hierarchy and devotional treatment stay. The motif can be a person, a silhouette, a Bible, hands or light depending on the topic; Jeshua isn't required in every image. References help understand visual needs, not reproduce another channel's faces, compositions, logos or thumbnails. An empty gradient background doesn't replace finished artwork.
 
-## Seis temas
+## Six themes
 
-Los identificadores del planner son `morning`, `gratitude`, `anxiety`, `holy_spirit`, `protection` y `night`.
+The planner's identifiers are `morning`, `gratitude`, `anxiety`, `holy_spirit`, `protection` and `night`.
 
-| Tema | Dirección visual | Ejemplo de titular ES |
+| Theme | Visual direction | Example ES headline |
 | --- | --- | --- |
-| `morning` | Amanecer dorado, apertura y esperanza | COMIENZA EL DÍA CON JESHUA |
-| `gratitude` | Luz diurna cálida, gesto sereno y agradecido | GRACIAS POR UN NUEVO DÍA |
-| `anxiety` | Calma y cercanía, fondo sencillo sin señales de amenaza | ENTREGA TU ANSIEDAD A JESHUA |
-| `holy_spirit` | Luz envolvente, recogimiento y aire luminoso | ESPÍRITU SANTO GUÍA MIS PASOS |
-| `protection` | Presencia firme y acogedora, sensación de refugio | JESHUA GUARDA MI HOGAR |
-| `night` | Navy profundo, luz cálida tenue y descanso | DESCANSA EN LA PAZ DE JESHUA |
+| `morning` | Golden dawn, openness and hope | COMIENZA EL DÍA CON JESHUA |
+| `gratitude` | Warm daylight, a serene and grateful gesture | GRACIAS POR UN NUEVO DÍA |
+| `anxiety` | Calm and closeness, a simple background with no sign of threat | ENTREGA TU ANSIEDAD A JESHUA |
+| `holy_spirit` | Enveloping light, recollection and luminous air | ESPÍRITU SANTO GUÍA MIS PASOS |
+| `protection` | A firm, welcoming presence, a feeling of refuge | JESHUA GUARDA MI HOGAR |
+| `night` | Deep navy, faint warm light and rest | DESCANSA EN LA PAZ DE JESHUA |
 
-Son propuestas editoriales originales, no citas bíblicas ni promesas de resultados. El contenido real del vídeo determina cuál corresponde. `time_of_day` orienta la iluminación; no convierte automáticamente una oración de ansiedad en una de la mañana.
+They're original editorial proposals, not Bible quotes or promises of results. The video's real content decides which one applies. `time_of_day` guides the lighting; it doesn't automatically turn an anxiety prayer into a morning one.
 
-## Entrada
+## Input
 
-El archivo [de ejemplo](../examples/jeshua-thumbnail-input.json) permite preparar un plan sin red. El alcance inicial de idioma es explícitamente **ES/EN**, mediante `language: "es"` o `"en"`. No se da por implementada la traducción a otros idiomas.
+The [example file](../examples/jeshua-thumbnail-input.json) lets you prepare a plan offline. The initial language scope is explicitly **ES/EN**, via `language: "es"` or `"en"`. Translation into other languages isn't considered implemented.
 
-| Campo JSON | Uso |
+| JSON field | Use |
 | --- | --- |
-| `video_title` | Título completo del vídeo; no se copia entero en la miniatura |
-| `video_topic` | Tema central que debe comunicar |
-| `video_summary` | Resumen breve para elegir el enfoque |
-| `script` | Guion o fragmento representativo; guía la coherencia editorial |
-| `bible_verse` | Referencia bíblica y, solo cuando corresponda, texto autorizado |
-| `prayer_type` | Uno de los seis identificadores anteriores |
-| `emotion` | Emoción buscada, por ejemplo paz o gratitud |
-| `time_of_day` | Momento del día, por ejemplo `dawn` o `night` |
-| `language` | `es` o `en`; determina el idioma del texto visible |
+| `video_title` | The video's full title; not copied whole onto the thumbnail |
+| `video_topic` | Central topic it must communicate |
+| `video_summary` | Short summary to choose the angle |
+| `script` | Script or a representative excerpt; guides editorial consistency |
+| `bible_verse` | Bible reference and, only where appropriate, authorized text |
+| `prayer_type` | One of the six identifiers above |
+| `emotion` | Target emotion, e.g. peace or gratitude |
+| `time_of_day` | Time of day, e.g. `dawn` or `night` |
+| `language` | `es` or `en`; sets the language of the visible text |
 
-No enviar claves API en este archivo. Utilizar textos, fotografías e ilustraciones propios o con licencia suficiente. Una referencia a un salmo no otorga derechos sobre cualquier traducción moderna ni sobre la grabación musical de otra persona.
+Don't put API keys in this file. Use your own texts, photos and illustrations, or ones with a sufficient license. A reference to a psalm grants no rights over any modern translation or over someone else's music recording.
 
-## Flujo CLI
+## CLI flow
 
-Desde la raíz de Oraflow, preparar el plan sin llamadas a proveedores:
+From the Oraflow root, prepare the plan without calling providers:
 
 ```bash
 npm run thumbnail:jeshua -- --input examples/jeshua-thumbnail-input.json --plan-only --out output/jeshua
 ```
 
-Componer una vista para revisar usando una imagen propia o licenciada:
+Compose a preview for review using your own or a licensed image:
 
 ```bash
-npm run thumbnail:jeshua -- --input examples/jeshua-thumbnail-input.json --artwork /ruta/imagen.jpg --variants 2 --out output/jeshua
+npm run thumbnail:jeshua -- --input examples/jeshua-thumbnail-input.json --artwork /path/image.jpg --variants 2 --out output/jeshua
 ```
 
-La generación remota es una opción explícita y utiliza una API existente que esté configurada:
+Remote generation is an explicit option and uses an existing configured API:
 
 ```bash
 npm run thumbnail:jeshua -- --input examples/jeshua-thumbnail-input.json --generate --variants 2 --out output/jeshua
 ```
 
-`--variants N` admite de 1 a 4 variantes. Revisar el coste del proveedor antes de ejecutar `--generate`; una suscripción de una aplicación no implica crédito o acceso incluido a su API. El coste depende también del número de variantes e intentos. `--plan-only` debe permanecer sin red y no generar cargos.
+`--variants N` accepts 1 to 4 variants. Check the provider's cost before running `--generate`; an app subscription doesn't imply credit or included access to its API. Cost also depends on the number of variants and attempts. `--plan-only` must stay offline and incur no charges.
 
-Después de inspeccionar el artwork elegido, registrar que una persona ha comprobado ausencia de letras, anatomía y coherencia visual:
+After inspecting the chosen artwork, record that a person checked there are no letters, the anatomy and the visual consistency:
 
 ```bash
-npm run thumbnail:jeshua -- --input examples/jeshua-thumbnail-input.json --artwork /ruta/imagen-revisada.jpg --approve-artwork --out output/jeshua
+npm run thumbnail:jeshua -- --input examples/jeshua-thumbnail-input.json --artwork /path/reviewed-image.jpg --approve-artwork --out output/jeshua
 ```
 
-`--approve-artwork` representa esa revisión humana; no es una garantía de OCR, detección de rostros o anatomía automática. Hay que revisar de nuevo si cambia la imagen. Ninguna de estas órdenes publica contenido.
+`--approve-artwork` stands for that human review; it isn't a guarantee of OCR, face detection or automatic anatomy checks. Review again if the image changes. None of these commands publishes content.
 
-La marca se activa mediante `THUMBNAIL_STYLE=jeshua-divine-dawn` o cuando `CHANNEL_NAME` corresponde a `Oraciones en Presencia de Jeshua`. Configurar esas opciones en el entorno autorizado; no modificar las credenciales ni reiniciar el laboratorio para probar este flujo.
+The brand is enabled with `THUMBNAIL_STYLE=jeshua-divine-dawn` or when `CHANNEL_NAME` is `Oraciones en Presencia de Jeshua`. Set those options in the authorized environment; don't change credentials or restart the lab to test this flow.
 
-El CLI guarda por defecto en `data/thumbnails/jeshua`; cada ejecución crea una carpeta distinta `jeshua-*` con `manifest.json` y subcarpetas por variante. La aplicación guarda en `uploads/thumbnails`. `THUMBNAIL_ARTWORK_PATH` permite usar una imagen local en el flujo automático; sin ella se usa el proveedor de imágenes existente. Un proveedor ausente o fallido produce un error, no una portada ficticia. El CLI lee las claves del entorno o del `.env` solamente con `--generate`; las credenciales guardadas del panel las recibe el agente integrado.
+By default the CLI saves to `data/thumbnails/jeshua`; each run creates a separate `jeshua-*` folder with `manifest.json` and one subfolder per variant. The app saves to `uploads/thumbnails`. `THUMBNAIL_ARTWORK_PATH` lets the automatic flow use a local image; without it the existing image provider is used. A missing or failing provider produces an error, not a fake thumbnail. The CLI reads keys from the environment or `.env` only with `--generate`; credentials saved in the panel go to the integrated agent.
 
-Cada variante generada solicita artwork diferente. Si se proporciona un único `--artwork`, las variantes reutilizan esa imagen y permiten comparar texto y composición. `--text-side left|right` fija el lado para una imagen local. Sin él, se compara el detalle visual de ambas columnas y se prefiere la más tranquila. Esto **no es detección de rostros**. Opcionalmente el brief admite `subject_region: {x,y,width,height}`, coordenadas entre 0 y 1 sobre el lienzo final de 16:9, para excluir esa zona del texto. En las imágenes generadas, esa zona procede del plan y debe comprobarse visualmente.
+Each generated variant requests different artwork. If a single `--artwork` is given, the variants reuse that image so text and composition can be compared. `--text-side left|right` fixes the side for a local image. Without it, the visual detail of both columns is compared and the calmer one is preferred. This is **not face detection**. Optionally the brief accepts `subject_region: {x,y,width,height}`, coordinates between 0 and 1 on the final 16:9 canvas, to keep text out of that area. On generated images, that area comes from the plan and must be checked visually.
 
-## Prompt maestro de artwork
+## Master artwork prompt
 
-Plantilla en inglés. Sustituir los campos entre llaves con el plan; el idioma de esta instrucción no determina el idioma del titular que añadirá el renderer.
+English template. Replace the fields in braces with the plan; the language of this instruction doesn't set the language of the headline the renderer will add.
 
 ```text
 Create an original finished devotional artwork for a 16:9 YouTube thumbnail
@@ -143,26 +143,26 @@ muddy contrast, excessive glow, overprocessed skin, horror, threatening imagery,
 empty gradient placeholder, unfinished artwork, low-resolution artifacts
 ```
 
-Las prohibiciones del prompt reducen errores, pero no verifican su ausencia. La revisión del resultado sigue siendo necesaria.
+The prompt's prohibitions reduce errors, but don't verify their absence. Reviewing the result is still necessary.
 
-## Salidas y revisión
+## Outputs and review
 
-Artefactos por ejecución:
+Artifacts per run:
 
-- **`manifest.json`:** lista de 1–4 variantes con rutas a sus archivos.
-- **`variant-N/plan.json`:** entrada normalizada, idioma, tema, titular exacto, apoyo opcional, concepto, composición y prompts.
-- **`thumbnail.jpg` y `thumbnail.png`:** 1280 × 720 con letras aplicadas mediante Sharp/Pango y fuente incluida bajo SIL OFL. El JPEG se mantiene por debajo de 2 MB.
-- **`mobile-320.jpg` y `mobile-160.jpg`:** exportaciones reales para revisión móvil.
-- **`qa.json`:** cajas del texto, tamaño de fuente, contraste mínimo muestreado (objetivo ≥4,5:1), margen de 64 px, zona reservada para duración, hash SHA-256 del artwork y avisos de recorte/resolución. El titular se ajusta entre 88 y 132 px; si no cabe, se rechaza con una solicitud de abreviarlo. No se elimina texto silenciosamente.
+- **`manifest.json`:** list of 1–4 variants with paths to their files.
+- **`variant-N/plan.json`:** normalized input, language, theme, exact headline, optional support line, concept, composition and prompts.
+- **`thumbnail.jpg` and `thumbnail.png`:** 1280 × 720 with lettering applied through Sharp/Pango and a bundled font under SIL OFL. The JPEG stays under 2 MB.
+- **`mobile-320.jpg` and `mobile-160.jpg`:** real exports for mobile review.
+- **`qa.json`:** text boxes, font size, minimum sampled contrast (target ≥4.5:1), 64 px margin, reserved duration area, SHA-256 hash of the artwork and cropping/resolution warnings. The headline is fitted between 88 and 132 px; if it doesn't fit, it's rejected with a request to shorten it. Text is never silently dropped.
 
-`automaticChecksPassed` no equivale a aprobación editorial: `requiresVisualReview` permanece activo. `artworkReview` registra `pending` o `operator-confirmed` si se usa `--approve-artwork` con una imagen local previamente inspeccionada; no se puede aprobar de antemano un artwork remoto que aún no existe. No hay OCR, detector de anatomía ni medidor semántico de legibilidad. Este informe acompaña al archivo, sin sustituir el proceso de revisión/publicación de Oraflow.
+`automaticChecksPassed` isn't editorial approval: `requiresVisualReview` stays on. `artworkReview` records `pending`, or `operator-confirmed` if `--approve-artwork` is used with a previously inspected local image; remote artwork that doesn't exist yet can't be approved in advance. There's no OCR, anatomy detector or semantic legibility meter. This report travels with the file without replacing Oraflow's review/publishing process.
 
-Antes de solicitar un artwork de pago, el servicio comprueba que el texto cabe con la fuente real. Si la propuesta de texto de IA no cabe, vuelve a la alternativa editorial local del mismo tema y registra el motivo; no paga una segunda imagen para resolver un problema tipográfico.
+Before requesting paid artwork, the service checks that the text fits with the real font. If the AI's text proposal doesn't fit, it falls back to the local editorial alternative for the same theme and records why; it doesn't pay for a second image to solve a typographic problem.
 
-Checklist antes de aceptar una variante:
+Checklist before accepting a variant:
 
-- A **320 px de ancho**: se entiende el tema, el titular tiene 3–7 palabras, el texto coincide exactamente con lo aprobado y la tipografía conserva acentos. Si hay apoyo, aporta información sin competir.
-- A **160 px de ancho**: el titular y el sujeto principal siguen siendo reconocibles; el mensaje no depende de detalles pequeños ni de un apoyo ilegible.
-- A resolución completa: texto dentro del margen de 64 px, esquina inferior derecha despejada, sin cortes importantes, sin desbordamientos y con contraste suficiente en toda el área de lectura. Verificar también las dimensiones y el tamaño del archivo de salida.
-- Inspección humana: ausencia de texto residual en el artwork, manos y rostro plausibles, expresión adecuada, coherencia con el guion y diferencias reales entre variantes sin perder la marca.
-- Procedencia confirmada: artwork y texto propios o licenciados; ningún elemento copiado de miniaturas de referencia. La aprobación final no se deduce únicamente de los controles automáticos.
+- At **320 px wide**: the topic is understood, the headline has 3–7 words, the text matches exactly what was approved and the typeface keeps accents. If there's a support line, it adds information without competing.
+- At **160 px wide**: the headline and the main subject are still recognizable; the message doesn't depend on small details or an illegible support line.
+- At full resolution: text inside the 64 px margin, lower-right corner clear, no important cropping, no overflow and enough contrast across the whole reading area. Also check the output's dimensions and file size.
+- Human inspection: no leftover text in the artwork, plausible hands and face, a fitting expression, consistency with the script and real differences between variants without losing the brand.
+- Confirmed provenance: your own or licensed artwork and text; nothing copied from reference thumbnails. Final approval is never inferred from the automatic checks alone.

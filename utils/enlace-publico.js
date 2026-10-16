@@ -1,13 +1,14 @@
 /**
- * Enlace público temporal para que Instagram descargue un Short o las
- * imágenes de un carrusel (04/10/2026).
+ * A temporary public link so Instagram can download a Short or a carousel's images
+ * (04/10/2026).
  *
- * Instagram (inicio de sesión con Instagram) solo acepta `video_url`, y Meta
- * rechaza sus propios enlaces (fbcdn: "First-party URLs are restricted").
- * El login de panel.tu-dominio.com (oauth2-proxy) sirve SIN login únicamente
- * `GET /ig-media/<48 hex>.mp4|.jpg` desde esta carpeta (upstream file://, montada
- * solo lectura): Oraflow no queda expuesto y un nombre no se adivina.
- * Cada copia se borra cuando Instagram la ha bajado, y las de >26 h siempre.
+ * Instagram (Instagram login) only accepts `video_url`, and Meta rejects its own
+ * links (fbcdn: "First-party URLs are restricted").
+ * The dashboard's login (oauth2-proxy) serves WITHOUT login only `GET /ig-media/<48
+ * hex>.mp4|.jpg` from this folder (upstream file://, mounted read-only): Oraflow
+ * isn't exposed and a name can't be guessed.
+ * Each copy is deleted once Instagram has fetched it, and those older than 26 h
+ * always.
  */
 const fs = require('fs');
 const path = require('path');

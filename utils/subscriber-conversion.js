@@ -2,8 +2,8 @@ const validDay = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.tes
   && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
 const count = value => Number.isFinite(value) && value >= 0;
 
-// Una sola consulta diaria garantiza el mismo corte de datos para numerador
-// y denominadores, aunque YouTube todavía esté procesando los últimos días.
+// A single daily query guarantees the same data cut for the numerator and the
+// denominators, even while YouTube is still processing the last few days.
 function subscriberConversion(rows, requestedPeriod) {
   const empty = { available: false, requestedPeriod, period: null, views: null, engagedViews: null, subscribersGained: null, subscribersLost: null };
   if (!Array.isArray(rows) || !rows.length || rows.some(row => !Array.isArray(row) || row.length !== 5 ||

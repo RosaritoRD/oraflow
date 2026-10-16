@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { YouTubeAutomationAgent } = require('../../index');
 
-test('POST /generate entrega el contexto validado al trabajo y rechaza formatos inválidos', async t => {
+test('POST /generate hands the validated context to the job and rejects invalid formats', async t => {
   const previousKey = process.env.API_KEY;
   process.env.API_KEY = 'local-test-only';
   t.after(() => {

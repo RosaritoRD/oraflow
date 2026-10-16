@@ -44,7 +44,7 @@ async function runProductionQA({ videoPath, storyboard, captions = [], timing = 
 
   // audio is the source of truth
   if (narrationDurationSec > 0) {
-    // La intro de marca va delante del vídeo ya mezclado: solo cuenta para la duración total.
+    // The brand intro goes in front of the already mixed video: it only counts for the total duration.
     const diff = duration - narrationDurationSec - (Number(introSec) || 0);
     if (diff < -0.5) add('duration', 'failed', `Video (${duration.toFixed(1)}s) is shorter than the narration (${narrationDurationSec.toFixed(1)}s): the voice is cut`);
     else if (diff > 3) add('duration', 'warning', `Video runs ${diff.toFixed(1)}s past the narration`);

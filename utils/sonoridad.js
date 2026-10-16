@@ -1,11 +1,12 @@
 /**
- * Volumen final del vídeo a -14 LUFS (06/10/2026). YouTube baja los vídeos que
- * suenan más fuerte que -14 pero NO sube los flojos: los Shorts salían a -30 LUFS
- * y los largos a -18, muy por debajo de lo que suena el resto del feed.
- * Se mide la sonoridad integrada del vídeo ya mezclado (voz + música + intro), se
- * aplica la ganancia que falta y un limitador a -1,5 dBTP para que no recorte.
- * Solo se recodifica el audio (-c:v copy): segundos, no minutos.
- * Env: TARGET_LUFS (-14), LOUDNORM=0 lo apaga.
+ * The video's final loudness at -14 LUFS (06/10/2026). YouTube turns down videos
+ * louder than -14 but does NOT turn up quiet ones: Shorts came out at -30 LUFS and
+ * long videos at -18, far below the rest of the feed.
+ * The integrated loudness of the already mixed video (voice + music + intro) is
+ * measured, the missing gain is applied and a limiter at -1.5 dBTP so it doesn't
+ * clip.
+ * Only the audio is re-encoded (-c:v copy): seconds, not minutes.
+ * Env: TARGET_LUFS (-14), LOUDNORM=0 turns it off.
  */
 const fs = require('fs').promises;
 const { runFFmpeg } = require('./ffmpeg');
@@ -21,14 +22,14 @@ async function mideLufs(ruta) {
   return m ? Number(m[1]) : NaN;
 }
 
-/** Ganancia a aplicar (dB): la que falta hasta el objetivo, como mucho +20 dB y -10 dB. */
+/** Gain to apply (dB): what's missing to reach the target, at most +20 dB and -10 dB. */
 function ganancia(medido, meta = objetivo()) {
-  if (!Number.isFinite(medido) || medido < -70) return 0; // silencio: no inventar volumen
+  if (!Number.isFinite(medido) || medido < -70) return 0; // silence: don't invent volume
   const g = meta - medido;
   return Math.round(Math.max(-10, Math.min(20, g)) * 10) / 10;
 }
 
-/** Normaliza el audio del MP4 en su sitio. Devuelve { antes, despues, ganancia } o null si no hizo falta. */
+/** Normalizes the MP4's audio in place. Returns { antes, despues, ganancia } or null if it wasn't needed. */
 async function normalizaVideo(ruta, { logger, env = process.env, mide = mideLufs, ejecuta = runFFmpeg } = {}) {
   if (env.LOUDNORM === '0') return null;
   const antes = await mide(ruta);
@@ -40,11 +41,11 @@ async function normalizaVideo(ruta, { logger, env = process.env, mide = mideLufs
       '-af', `volume=${g}dB,alimiter=limit=0.84:level=false`, '-c:a', 'aac', '-b:a', '192k', '-ar', '44100', '-movflags', '+faststart', tmp]);
     await fs.rename(tmp, ruta);
     const despues = await mide(ruta);
-    logger?.info?.(`Volumen del vídeo: ${antes} → ${despues} LUFS (${g > 0 ? '+' : ''}${g} dB)`);
+    logger?.info?.(`Video loudness: ${antes} → ${despues} LUFS (${g > 0 ? '+' : ''}${g} dB)`);
     return { antes, despues, ganancia: g };
   } catch (error) {
     await fs.unlink(tmp).catch(() => {});
-    logger?.warn?.(`Volumen no normalizado (${error.message}); se deja como estaba`);
+    logger?.warn?.(`Loudness not normalized (${error.message}); left as it was`);
     return null;
   }
 }

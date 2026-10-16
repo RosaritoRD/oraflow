@@ -2,8 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { GenerationRecoveryService } = require('../../utils/generation-recovery-service');
 
-// 29/09: los Shorts devolvían null en la etapa de miniatura y el trabajo moría
-// con "thumbnail produced an incomplete or missing artifact".
+// 29/09: Shorts returned null at the thumbnail stage and the job died with
+// "thumbnail produced an incomplete or missing artifact".
 function fakeDb() {
   const checkpoints = new Map();
   return {
@@ -14,13 +14,13 @@ function fakeDb() {
   };
 }
 
-test('un Short (miniatura omitida a propósito) supera la etapa de miniatura', async () => {
+test('a Short (thumbnail skipped on purpose) passes the thumbnail stage', async () => {
   const svc = new GenerationRecoveryService(fakeDb(), { baseDelayMs: 0 });
   const out = await svc.run('job', 'thumbnail', 40, async () => ({ skipped: true, reason: 'short' }));
   assert.equal(out.skipped, true);
 });
 
-test('un largo sin miniatura sigue fallando', async () => {
+test('a long video without a thumbnail still fails', async () => {
   const svc = new GenerationRecoveryService(fakeDb(), { baseDelayMs: 0 });
   await assert.rejects(svc.run('job', 'thumbnail', 40, async () => null), /incomplete or missing artifact/);
   await assert.rejects(svc.run('job2', 'thumbnail', 40, async () => ({ path: '/no/existe.jpg' })), /incomplete/);

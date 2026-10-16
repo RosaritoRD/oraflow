@@ -1,8 +1,8 @@
-// 12/10/2026: con la misma `speed` (0.84), eleven_flash_v2_5 habla ~30 % más lento que
-// eleven_multilingual_v2 con la voz principal del canal: medido con el mismo texto, 8,8 frente a
-// 11,2 caracteres por segundo. Desde que los Shorts usan flash (06/10) duran ~2 min en vez de
-// ~1:30 y sacan la mitad de vistas en 24 h. ELEVENLABS_SPEED_SHORT corrige la velocidad SOLO
-// cuando se narra con el modelo de los Shorts; sin ella, todo como antes.
+// 12/10/2026: at the same `speed` (0.84), eleven_flash_v2_5 speaks ~30 % slower than
+// eleven_multilingual_v2 with the channel's main voice: measured with the same text, 8.8 vs 11.2
+// characters per second. Since the Shorts moved to flash (06/10) they last ~2 min instead of ~1:30
+// and get half the views in 24 h. ELEVENLABS_SPEED_SHORT corrects the speed ONLY when narrating
+// with the Shorts model; without it, everything as before.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
@@ -26,7 +26,7 @@ function generador() {
 }
 const velocidad = () => pedidos.at(-1).data.voice_settings.speed;
 
-test('con el modelo de los Shorts se usa ELEVENLABS_SPEED_SHORT; con el de los largos, VOICE_SPEED', async (t) => {
+test('with the Shorts model ELEVENLABS_SPEED_SHORT is used; with the long-video one, VOICE_SPEED', async (t) => {
   t.after(() => { delete process.env.ELEVENLABS_SPEED_SHORT; delete process.env.VOICE_SPEED; });
   process.env.VOICE_SPEED = '0.84';
   process.env.ELEVENLABS_SPEED_SHORT = '1.08';
@@ -40,7 +40,7 @@ test('con el modelo de los Shorts se usa ELEVENLABS_SPEED_SHORT; con el de los l
   assert.equal(velocidad(), 0.84);
 });
 
-test('sin ELEVENLABS_SPEED_SHORT, los Shorts siguen con VOICE_SPEED (como antes)', async (t) => {
+test('without ELEVENLABS_SPEED_SHORT, Shorts keep VOICE_SPEED (as before)', async (t) => {
   t.after(() => { delete process.env.VOICE_SPEED; });
   process.env.VOICE_SPEED = '0.84';
   const g = generador();
@@ -49,7 +49,7 @@ test('sin ELEVENLABS_SPEED_SHORT, los Shorts siguen con VOICE_SPEED (como antes)
   assert.equal(velocidad(), 0.84);
 });
 
-test('sin modelo propio para los Shorts, la velocidad de los Shorts no se aplica', async (t) => {
+test('without a Shorts model of its own, the Shorts speed isn\'t applied', async (t) => {
   t.after(() => { delete process.env.ELEVENLABS_SPEED_SHORT; delete process.env.VOICE_SPEED; });
   process.env.VOICE_SPEED = '0.84';
   process.env.ELEVENLABS_SPEED_SHORT = '1.08';
@@ -60,7 +60,7 @@ test('sin modelo propio para los Shorts, la velocidad de los Shorts no se aplica
   assert.equal(velocidad(), 0.84);
 });
 
-test('un valor fuera de rango se recorta al máximo de ElevenLabs (1.2)', async (t) => {
+test('an out-of-range value is clipped to ElevenLabs\' maximum (1.2)', async (t) => {
   t.after(() => { delete process.env.ELEVENLABS_SPEED_SHORT; });
   process.env.ELEVENLABS_SPEED_SHORT = '3';
   const g = generador();
@@ -71,7 +71,7 @@ test('un valor fuera de rango se recorta al máximo de ElevenLabs (1.2)', async 
 
 const { ajusteCorto, LIMITE_CORTO } = require('../../utils/voice-pacing');
 
-test('la caché de la narración de un Short cambia si cambian su modelo o su velocidad (y la de los largos no)', () => {
+test('a Short\'s narration cache changes if its model or speed changes (and the long videos\' doesn\'t)', () => {
   const env = { ELEVENLABS_TTS_MODEL_SHORT: 'eleven_flash_v2_5', ELEVENLABS_SPEED_SHORT: '1.08' };
   assert.equal(ajusteCorto('a'.repeat(1000), env), 'eleven_flash_v2_5@1.08');
   assert.notEqual(ajusteCorto('a'.repeat(1000), env), ajusteCorto('a'.repeat(1000), { ...env, ELEVENLABS_SPEED_SHORT: '' }));
@@ -79,15 +79,15 @@ test('la caché de la narración de un Short cambia si cambian su modelo o su ve
   assert.equal(ajusteCorto('a'.repeat(1000), {}), '', 'sin modelo de Shorts, nada cambia');
 });
 
-// 12/10/2026: el Short del 13/10 (1.230 caracteres hablados) llevaba 14 pausas <break …/> y con
-// ellas sumaba 1.538: pasó de LIMITE_CORTO y salió con el modelo y la velocidad de los largos
-// (el doble de créditos). Qué es un Short lo decide lo que se DICE, no las marcas de pausa.
+// 12/10/2026: the 13/10 Short (1,230 spoken characters) carried 14 <break …/> pauses and with them
+// added up to 1,538: it went over LIMITE_CORTO and came out with the long videos' model and speed
+// (twice the credits). What counts as a Short is decided by what's SAID, not by the pause markers.
 const conPausas = (hablados, pausas) => {
   const trozo = 'a'.repeat(Math.floor(hablados / (pausas + 1)));
   return Array.from({ length: pausas + 1 }, () => trozo).join(' <break time="0.45s" /> ');
 };
 
-test('un Short con pausas que pasan de 1.500 caracteres sigue con el modelo y la velocidad de los Shorts', async (t) => {
+test('a Short whose pauses push it over 1,500 characters keeps the Shorts model and speed', async (t) => {
   t.after(() => { delete process.env.ELEVENLABS_SPEED_SHORT; delete process.env.VOICE_SPEED; delete process.env.VOICE_POLISH; });
   process.env.VOICE_SPEED = '0.84';
   process.env.ELEVENLABS_SPEED_SHORT = '1.08';
@@ -102,7 +102,7 @@ test('un Short con pausas que pasan de 1.500 caracteres sigue con el modelo y la
   assert.equal(g.lastNarrationResult.model, 'eleven_flash_v2_5');
 });
 
-test('un largo sigue con el modelo de los largos aunque se le quiten las pausas', async (t) => {
+test('a long video keeps the long-video model even with the pauses removed', async (t) => {
   t.after(() => { delete process.env.VOICE_SPEED; delete process.env.VOICE_POLISH; });
   process.env.VOICE_SPEED = '0.84';
   process.env.VOICE_POLISH = '0';
@@ -113,7 +113,7 @@ test('un largo sigue con el modelo de los largos aunque se le quiten las pausas'
   assert.equal(velocidad(), 0.84);
 });
 
-test('la clave de caché de un Short con muchas pausas lleva su modelo y velocidad', () => {
+test('the cache key of a Short with many pauses carries its model and speed', () => {
   const env = { ELEVENLABS_TTS_MODEL_SHORT: 'eleven_flash_v2_5', ELEVENLABS_SPEED_SHORT: '1.08' };
   assert.equal(ajusteCorto(conPausas(1230, 14), env), 'eleven_flash_v2_5@1.08');
   assert.equal(ajusteCorto(conPausas(3380, 40), env), '');

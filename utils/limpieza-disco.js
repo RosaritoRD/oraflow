@@ -1,15 +1,15 @@
 /**
- * Limpieza diaria del disco (30/09/2026, el disco de la VPS llegó al 97%).
- * Reglas acordadas con el autor:
- *   · temp/timeline/prod_*  restos del montaje: fuera cuando llevan 6 h quietos
- *                           (la caché de planos, shot-cache, tiene su propia poda)
- *   · videos/ y audio/      vídeo final y narración: fuera 3 días después de
- *                           publicarse en YouTube; si la producción nunca llegó a
- *                           programarse (falló o se descartó), a los 7 días
- *   · assets/stock          biblioteca de clips con tope (8 GB): se van primero
- *                           los que no tienen ficha y luego los menos usados;
- *                           nunca lo usado en las últimas 24 h
- * No corre si hay un vídeo generándose.
+ * Daily disk cleanup (30/09/2026, the VPS disk reached 97%).
+ * Rules agreed with the owner:
+ *   · temp/timeline/prod_*  editing leftovers: removed once they've sat idle for 6 h
+ *                           (the shot cache, shot-cache, has its own pruning)
+ *   · videos/ and audio/    final video and narration: removed 3 days after being
+ *                           published on YouTube; if the production was never
+ *                           scheduled (failed or discarded), after 7 days
+ *   · assets/stock          clip library with a cap (8 GB): the ones without a
+ *                           record go first, then the least used;
+ *                           never what was used in the last 24 h
+ * It doesn't run while a video is being generated.
  */
 const fs = require('fs').promises;
 const path = require('path');
@@ -24,7 +24,7 @@ function produccionDe(nombre) {
   return m ? m[1] : null;
 }
 
-/** Decide qué borrar. Puro: no toca el disco. */
+/** Decides what to delete. Pure: doesn't touch the disk. */
 function planLimpieza({ ahora = Date.now(), dias = 3, diasHuerfanos = 7, topeStock = 8 * GB,
   temporales = [], producciones = new Map(), finales = [], stock = [] } = {}) {
   const borrar = [];
@@ -74,12 +74,12 @@ async function tamanoDir(dir) {
   return n;
 }
 
-/** Recoge el estado real, planifica y borra (o solo informa con `simular`). */
+/** Gathers the real state, plans and deletes (or only reports with `simular`). */
 async function limpiaDisco({ db, dataRoot, ahora = Date.now(), logger = console, simular = false,
   topeStock = (Number(process.env.STOCK_LIBRARY_GB) || 8) * GB } = {}) {
   const enCurso = await db.getRow("SELECT COUNT(*) AS n FROM generation_jobs WHERE status IN ('queued', 'running')");
   if (Number(enCurso?.n || 0) > 0) {
-    logger.info('Limpieza de disco: hay un vídeo generándose, se deja para la próxima');
+    logger.info('Disk cleanup: a video is being generated, leaving it for next time');
     return { borrar: [], bytes: 0, aplazada: true };
   }
 
@@ -107,7 +107,7 @@ async function limpiaDisco({ db, dataRoot, ahora = Date.now(), logger = console,
 
   const plan = planLimpieza({ ahora, producciones, temporales, finales, stock, topeStock });
   if (!simular) {
-    for (const ruta of plan.borrar) await fs.rm(ruta, { recursive: true, force: true }).catch(e => logger.warn(`No se pudo borrar ${ruta}: ${e.message}`));
+    for (const ruta of plan.borrar) await fs.rm(ruta, { recursive: true, force: true }).catch(e => logger.warn(`Could not delete ${ruta}: ${e.message}`));
   }
   logger.info(`Limpieza de disco${simular ? ' (simulada)' : ''}: ${plan.borrar.length} archivos, ${(plan.bytes / GB).toFixed(2)} GB`);
   return plan;

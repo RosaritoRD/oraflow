@@ -618,7 +618,7 @@ class SceneRepairService {
 
     const audioPath = await this.rebuildNarration(productionId, scenes, bundle.assets?.audio?.path, timestamp);
     const allIntentionalSilence = scenes.every(scene => scene.narrationStatus === 'intentional_silence');
-    // Mismo formato y semilla que el render original: el piano suena igual tras reparar.
+    // Same format and seed as the original render: the piano sounds the same after repairing.
     await this.videoGenerator.addAudioToVideo(visualPath, audioPath, finalPath, {
       allowSilent: allIntentionalSilence,
       format: esShort(bundle.strategy) ? 'short' : 'long',

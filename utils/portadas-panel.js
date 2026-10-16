@@ -1,8 +1,8 @@
 /**
- * Portadas para subir a mano (11/10/2026, el autor): la portada ya NO va dentro
- * del Short (1,5 s de imagen fija antes de la voz bajaba las vistas). Se sigue
- * componiendo y aquí se lista para que él la ponga de portada en Instagram,
- * Facebook y YouTube desde el teléfono. Página /portadas (con login).
+ * Covers to upload by hand (11/10/2026, the owner): the cover NO longer goes
+ * inside the Short (1.5 s of a still image before the voice lowered views). It's
+ * still composed and listed here so the owner can set it as the cover on
+ * Instagram, Facebook and YouTube from the phone. Page /portadas (with login).
  */
 const path = require('path');
 
@@ -10,7 +10,7 @@ const RAICES = [path.join(__dirname, '..', 'data'), path.join(__dirname, '..', '
 
 const json = (t) => { try { return JSON.parse(t || '{}') || {}; } catch { return {}; } };
 
-/** Las últimas publicaciones (Short y largo) con la imagen de portada que tengan. */
+/** The latest posts (Short and long) with whatever cover image they have. */
 async function listaPortadas(db, limite = 14) {
   const filas = await db.getAllRows(
     `SELECT ps.production_id AS id, ps.title, ps.publish_time, ps.youtube_url, ps.metadata, p.assets
@@ -28,7 +28,7 @@ async function listaPortadas(db, limite = 14) {
       formato: corto ? 'short' : 'largo',
       youtube: f.youtube_url || null,
       imagen: (corto ? a.shortCover?.path : a.thumbnail?.path) || null,
-      // Largos (11/10/2026): A/B/C para «Probar y comparar» de YouTube Studio.
+      // Long videos (11/10/2026): A/B/C for YouTube Studio's «Test and compare».
       variantes: !corto && Array.isArray(a.thumbnail?.variants)
         ? a.thumbnail.variants.filter((v) => v?.path && /^[ABC]$/.test(v.letra)).map((v) => ({ letra: v.letra, path: v.path }))
         : []
@@ -36,7 +36,7 @@ async function listaPortadas(db, limite = 14) {
   });
 }
 
-/** Solo sirve archivos de data/ o uploads/: la ruta viene de la base, no del navegador. */
+/** Only serves files from data/ or uploads/: the path comes from the database, not the browser. */
 function rutaSegura(ruta) {
   if (!ruta) return null;
   const r = path.resolve(ruta);
@@ -87,7 +87,8 @@ button,a.b{display:block;width:100%;box-sizing:border-box;margin:10px 0 0;paddin
 <p>Los Shorts ya no traen la portada pegada al principio: empiezan hablando. Guarda la imagen y ponla tú de portada: en Instagram «Editar portada → Agregar desde el carrete», en YouTube Shorts «Editar → Portada», en Facebook «Editar → Miniatura».</p>
 ${tarjetas || '<p>Todavía no hay publicaciones.</p>'}
 <script>
-// iPhone solo deja compartir archivos si se pide en el mismo toque: se bajan antes.
+// iPhone only allows sharing files if it's requested in the same tap: they're downloaded
+// beforehand.
 const archivos = {};
 document.querySelectorAll('button[data-src]').forEach((b) => {
   fetch(b.dataset.src).then((r) => r.blob()).then((x) => { archivos[b.dataset.src] = new File([x], b.dataset.nombre, { type: 'image/jpeg' }); }).catch(() => {});

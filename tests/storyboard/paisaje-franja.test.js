@@ -1,16 +1,16 @@
-// 02/10/2026 (el autor): «que sean más paisajes y relacionados si es de noche o de día».
+// 02/10/2026: «more landscapes, and related to whether it's night or day».
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { momentoDe, consultaPaisaje, ajustePaisaje } = require('../../utils/paisaje-franja');
 
-test('el momento sale del guion (franja del contenido) y si no, de la hora del hueco', () => {
+test('the moment comes from the script (content\'s time of day) and otherwise from the slot\'s hour', () => {
   assert.equal(momentoDe({ script: { title: 'Oración de la noche para dormir en paz' } }), 'noche');
   assert.equal(momentoDe({ script: { title: 'Oración para empezar el día' }, strategy: { franja: 'MAÑANA' } }), 'manana');
   assert.equal(momentoDe({ script: {}, strategy: { franja: 'TARDE' } }), 'tarde');
   assert.equal(momentoDe({}), 'manana', 'sin datos: mañana, el formato principal');
 });
 
-test('cada escena pide un paisaje distinto, de su franja', () => {
+test('each scene asks for a different landscape, from its time of day', () => {
   const noche = [0, 1, 2, 3].map(i => consultaPaisaje('noche', i));
   assert.equal(new Set(noche).size, 4);
   assert.ok(noche.every(q => /night|stars|starry|moon/.test(q)));
@@ -20,17 +20,17 @@ test('cada escena pide un paisaje distinto, de su franja', () => {
 
 const asset = (title, keywords = []) => ({ title, keywords });
 
-test('los paisajes suben; lo que no es paisaje no', () => {
+test('landscapes go up; non-landscapes don\'t', () => {
   assert.ok(ajustePaisaje(asset('Mountain lake at sunrise'), 'manana') > 0);
   assert.equal(ajustePaisaje(asset('Woman reading a book'), 'manana'), 0);
 });
 
-test('lo que choca con la hora del día baja mucho', () => {
+test('what clashes with the time of day drops a lot', () => {
   assert.ok(ajustePaisaje(asset('Starry night sky over mountains'), 'manana') < -10);
   assert.ok(ajustePaisaje(asset('Sunrise over the sea', ['morning']), 'noche') < -10);
   assert.ok(ajustePaisaje(asset('Starry night sky over mountains'), 'noche') > 0);
 });
 
-test('lee también las palabras clave (strings u objetos {name})', () => {
+test('also reads keywords (strings or {name} objects)', () => {
   assert.ok(ajustePaisaje(asset('clip 123', [{ name: 'forest' }, 'night']), 'noche') > 0);
 });

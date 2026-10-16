@@ -1,15 +1,16 @@
 /**
- * El carrusel de oración convertido en vídeo con música (04/10/2026).
+ * The prayer carousel turned into a video with music (04/10/2026).
  *
- * el autor quiere música cristiana en las publicaciones. La API de Instagram NO
- * deja poner música a un carrusel de imágenes (eso solo se hace a mano en la
- * app) y una canción comercial subida dentro del vídeo la silencia Meta. Así
- * que el carrusel se monta como Reel 9:16 con música de licencia libre de
- * BACKGROUND_MUSIC_DIR (hoy: pianos de Kevin MacLeod, CC BY 4.0 → crédito
- * en el texto). Para otra música basta con dejar el .mp3 en esa carpeta.
+ * The owner wants Christian music on the posts. The Instagram API does NOT allow
+ * adding music to an image carousel (that's only done by hand in the app) and Meta
+ * mutes a commercial song uploaded inside the video. So the carousel is assembled
+ * as a 9:16 Reel with freely licensed music from BACKGROUND_MUSIC_DIR (today:
+ * Kevin MacLeod pianos, CC BY 4.0 → credit in the text). For other music, just
+ * drop the .mp3 in that folder.
  *
- * Tiempos: portada 4 s, cada oración el tiempo de leerla (10-15 s), cierre 5 s.
- * Total ≤ 89 s para que Facebook lo acepte como Reel.
+ * Timings: cover 4 s, each prayer the time it takes to read it (10-15 s), closing
+ * 5 s.
+ * Total ≤ 89 s so Facebook accepts it as a Reel.
  */
 const fs = require('fs');
 const path = require('path');
@@ -19,7 +20,7 @@ const FUNDIDO = 0.7;
 const MAX_SEGUNDOS = 89;
 const AUDIO = /\.(mp3|m4a|wav)$/i;
 
-/** Segundos en pantalla de cada diapositiva (portada, oraciones…, cierre). */
+/** Seconds on screen for each slide (cover, prayers…, closing). */
 function duraciones(datos) {
   const oraciones = datos.oraciones.map(o => {
     const palabras = `${o.texto} ${o.versiculo?.texto || ''}`.split(/\s+/).length;
@@ -38,7 +39,7 @@ function eligeMusica(dir, semilla = Date.now()) {
   return path.join(dir, pistas[Math.floor(semilla / 86400000) % pistas.length]);
 }
 
-/** Crédito para el texto si la carpeta trae LICENCIA.md con una licencia CC BY. */
+/** Credit for the text if the folder carries a LICENCIA.md with a CC BY license. */
 function creditoMusica(dir) {
   const licencia = path.join(dir || '', 'LICENCIA.md');
   if (!fs.existsSync(licencia)) return '';
@@ -48,7 +49,7 @@ function creditoMusica(dir) {
   return `🎵 Música: ${autor} · CC BY 4.0`;
 }
 
-/** Argumentos de ffmpeg: imágenes con fundido + música con entrada y salida suaves. */
+/** ffmpeg arguments: images with crossfades + music with soft fade in and out. */
 function argumentosFFmpeg({ imagenes, tiempos, musica, salida }) {
   const args = ['-y'];
   imagenes.forEach((img, i) => args.push('-loop', '1', '-t', String(tiempos[i]), '-i', img));
@@ -78,12 +79,12 @@ function argumentosFFmpeg({ imagenes, tiempos, musica, salida }) {
 
 async function hazVideo({ imagenes, datos, musicaDir = process.env.BACKGROUND_MUSIC_DIR, salida, semilla, ejecuta = runFFmpeg }) {
   const tiempos = duraciones(datos);
-  if (tiempos.length !== imagenes.length) throw new Error('Vídeo del carrusel: no cuadran imágenes y tiempos');
+  if (tiempos.length !== imagenes.length) throw new Error('Carousel video: images and timings do not match');
   const musica = eligeMusica(musicaDir, semilla);
   const { args, total } = argumentosFFmpeg({ imagenes, tiempos, musica, salida });
   await fs.promises.mkdir(path.dirname(salida), { recursive: true });
   await ejecuta(args);
-  if (musica && ejecuta === runFFmpeg) await require('./sonoridad').normalizaVideo(salida); // música a -14 LUFS
+  if (musica && ejecuta === runFFmpeg) await require('./sonoridad').normalizaVideo(salida); // music at -14 LUFS
   return { ruta: salida, segundos: total, musica, credito: musica ? creditoMusica(musicaDir) : '' };
 }
 

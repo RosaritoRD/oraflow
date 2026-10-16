@@ -46,9 +46,9 @@ const PROVIDERS = {
   },
 };
 
-// IA local: Ollama en la PC del autor, por Tailscale (07/10/2026). Solo la usan
-// las tareas sencillas que la piden con `local: true`; si la PC está apagada o
-// tarda, se usa el proveedor de siempre y se deja la PC en paz un rato.
+// Local AI: Ollama on the owner's PC, over Tailscale (07/10/2026). Only simple
+// tasks that ask for it with `local: true` use it; if the PC is off or slow, the
+// usual provider is used and the PC is left alone for a while.
 const LOCAL_PAUSA_MS = 10 * 60 * 1000;
 
 function configLocal(local = {}) {
@@ -88,7 +88,7 @@ class AITextService {
         body: JSON.stringify({
           model: this.local.model,
           stream: false,
-          think: false, // qwen3 piensa por defecto: minutos de más y texto que rompe el JSON
+          think: false, // qwen3 thinks by default: extra minutes and text that breaks the JSON
           ...(options.json ? { format: 'json' } : {}),
           options: {
             temperature: options.temperature ?? 0.7,
@@ -98,10 +98,10 @@ class AITextService {
           messages: [{ role: 'user', content: prompt }],
         }),
       });
-      if (!respuesta.ok) throw new Error(`Ollama respondió ${respuesta.status}`);
+      if (!respuesta.ok) throw new Error(`Ollama answered ${respuesta.status}`);
       const cuerpo = await respuesta.json();
       const texto = cuerpo?.message?.content;
-      if (typeof texto !== 'string' || !texto.trim()) throw new Error('Ollama devolvió una respuesta vacía');
+      if (typeof texto !== 'string' || !texto.trim()) throw new Error('Ollama returned an empty response');
       return texto;
     } finally {
       clearTimeout(reloj);
@@ -117,8 +117,8 @@ class AITextService {
       return this._initOpenAICompatible(PROVIDERS[provider], apiKey, model);
     }
 
-    // AI_TEXT_PROVIDER=openrouter fuerza un proveedor aunque haya otras claves
-    // (29/09/2026: OpenAI sin créditos, el texto va por OpenRouter).
+    // AI_TEXT_PROVIDER=openrouter forces a provider even if there are other
+    // keys (29/09/2026: OpenAI out of credit, text goes through OpenRouter).
     const forced = String(process.env.AI_TEXT_PROVIDER || '').toLowerCase();
     if (PROVIDERS[forced] && process.env[PROVIDERS[forced].envKey]) {
       return this._initOpenAICompatible(PROVIDERS[forced], process.env[PROVIDERS[forced].envKey], process.env.AI_TEXT_MODEL || undefined);
@@ -167,7 +167,7 @@ class AITextService {
       } catch (error) {
         this.localCaidoHasta = Date.now() + LOCAL_PAUSA_MS;
         const motivo = error.name === 'AbortError' ? `sin respuesta en ${this.local.timeoutMs} ms` : error.message;
-        this.logger.warn(`IA local (${this.local.model}) no disponible: ${motivo}. Se usa ${this.providerName || 'el proveedor de siempre'}.`);
+        this.logger.warn(`Local AI (${this.local.model}) unavailable: ${motivo}. Using ${this.providerName || 'the usual provider'}.`);
       }
     }
     this.ultimoProveedor = this.providerName;
@@ -196,9 +196,10 @@ class AITextService {
       throw new Error('No AI text provider configured');
     }
 
-    // ⚠️ gpt-5.x rechaza `temperature` con un 400 ("only the default (1) value
-    // is supported"). Antes eso hacía que TODO cayera a las plantillas en inglés
-    // sin avisar: guiones, SEO y storyboard. Si el modelo no lo admite, no se manda.
+    // ⚠️ gpt-5.x rejects `temperature` with a 400 ("only the default (1) value is
+    // supported"). That used to make EVERYTHING fall back to the English templates
+    // silently: scripts, SEO and storyboard. If the model doesn't accept it, it isn't
+    // sent.
     const admiteTemperatura = !/^(?:gpt-5|o[1-9])/i.test(String(model));
     const params = {
       model,
@@ -215,7 +216,7 @@ class AITextService {
       });
       return this._extractContent(response);
     } catch (error) {
-      // Red de seguridad para modelos futuros que tampoco la admitan.
+      // A safety net for future models that don't accept it either.
       if (params.temperature !== undefined && /temperature/i.test(error?.message || '')) {
         const { temperature: _fuera, ...sinTemperatura } = params;
         const response = await this.client.chat.completions.create({

@@ -1,6 +1,6 @@
 /* global i18n */
 /* global ui, api, apiKey, requestApiKey, escapeHTML, empty, showToast */
-// Pestañas Shorts (versículos) y Clipping: hablan con /api/shorts/*.
+// Shorts (verses) and Clipping tabs: they talk to /api/shorts/*.
 (() => {
   'use strict';
 
@@ -135,7 +135,7 @@
     const running = job?.status === 'running';
     $$('#shorts-run, [data-clip-run], #clip-run-all').forEach(b => { b.disabled = running; });
     $$('[data-shorts-job]').forEach(panel => {
-      // Cada pestaña muestra su propio trabajo; el otro solo bloquea los botones.
+      // Each tab shows its own job; the other one only blocks the buttons.
       const mine = job && (panel.closest('#shorts-view') ? job.kind === 'versiculos' : job.kind === 'clipping');
       panel.classList.toggle('hidden', !mine);
       if (!mine) return;
@@ -195,7 +195,7 @@
     if (!quiet) showToast(i18n.t('Batch saved.'));
   }
 
-  /* ---------- Uploads (XHR para ver el progreso de archivos grandes) ---------- */
+  /* ---------- Uploads (XHR to see the progress of large files) ---------- */
 
   function uploadOne(area, file, retry = true) {
     return new Promise((resolve, reject) => {
@@ -214,7 +214,7 @@
           return uploadOne(area, file, false).then(resolve, reject);
         }
         let data = {};
-        try { data = JSON.parse(xhr.responseText); } catch (_) { /* respuesta vacía */ }
+        try { data = JSON.parse(xhr.responseText); } catch (_) { /* empty response */ }
         if (xhr.status >= 200 && xhr.status < 300) resolve(data.result);
         else reject(new Error(data.error || (xhr.status === 413 ? i18n.t('The file is too large.') : i18n.t('Upload failed'))));
       };
@@ -316,7 +316,7 @@
   $('#shorts-save').addEventListener('click', () => saveLote().catch(error => showToast(error.message, 'error')));
   $('#shorts-run').addEventListener('click', () => run('versiculos'));
 
-  // Ctrl/Cmd+S guarda el lote mientras se escribe.
+  // Ctrl/Cmd+S saves the batch while typing.
   $('#shorts-lote').addEventListener('keydown', event => {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
       event.preventDefault();

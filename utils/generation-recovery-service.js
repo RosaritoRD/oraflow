@@ -79,7 +79,7 @@ class GenerationRecoveryService {
     if (!artifact || typeof artifact !== 'object') return false;
     if (stage === 'strategy') return Boolean(artifact.topic);
     if (stage === 'script') return Boolean(artifact.title && (artifact.fullScript || artifact.mainContent));
-    // Los Shorts no llevan miniatura: la etapa deja constancia de que se omitió a propósito.
+    // Shorts carry no thumbnail: the stage records that it was skipped on purpose.
     if (stage === 'thumbnail') return artifact.skipped === true || this.validatePathArtifact(artifact.path);
     if (stage === 'seo') return Boolean(artifact.title && artifact.description && Array.isArray(artifact.tags));
     if (stage === 'production') {

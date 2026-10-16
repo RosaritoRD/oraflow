@@ -1,4 +1,4 @@
-// 11/10/2026 (el autor): miniatura con el diseño de su referencia «Oración / PODEROSA / para hoy».
+// 11/10/2026: a thumbnail with the owner's reference design «Oración / PODEROSA / para hoy».
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
@@ -10,7 +10,7 @@ const { componeMiniaturaYeshua, miniaturaSvg } = require('../../utils/miniatura-
 
 const silencio = { info() {}, warn() {} };
 
-test('largo: 3-6 palabras en total; Short: 2-4 grandes y sin línea pequeña', () => {
+test('long: 3-6 words in total; Short: 2-4 big ones and no small line', () => {
   assert.deepEqual(titularValido({ arriba: 'oración', oro: 'poderosa', abajo: 'Para hoy' }),
     { arriba: 'Oración', oro: 'PODEROSA', abajo: 'para hoy' });
   assert.equal(titularValido({ arriba: 'Oración', oro: 'PODEROSA' }), null, 'el largo necesita la línea pequeña');
@@ -20,13 +20,13 @@ test('largo: 3-6 palabras en total; Short: 2-4 grandes y sin línea pequeña', (
   assert.equal(titularValido({ arriba: 'Recibe hoy', oro: 'PAZ DE DIOS', abajo: '' }, 'short'), null, 'más de 4 palabras');
 });
 
-test('tono: «milagro urgente» vale (lo pidió el autor); «milagro garantizado» y «no sabes orar» no', () => {
+test('tone: «milagro urgente» is fine (the owner asked for it); «milagro garantizado» and «no sabes orar» aren\'t', () => {
   assert.ok(titularValido({ arriba: 'Milagro', oro: 'URGENTE', abajo: 'oración de fe' }));
   assert.equal(titularValido({ arriba: 'Milagro', oro: 'GARANTIZADO', abajo: 'para hoy' }), null);
   assert.equal(titularValido({ arriba: 'Si no', oro: 'SABES ORAR', abajo: 'escucha esto' }), null);
 });
 
-test('reglas: la necesidad del título manda y siempre hay 3 variantes válidas', () => {
+test('rules: the title\'s need rules and there are always 3 valid variants', () => {
   const ansiedad = titularesPorReglas({ title: 'Oración para dejar la ansiedad por lo que viene' });
   assert.equal(ansiedad.length, 3);
   assert.equal(ansiedad[0].oro, 'TU ANSIEDAD');
@@ -39,7 +39,7 @@ test('reglas: la necesidad del título manda y siempre hay 3 variantes válidas'
   }
 });
 
-test('IA: lo inválido o repetido se cambia por el catálogo; si falla, reglas', async () => {
+test('AI: whatever is invalid or repeated is swapped for the catalog; if it fails, rules', async () => {
   const ia = (json) => ({ generateText: async () => JSON.stringify(json) });
   const r = await titularesMiniatura({
     title: 'Oración de la noche para dormir en paz', logger: silencio,
@@ -57,7 +57,7 @@ test('IA: lo inválido o repetido se cambia por el catálogo; si falla, reglas',
   assert.equal(roto.origen, 'reglas');
 });
 
-test('SVG: escapa el texto, quita la coma final y pinta sello y filetes', async () => {
+test('SVG: escapes the text, removes the trailing comma and draws the seal and rules', async () => {
   const svg = await miniaturaSvg({ sharp, titular: { arriba: 'Yeshua,', oro: 'DAME <TU> PAZ', abajo: 'oración & fe' }, layout: 'izquierda', W: 1920, H: 1080 });
   assert.ok(svg.includes('DAME &lt;TU&gt; PAZ'));
   assert.ok(svg.includes('oración &amp; fe'));
@@ -68,10 +68,10 @@ test('SVG: escapa el texto, quita la coma final y pinta sello y filetes', async 
   assert.equal((corto.match(/fill="url\(#filete[ID]\)"/g) || []).length, 2, 'sin línea pequeña: solo los del sello');
 });
 
-test('compone a 3840x2160 y cabe en los 2 MB de la API de YouTube', async () => {
+test('composes at 3840x2160 and fits in the YouTube API\'s 2 MB', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'miniatura-'));
   const fondo = path.join(dir, 'f.png');
-  // Ruido: el peor caso para el tamaño del JPG.
+  // Noise: the worst case for JPG size.
   const ruido = Buffer.alloc(1536 * 1024 * 3);
   for (let i = 0; i < ruido.length; i++) ruido[i] = (i * 2654435761) >>> 24;
   await sharp(ruido, { raw: { width: 1536, height: 1024, channels: 3 } }).png().toFile(fondo);

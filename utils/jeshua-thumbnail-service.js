@@ -5,7 +5,7 @@ const { renderThumbnail, assertCopyFits } = require('./jeshua-thumbnail-renderer
 
 function isJeshuaStyle(env = process.env) {
   if (env.THUMBNAIL_STYLE) return env.THUMBNAIL_STYLE === BRAND.id;
-  // 05/10/2026: la marca pasó de "Jeshua" a "Yeshua"; se aceptan las dos.
+  // 05/10/2026: the brand went from "Jeshua" to "Yeshua"; both are accepted.
   return /^oraciones en presencia de [jy]eshua$/.test(
     String(env.CHANNEL_NAME || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase());
 }

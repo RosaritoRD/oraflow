@@ -1,11 +1,11 @@
 /* global i18n, ui */
-// Megamenú lateral estilo KEIZAC (copia de la forma del panel de keizac-web:
-// js/meganav.js + css/meganav.css en modo `body.sidenav`). Columna negra con
-// pocas pestañas; cada una abre AL LADO, a la altura de su fila, un panel con
-// las opciones agrupadas. En el móvil, cajón con acordeones.
+// Side mega-menu (a copy of the main website panel's shape: js/meganav.js +
+// css/meganav.css in `body.sidenav` mode). A dark column with few tabs; each one
+// opens BESIDE it, at the height of its row, a panel with the grouped options. On
+// mobile, a drawer with accordions.
 //
-// El menú viejo (`.nav-item`) se queda en el DOM, oculto: app.js y enhance.js
-// cuentan con él para el estado activo y para navegar por #hash.
+// The old menu (`.nav-item`) stays in the DOM, hidden: app.js and enhance.js rely
+// on it for the active state and for #hash navigation.
 (() => {
   'use strict';
 
@@ -14,28 +14,36 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const CLOSE_DELAY = 140;
-  // Oraflow entra desde el megamenú de Keizac como un producto más (igual que
-  // Fleet): este botón es su «← Panel principal» de vuelta, en la misma pestaña.
-  const KEIZAC_PANEL = 'https://tu-dominio.com/admin'; // ms de gracia al pasar el ratón de la pestaña al panel (igual que Keizac)
+  // Oraflow is entered from the Keizac mega-menu as one more product (like Fleet): this button
+  // is its «← Main panel» way back, in the same tab.
+  const KEIZAC_PANEL = 'https://your-domain.com/admin'; // grace ms when moving the mouse from the tab to the panel (like Keizac)
 
-  /* Pestañas → grupos → opciones. `view` navega a una pantalla; `action` pulsa
-     un botón existente; `guide` abre una guía. Etiquetas en inglés = claves
-     del catálogo de i18n.js. */
+  /*
+   * Tabs → groups → options. `view` navigates to a screen; `action` clicks an existing button;
+   * `guide` opens a guide. English labels = keys of the i18n.js catalog.
+   */
   function menu() {
     const guias = (window.agentGuides || []).map(g => ({ raw: g.title, guide: g.slug }));
-    // 05/10/2026: menú por áreas (YouTube · Redes · Resultados…), pedido del autor.
+    // 05/10/2026: menu by area (YouTube · Social · Results…).
     return [
       { id: 'today', label: 'Today', view: 'overview', home: true },
       { id: 'youtube', label: 'YouTube', columns: [
         { title: 'Videos', items: [{ label: 'Create video', action: '#generate-button' }, { label: 'Pipeline', view: 'pipeline' }] },
         { title: 'Shorts', items: [{ label: 'Verse Shorts', view: 'shorts' }, { label: 'Clipping', view: 'clipping' }] },
-        { title: 'Plan', items: [{ label: 'Calendar & ideas', view: 'calendar' }, { label: 'Research', view: 'research' }, { label: 'Autonomous operator', view: 'operator' }] }
+        { title: 'Plan', items: [{ label: 'Calendar & ideas', view: 'calendar' }, { label: 'Research', view: 'research' }, { label: 'Outliers', view: 'outliers' }, { label: 'Autonomous operator', view: 'operator' }] }
       ] },
-      { id: 'social', label: 'Redes', columns: [
-        { title: 'Instagram y Facebook', items: [{ raw: 'Publicaciones diarias', view: 'redes' }, { raw: 'Historia de hoy', href: '/historia' }, { raw: 'Portadas para subir', href: '/portadas' }] },
-        { title: 'Comentarios', items: [{ label: 'Engagement', view: 'engagement' }, { raw: 'Respuestas «Amén»', view: 'redes' }] },
-        { title: 'Ajustes', items: [{ raw: 'Textos y enlaces', view: 'redes' }, { raw: 'Libro (página de venta)', href: 'https://tu-dominio.com/libro' }] }
+      { id: 'social', label: 'Social', columns: [
+        { title: 'Instagram and Facebook', items: [{ label: 'Daily posts', view: 'redes' }, { label: "Today's story", href: '/historia' }, { label: 'Covers to upload', href: '/portadas' }] },
+        { title: 'Comments', items: [{ label: 'Engagement', view: 'engagement' }, { label: '«Amén» replies', view: 'redes' }] },
+        { title: 'Settings', items: [{ label: 'Texts and links', view: 'redes' }, { label: 'Book (sales page)', href: 'https://your-domain.com/libro' }] }
       ] },
+      // 15/10/2026: Messages with its sections split out.
+      // The open-source edition ships without the Messages module (its stub sets this flag).
+      ...(window.mensajesDisponibles === false ? [] : [{ id: 'messages', label: 'Messages', columns: [
+        { title: 'Conversations', items: [{ label: 'Overview', view: 'msj-resumen' }, { label: 'Inbox', view: 'msj-bandeja' }] },
+        { title: 'Automatic', items: [{ label: 'Per-video automations', view: 'msj-reglas' }, { label: 'Runs', view: 'msj-ejecuciones' }] },
+        { title: 'Settings', items: [{ label: 'Connected accounts', view: 'msj-cuentas' }] }
+      ] }]),
       { id: 'results', label: 'Results', columns: [
         { title: 'Performance', items: [{ label: 'Analytics', view: 'analytics' }] }
       ] },
@@ -79,8 +87,8 @@
   panels.className = 'rnav__panels';
   document.body.appendChild(panels);
 
-  // Barra superior fija (buscador, idioma, actualizar, crear): se MUEVEN los
-  // controles existentes, así sus ids y manejadores siguen siendo los mismos.
+  // Fixed top bar (search, language, refresh, create): the existing controls are MOVED, so their
+  // ids and handlers stay the same.
   const bar = document.createElement('div');
   bar.className = 'kbar';
   bar.innerHTML = `<button type="button" class="kbar__burger" aria-expanded="false">${BURGER}</button>
@@ -125,7 +133,7 @@
     marcarActual();
   }
 
-  /* ── pestaña de la pantalla actual ── */
+  /* ── tab of the current screen ── */
   function tabDeVista(view) {
     for (const tab of menu()) {
       if (tab.home && tab.view === view) return tab.id;
@@ -153,7 +161,7 @@
     b.classList.add('is-open');
     b.setAttribute('aria-expanded', 'true');
     p.hidden = false;
-    // A la altura de su fila (como Keizac); si no cabe, se sube lo justo.
+    // At the height of its row (like Keizac); if it doesn't fit, it's raised just enough.
     const MIN = 72;
     const arriba = Math.max(MIN, b.getBoundingClientRect().top - 6);
     const tope = Math.max(MIN, innerHeight - p.scrollHeight - 12);
@@ -171,7 +179,7 @@
   function scheduleClose() { clearTimeout(closeTimer); closeTimer = setTimeout(closeAll, CLOSE_DELAY); }
   function cancelClose() { clearTimeout(closeTimer); }
 
-  /* ── ejecutar una opción ── */
+  /* ── run an option ── */
   function ir(el) {
     closeAll();
     cerrarCajon();
@@ -227,7 +235,7 @@
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeAll(); cerrarCajon(); } });
 
-  /* ── cajón del móvil: acordeón de verdad (abrir una cierra las demás) ── */
+  /* ── mobile drawer: a real accordion (opening one closes the others) ── */
   function cerrarCajon() {
     if (drawer.hidden) return;
     drawer.hidden = true;
@@ -243,7 +251,7 @@
   });
   drawer.addEventListener('click', e => {
     if (e.target.closest('.rnav__drawer-close')) return cerrarCajon();
-    // Idioma desde el cajón: en el móvil el selector de la barra no cabe.
+    // Language from the drawer: on mobile the bar's selector doesn't fit.
     const lang = e.target.closest('[data-lang]');
     if (lang) {
       const sel = $('#language-select');
@@ -258,7 +266,7 @@
     h.nextElementSibling.hidden = !abrir;
   });
 
-  // Seguir la pantalla actual: se envuelve switchView (ya envuelto por enhance.js).
+  // Follow the current screen: switchView is wrapped (already wrapped by enhance.js).
   const base = window.switchView;
   window.switchView = view => { base(view); marcarActual(); };
   addEventListener('hashchange', () => setTimeout(marcarActual, 0));

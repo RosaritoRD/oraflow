@@ -1,19 +1,19 @@
 /**
- * Citas bíblicas leídas en voz alta (pedido del autor, 03/10/2026).
+ * Bible references read aloud (requested 03/10/2026).
  *
- * El guion trae «Salmo 5:3» o «Jn 3,16» y la voz lo leía como una hora o una
- * cifra. Aquí se convierte a como se dice: «Juan, capítulo tres, versículo
- * dieciséis». el autor prefiere que el vídeo dure un poco más a que la cita suene
- * mal. Reglas:
- *   - abreviatura → nombre completo del libro;
- *   - primer número → «capítulo» + número en letra (los Salmos no dicen
+ * The script carries «Salmo 5:3» or «Jn 3,16» and the voice read it like a time
+ * or a number. Here it's converted to how it's said: «Juan, capítulo tres,
+ * versículo dieciséis». The owner prefers the video running a bit longer to the
+ * reference sounding wrong. Rules:
+ *   - abbreviation → the book's full name;
+ *   - first number → «capítulo» + the number in words (Psalms don't say
  *     «capítulo»: «Salmo veintitrés, versículo uno»);
- *   - después de «,» o «:» → «versículo» + número en letra; un rango se dice
- *     «versículos tres a diez» y una lista «versículos dieciséis y dieciocho».
+ *   - after «,» or «:» → «versículo» + the number in words; a range is said
+ *     «versículos tres a diez» and a list «versículos dieciséis y dieciocho».
  *
- * Solo para guiones en español. Solo se toca lo que tiene forma de cita
- * (libro + capítulo + versículo, o «Salmo N»): «Juan tiene 3 hijos» o «a las
- * 5:30» no cambian.
+ * Spanish scripts only. Only what is shaped like a reference is touched (book +
+ * chapter + verse, or «Salmo N»): «Juan tiene 3 hijos» or «a las 5:30» don't
+ * change.
  */
 
 const UNIDADES = ['cero', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve',
@@ -24,7 +24,7 @@ const DECENAS = { 3: 'treinta', 4: 'cuarenta', 5: 'cincuenta', 6: 'sesenta', 7: 
 const CENTENAS = { 1: 'ciento', 2: 'doscientos', 3: 'trescientos', 4: 'cuatrocientos', 5: 'quinientos',
   6: 'seiscientos', 7: 'setecientos', 8: 'ochocientos', 9: 'novecientos' };
 
-/** 0-999 en letra. Basta: el capítulo más alto es 150 y el versículo, 176. */
+/** 0-999 in words. That's enough: the highest chapter is 150 and the verse, 176. */
 function numeroEnLetras(n) {
   n = Number(n);
   if (!Number.isInteger(n) || n < 0 || n > 999) return String(n);
@@ -40,8 +40,8 @@ function numeroEnLetras(n) {
   return resto ? `${CENTENAS[c]} ${numeroEnLetras(resto)}` : (c === 1 ? 'cien' : CENTENAS[c]);
 }
 
-/* Libro → [nombre que se dice, ...formas escritas]. Las formas cortas
-   distinguen mayúsculas («Mi 6:8» es Miqueas; «mi» en una frase no). */
+/* Book → [name as said, ...written forms]. The short forms are
+   case-sensitive («Mi 6:8» is Micah; «mi» in a sentence isn't). */
 const LIBROS = [
   ['Génesis', 'Génesis', 'Genesis', 'Gn', 'Gén', 'Gen'],
   ['Éxodo', 'Éxodo', 'Exodo', 'Ex', 'Éx'],
@@ -104,22 +104,22 @@ const LIBROS = [
 const NOMBRE_DE = new Map();
 for (const [dicho, ...formas] of LIBROS) for (const f of formas) NOMBRE_DE.set(f.toLowerCase(), dicho);
 
-/* Las formas largas primero, para que «Juan» no se coma como «Jn» y «Salmos»
-   no quede en «Salmo» + «s». */
+/* Long forms first, so «Juan» isn't swallowed as «Jn» and «Salmos» doesn't end
+   up as «Salmo» + «s». */
 const FORMAS = [...NOMBRE_DE.keys()].sort((a, b) => b.length - a.length)
   .map(f => f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
 const LIBRO = `(?:${FORMAS.join('|')})`;
 const ORDINAL = { 1: 'Primera', 2: 'Segunda', 3: 'Tercera' };
 
-/* [1-3] libro[.] capítulo (,|:) versículos   —   versículos: 16 | 3-10 | 16.18 | 1,27 */
+/* [1-3] book[.] chapter (,|:) verses   —   verses: 16 | 3-10 | 16.18 | 1,27 */
 const CITA = new RegExp(
   `(?<![\\p{L}\\d])(?:([1-3])\\s?)?(${LIBRO})\\.?\\s+(\\d{1,3})(?:\\s?:\\s?|,)(\\d{1,3}(?:\\s?[-–—]\\s?\\d{1,3}|(?:[.,]\\d{1,3})+)?)(?![\\d\\p{L}])`,
   'giu');
-/* «Salmo 23» sin versículo. */
+/* «Salmo 23» with no verse. */
 const SALMO_SOLO = /(?<![\p{L}\d])(Salmos?|Sal)\.?\s+(\d{1,3})(?![\d\p{L}:,])/gu;
 
-/* Una forma corta tiene que llegar escrita como en la tabla (con su mayúscula):
-   «Mi 6:8» es Miqueas, «mi 6:8» no es nada. */
+/* A short form has to arrive written as in the table (with its capital): «Mi 6:8»
+   is Micah, «mi 6:8» is nothing. */
 function esFormaValida(escrito) {
   const forma = escrito.replace(/\.$/, '');
   if (forma.length > 4) return true;
@@ -143,7 +143,7 @@ function leeCitasBiblicas(texto) {
     if (!esFormaValida(libro)) return todo;
     const dicho = NOMBRE_DE.get(libro.toLowerCase());
     if (!dicho) return todo;
-    /* Un libro con número solo si de verdad lo lleva (1 Juan, 2 Timoteo…). */
+    /* A numbered book only if it really has one (1 Juan, 2 Timoteo…). */
     const nombre = num ? `${ORDINAL[num]} de ${dicho}` : dicho;
     if (dicho === 'Salmo') return `Salmo ${numeroEnLetras(+cap)}, ${versiculosDichos(vers)}`;
     return `${nombre}, capítulo ${numeroEnLetras(+cap)}, ${versiculosDichos(vers)}`;
@@ -152,7 +152,7 @@ function leeCitasBiblicas(texto) {
   return salida;
 }
 
-/** ¿El canal habla español? (CONTENT_LANGUAGE = es, es-MX, …) */
+/** Does the channel speak Spanish? (CONTENT_LANGUAGE = es, es-MX, …) */
 function esEspanol(idioma = process.env.CONTENT_LANGUAGE) {
   return /^es\b/i.test(String(idioma || ''));
 }

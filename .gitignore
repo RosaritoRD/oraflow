@@ -23,6 +23,7 @@ config/*.pem
 data/*.db
 data/*.sqlite
 data/*.db-journal
+data/.clave-mensajes
 *.db-shm
 *.db-wal
 
@@ -94,3 +95,4 @@ data/thumbnails/
 # Grafo de conocimiento de graphify — artefacto local, no al repo
 graphify-out/
 .graphify_*
+__pycache__/

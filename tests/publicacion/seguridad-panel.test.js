@@ -19,7 +19,7 @@ async function server(t) {
   return { base:`http://127.0.0.1:${http.address().port}`, writes };
 }
 
-test('dashboard y guardar ajustes excluyen credenciales y preferencias ajenas, también claves futuras', async t => {
+test('dashboard and saving settings exclude credentials and other people\'s preferences, future keys too', async t => {
   const {base}=await server(t);
   for (const [path,options] of [['/api/dashboard',{}],['/api/settings',{method:'PUT',headers:{'content-type':'application/json','x-api-key':'test-only'},body:'{}'}]]) {
     const response=await fetch(base+path,options);
@@ -34,7 +34,7 @@ test('dashboard y guardar ajustes excluyen credenciales y preferencias ajenas, t
   }
 });
 
-test('una web ajena no puede guardar preferencias ni ajustes mediante el navegador', async t => {
+test('a third-party website can\'t save preferences or settings through the browser', async t => {
   const {base,writes}=await server(t);
   for (const headers of [{origin:'https://another.example'},{origin:'null'},{'sec-fetch-site':'cross-site'}]) {
     const response=await fetch(base+'/api/me/prefs',{method:'PUT',headers:{'content-type':'application/json',...headers},body:'{"tema":"claro"}'});
@@ -46,7 +46,7 @@ test('una web ajena no puede guardar preferencias ni ajustes mediante el navegad
   assert.equal(writes.length,1);
 });
 
-test('el perfil no se almacena en cachés compartidas', async t => {
+test('the profile isn\'t stored in shared caches', async t => {
   const {base}=await server(t);
   const response=await fetch(base+'/api/me');
   assert.equal(response.status,200);

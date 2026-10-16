@@ -1,6 +1,6 @@
 /* global i18n */
 /* global ui, api, escapeHTML, showToast */
-// Pestaña Cuentas: estado de cada conexión, probarla y reconectar YouTube.
+// Accounts tab: each connection's status, testing it and reconnecting YouTube.
 (() => {
   'use strict';
 
@@ -8,7 +8,7 @@
   const $$ = selector => Array.from(document.querySelectorAll(selector));
   const cuentas = ui.accounts = { state: null, results: {} };
 
-  // Nombre y para qué sirve cada clave (el servidor solo da ids y estado).
+  // Name and purpose of each key (the server only gives ids and status).
   const INFO = {
     youtube_api: ['YouTube Data API', 'Research radar: reads public YouTube data. It does not publish.'],
     openrouter: ['OpenRouter', 'Writes scripts, titles and descriptions (AI text).'],
@@ -123,7 +123,7 @@
     $('#yt-client-form').classList.add('hidden');
   });
   $('#yt-redirect-copy').addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText($('#yt-redirect').textContent); showToast(i18n.t('Copied.')); } catch (_) { /* sin portapapeles */ }
+    try { await navigator.clipboard.writeText($('#yt-redirect').textContent); showToast(i18n.t('Copied.')); } catch (_) { /* no clipboard */ }
   });
   $('#yt-client-form').addEventListener('submit', async event => {
     event.preventDefault();
@@ -140,7 +140,7 @@
     }
   });
 
-  // Vuelta del flujo de Google: /?cuentas=ok#accounts o /?cuentas=<mensaje>#accounts
+  // Return from the Google flow: /?cuentas=ok#accounts or /?cuentas=<message>#accounts
   const vuelta = new URLSearchParams(location.search).get('cuentas');
   if (vuelta !== null) {
     const banner = $('#accounts-banner');

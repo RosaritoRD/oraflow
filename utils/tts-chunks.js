@@ -1,7 +1,8 @@
 /**
- * ElevenLabs corta por petición (eleven_multilingual_v2: 10.000 caracteres).
- * Un guion de 14-16 min ronda los 12.000, así que la narración se parte en
- * trozos por párrafo/frase, se genera cada uno y se unen audio y alineación.
+ * ElevenLabs cuts per request (eleven_multilingual_v2: 10,000 characters).
+ * A 14-16 min script is around 12,000, so the narration is split into chunks by
+ * paragraph/sentence, each one is generated and the audio and alignment are
+ * joined.
  */
 
 const DEFAULT_MAX_CHARS = 4500;
@@ -19,7 +20,7 @@ function hardSplit(text, max) {
   return out;
 }
 
-/** Trozos de como mucho `max` caracteres, cortando por párrafo, luego por frase. */
+/** Chunks of at most `max` characters, cutting by paragraph, then by sentence. */
 function splitForTts(text, max = DEFAULT_MAX_CHARS) {
   const clean = String(text || '').trim();
   if (clean.length <= max) return clean ? [clean] : [];
@@ -51,9 +52,9 @@ function splitForTts(text, max = DEFAULT_MAX_CHARS) {
 }
 
 /**
- * Une las alineaciones por carácter de cada trozo desplazando sus tiempos por
- * la duración real del audio anterior. Entre trozos mete un espacio para que
- * las palabras de los bordes no se peguen.
+ * Joins each chunk's per-character alignments by shifting their times by the real duration of
+ * the previous audio. Puts a space between chunks so the words at the edges don't stick
+ * together.
  * @param {{alignment: object|null, duration: number}[]} parts
  */
 function mergeAlignments(parts) {

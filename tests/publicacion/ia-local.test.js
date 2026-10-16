@@ -1,6 +1,6 @@
-// IA local: qwen3 en la PC del autor (Ollama por Tailscale, 07/10/2026).
-// Las tareas sencillas la prueban primero; si la PC está apagada o tarda, se
-// usa el proveedor de siempre y el trabajo sale igual.
+// Local AI: qwen3 on the owner's PC (Ollama over Tailscale, 07/10/2026).
+// Simple tasks try it first; if the PC is off or slow, the usual provider is
+// used and the work comes out the same.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
@@ -26,14 +26,14 @@ function ollamaFalso(responder) {
 
 function servicio(url, extra = {}) {
   const s = new AITextService({}, { local: { url, model: 'qwen3:8b', timeoutMs: 1500, ...extra } });
-  // El proveedor de siempre, falso: si se llama, se nota.
+  // The usual provider, faked: if it gets called, it shows.
   s.client = { chat: { completions: { create: async () => ({ choices: [{ message: { content: 'DE LA NUBE' } }] }) } } };
   s.model = 'gpt-test';
   s.providerName = 'Nube';
   return s;
 }
 
-test('con local: true y la PC encendida, contesta qwen3 sin pensar y en JSON', async () => {
+test('with local: true and the PC on, qwen3 answers without thinking and in JSON', async () => {
   const o = await ollamaFalso((req, res) => res.end(JSON.stringify({ message: { content: '{"ok":true}' } })));
   const s = servicio(o.url);
   const texto = await s.generateText('clasifica', { local: true, json: true, temperature: 0.2, maxTokens: 500 });
@@ -50,7 +50,7 @@ test('con local: true y la PC encendida, contesta qwen3 sin pensar y en JSON', a
   assert.equal(p.cuerpo.options.num_predict, 500);
 });
 
-test('sin local: true no se toca la PC', async () => {
+test('without local: true the PC isn\'t touched', async () => {
   const o = await ollamaFalso((req, res) => res.end(JSON.stringify({ message: { content: 'LOCAL' } })));
   const s = servicio(o.url);
   assert.equal(await s.generateText('guion largo'), 'DE LA NUBE');
@@ -58,15 +58,15 @@ test('sin local: true no se toca la PC', async () => {
   assert.equal(o.peticiones.length, 0);
 });
 
-test('PC apagada: se usa la nube y la PC se deja en paz un rato', async () => {
+test('PC off: the cloud is used and the PC is left alone for a while', async () => {
   const s = servicio('http://127.0.0.1:9'); // nadie escucha
   assert.equal(await s.generateText('x', { local: true }), 'DE LA NUBE');
   assert.equal(s.ultimoProveedor, 'Nube');
   assert.ok(s.localCaidoHasta > Date.now(), 'tras un fallo se espera antes de volver a probar');
 });
 
-test('PC lenta: se corta al plazo y sale por la nube', async () => {
-  const o = await ollamaFalso(() => { /* no contesta nunca */ });
+test('slow PC: cut at the deadline and goes through the cloud', async () => {
+  const o = await ollamaFalso(() => { /* never answers */ });
   const s = servicio(o.url, { timeoutMs: 200 });
   const t0 = Date.now();
   assert.equal(await s.generateText('x', { local: true }), 'DE LA NUBE');
@@ -74,7 +74,7 @@ test('PC lenta: se corta al plazo y sale por la nube', async () => {
   await o.cierra().catch(() => {});
 });
 
-test('respuesta vacía o error de Ollama: nube', async () => {
+test('empty response or Ollama error: cloud', async () => {
   const o = await ollamaFalso((req, res, n) => {
     if (n === 1) { res.statusCode = 500; return res.end('{"error":"model not found"}'); }
     res.end(JSON.stringify({ message: { content: '   ' } }));
@@ -86,7 +86,7 @@ test('respuesta vacía o error de Ollama: nube', async () => {
   await o.cierra();
 });
 
-test('después de la pausa vuelve a probar la PC', async () => {
+test('after the pause it tries the PC again', async () => {
   const o = await ollamaFalso((req, res) => res.end(JSON.stringify({ message: { content: 'LOCAL' } })));
   const s = servicio(o.url);
   s.localCaidoHasta = Date.now() + 60_000;
@@ -97,7 +97,7 @@ test('después de la pausa vuelve a probar la PC', async () => {
   await o.cierra();
 });
 
-test('sin LOCAL_LLM_URL no hay IA local', async () => {
+test('without LOCAL_LLM_URL there\'s no local AI', async () => {
   const s = new AITextService({}, { local: { url: '' } });
   s.client = { chat: { completions: { create: async () => ({ choices: [{ message: { content: 'DE LA NUBE' } }] }) } } };
   s.model = 'gpt-test';
@@ -105,7 +105,7 @@ test('sin LOCAL_LLM_URL no hay IA local', async () => {
   assert.equal(await s.generateText('x', { local: true }), 'DE LA NUBE');
 });
 
-test('solo local (sin nube configurada) también sirve', async () => {
+test('local only (no cloud configured) works too', async () => {
   const o = await ollamaFalso((req, res) => res.end(JSON.stringify({ message: { content: 'LOCAL' } })));
   const s = new AITextService({}, { local: { url: o.url, model: 'qwen3:8b' } });
   s.client = null; s.gemini = null;
@@ -113,7 +113,7 @@ test('solo local (sin nube configurada) también sirve', async () => {
   await o.cierra();
 });
 
-test('el análisis de comentarios pide la IA local, en JSON', async () => {
+test('comment analysis requests the local AI, in JSON', async () => {
   const { AudienceEngagementService } = require('../../utils/audience-engagement-service');
   let opciones = null;
   const db = {

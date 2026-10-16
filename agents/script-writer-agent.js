@@ -114,8 +114,9 @@ class ScriptWriterAgent {
 
     const largo = strategy.requestedLength || process.env.DEFAULT_VIDEO_LENGTH || '8-12 minutes';
     const tope = esShort(strategy) ? null : topePalabras(largo);
-    // 12/10/2026: el Short del 13/10 salió con 220 palabras. Su tope va solo en el prompt:
-    // recortar secciones (como en los largos) le quitaría al Short su única sección.
+    // 12/10/2026: the 13/10 Short came out with 220 words. Its cap only goes in the
+    // prompt: trimming sections (as with long videos) would take away the Short's only
+    // section.
     const topeDicho = tope || (esShort(strategy) ? SHORT_MAX_WORDS : null);
 
     const prompt = `You are writing a YouTube script plan.
@@ -227,14 +228,17 @@ Avoid fabricated statistics, unsupported claims, and fake urgency. List every ex
     }
   }
 
-  /** Regla de fe (05/10/2026): en una oración en español, Jesús de Nazaret como Rey y «Amén» al final. */
+  /**
+   * Faith rule (05/10/2026): in a Spanish prayer, Jesus of Nazareth as King and «Amén» at the
+   * end.
+   */
   cierraOracion(conclusion, strategy, parsed, sections) {
     const idioma = String(process.env.CONTENT_LANGUAGE || 'en').toLowerCase();
     const tema = `${strategy?.topic || ''} ${parsed?.title || ''} ${strategy?.contentType || ''}`;
     if (!idioma.startsWith('es') || !ES_ORACION.test(tema)) return conclusion;
     const guion = [parsed?.hook, parsed?.introduction, ...(sections || []).flatMap(sec => sec.content || [])].join(' ');
-    // La conclusión es un objeto { recap: [frases], finalThought } (normalizeAIConclusion):
-    // el cierre va en la última frase hablada, sin cambiar la forma del objeto.
+    // The conclusion is an object { recap: [sentences], finalThought } (normalizeAIConclusion):
+    // the closing goes in the last spoken sentence, without changing the object's shape.
     if (conclusion && typeof conclusion === 'object') {
       const recap = Array.isArray(conclusion.recap) ? [...conclusion.recap] : [];
       const anteriores = recap.slice(0, -1).join(' ');

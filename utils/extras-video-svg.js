@@ -1,9 +1,9 @@
 /**
- * Tarjetas animadas de «Elementos del vídeo» (03/10/2026), mismo estilo que la
- * animación de suscribirse: un fotograma SVG 1920x1080 con fondo transparente.
- * Arriba al centro, donde no tapan los subtítulos.
- *   svgCampana(t)          4,5 s: entra, la campana se balancea, se va.
- *   svgComentar(t, texto)  5 s: entra con un bocadillo de comentario, se va.
+ * Animated «Video elements» cards (03/10/2026), same style as the subscribe
+ * animation: a 1920x1080 SVG frame with a transparent background. Top center,
+ * where they don't cover the captions.
+ *   svgCampana(t)          4.5 s: comes in, the bell swings, goes away.
+ *   svgComentar(t, texto)  5 s: comes in with a comment bubble, goes away.
  */
 const W = 1920, H = 1080;
 const ROJO = '#E3262E', DORADO = '#E6C27A';
@@ -12,8 +12,10 @@ const CARD = { cx: 960, cy: 230, w: 980, h: 150 };
 const ease = t => (t < 0 ? 0 : t > 1 ? 1 : t * t * (3 - 2 * t));
 const escapa = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-/* Ancho estimado (~0,78 em por letra en mayúsculas de DejaVu Sans Bold). Si se
-   pasara del hueco, textLength lo encoge: nunca se sale de la tarjeta. */
+/*
+ * Estimated width (~0.78 em per capital letter in DejaVu Sans Bold). If it went past the slot,
+ * textLength shrinks it: it never spills off the card.
+ */
 const HUECO = 740;
 const ajusta = (texto, tam) => ([...String(texto)].length * tam * 0.78 > HUECO ? ` textLength="${HUECO}" lengthAdjust="spacingAndGlyphs"` : '');
 
@@ -47,7 +49,7 @@ function svgComentar(t, texto = 'Escribe AMÉN en los comentarios') {
   const linea = String(texto).toLocaleUpperCase('es');
   const tamDe = l => Math.max(30, Math.min(50, Math.floor(HUECO / (Math.max(1, [...l].length) * 0.78))));
   if ([...linea].length <= 30) return marco(t, 5, icono, linea, 'Tu oración también cuenta', tamDe(linea));
-  // Largo: en dos líneas, partido por la palabra más cercana a la mitad.
+  // Long: on two lines, split at the word closest to the middle.
   const palabras = linea.split(' ');
   let corte = 1, mejor = Infinity;
   for (let i = 1; i < palabras.length; i++) {
@@ -60,7 +62,7 @@ function svgComentar(t, texto = 'Escribe AMÉN en los comentarios') {
 }
 
 function svgCompartir(t) {
-  // La flecha de compartir «salta» una vez al entrar.
+  // The share arrow «jumps» once on entry.
   const dx = t >= 0.6 && t < 1.1 ? 10 * Math.sin(((t - 0.6) / 0.5) * Math.PI) : 0;
   const icono = `<circle r="56" fill="#2E7D5B"/>
     <g transform="translate(${dx.toFixed(1)} 0)"><path d="M-30 22c4 -26 22 -38 44 -38v-14l26 24l-26 24v-14c-18 0 -32 6 -44 18z" fill="#fff"/></g>`;

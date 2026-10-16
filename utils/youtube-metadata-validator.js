@@ -9,7 +9,7 @@ function removeControlCharacters(value, replacement = '') {
   }).join('');
 }
 
-/** Descripción: fuera los caracteres de control MENOS el salto de línea (los párrafos). */
+/** Description: control characters out EXCEPT the line break (the paragraphs). */
 function cleanDescription(value) {
   const lineas = String(value ?? '').replace(/\r\n?/g, '\n').split('\n').map(linea => removeControlCharacters(linea));
   return lineas.join('\n').replace(/\n{3,}/g, '\n\n');

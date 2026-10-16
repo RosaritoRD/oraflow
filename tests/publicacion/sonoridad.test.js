@@ -3,7 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const s = require('../../utils/sonoridad');
 
-test('ganancia hasta -14 LUFS, con topes y sin tocar el silencio', () => {
+test('gain up to -14 LUFS, with caps and without touching silence', () => {
   assert.equal(s.ganancia(-30.4), 16.4);
   assert.equal(s.ganancia(-18.1), 4.1);
   assert.equal(s.ganancia(-9), -5);
@@ -13,7 +13,7 @@ test('ganancia hasta -14 LUFS, con topes y sin tocar el silencio', () => {
   assert.equal(s.objetivo({ TARGET_LUFS: 'x' }), -14);
 });
 
-test('normalizaVideo: aplica la ganancia, deja el vídeo sin recodificar y se apaga con LOUDNORM=0', async () => {
+test('normalizaVideo: applies the gain, leaves the video un-re-encoded and turns off with LOUDNORM=0', async () => {
   const fs = require('fs'); const os = require('os'); const path = require('path');
   const ruta = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'lufs-')), 'v.mp4');
   fs.writeFileSync(ruta, 'x');

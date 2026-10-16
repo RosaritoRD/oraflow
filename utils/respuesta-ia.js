@@ -1,15 +1,14 @@
 /**
- * Respuestas con IA a los comentarios cristianos que no son un «Amén» suelto
- * (el autor, 07/10/2026): palabras de ánimo sobre el tema del vídeo, sin salirse
- * de contexto.
+ * AI replies to Christian comments that aren't a bare «Amén» (the owner,
+ * 07/10/2026): words of encouragement on the video's topic, staying in context.
  *
- * Lo que NO se toca (lo contesta el autor a mano):
- *   - crisis (alguien que habla de quitarse la vida o hacerse daño),
- *   - enlaces, teléfonos, WhatsApp/Telegram, inversiones (spam y estafas),
- *   - lo que la propia IA marca como no apto (preguntas de datos, quejas,
- *     comentarios que no van de fe).
- * Lo que se publica lo escribe el proveedor de la nube, no el modelo pequeño
- * de la PC: es texto público del canal.
+ * What is NOT touched (the owner answers it by hand):
+ *   - crises (someone talking about taking their life or harming themselves),
+ *   - links, phone numbers, WhatsApp/Telegram, investments (spam and scams),
+ *   - whatever the AI itself flags as unsuitable (factual questions, complaints,
+ *     comments that aren't about faith).
+ * What gets published is written by the cloud provider, not the PC's small
+ * model: it's the channel's public text.
  */
 
 const CRISIS = /suicid|quitarme la vida|matarme|no quiero vivir|ya no quiero seguir|hacerme da[ñn]o|acabar con mi vida|me quiero morir/i;
@@ -57,7 +56,7 @@ function extraeJson(texto) {
   try { return JSON.parse(m[0]); } catch (_e) { return null; }
 }
 
-/** (comentario) → respuesta lista para publicar, o null si no se contesta. */
+/** (comentario) → a reply ready to publish, or null if it isn't answered. */
 function escritorDeRespuestas(ai, { logger = null } = {}) {
   if (!ai?.isAvailable?.()) return null;
   return async ({ texto, titulo, red }) => {
@@ -67,7 +66,7 @@ function escritorDeRespuestas(ai, { logger = null } = {}) {
       if (!json || json.responder !== true) return null;
       return validaRespuesta(json.respuesta);
     } catch (error) {
-      logger?.warn?.(`Respuesta con IA: ${error.message}`);
+      logger?.warn?.(`AI reply: ${error.message}`);
       return null;
     }
   };

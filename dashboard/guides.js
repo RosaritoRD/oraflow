@@ -1,12 +1,13 @@
-/* global ui, escapeHTML, switchView */
-// Guías: documentación dentro del panel. Contenido propio y fijo (no viene de
-// usuarios ni de la API), por eso se pinta como HTML.
+/* global ui, escapeHTML, switchView, i18n */
+// Guides: documentation inside the panel. Our own fixed content (it doesn't come
+// from users or the API), which is why it's drawn as HTML. The Spanish versions
+// live here; the English ones in guides-en.js (same slugs).
 (() => {
   'use strict';
 
   const $ = selector => document.querySelector(selector);
 
-  const GUIAS = [
+  const GUIAS_ES = [
     {
       slug: 'empezar',
       title: 'Primeros pasos',
@@ -87,8 +88,50 @@
         <p>Cada 30-90 minutos (al azar, para que no parezca un robot) se responden los comentarios que son solo «Amén» o «Amén + nombre» («Amén por mi hija Ana» → «Hoy oramos por tu hija Ana…»). Las peticiones de salud, preguntas o historias las dejas tú, en <em>Interacción</em>.</p>
         <h3>Instagram</h3>
         <p>A los 4-9 minutos de <strong>cualquier</strong> comentario, la persona recibe por mensaje privado una oración (40 distintas) con el libro y el cupón, y en su comentario aparece «Te envié una oración por mensaje privado 💌». Una vez por persona; si vuelve a escribir «Amén», se le contesta normal.</p>
-        <p class="warn">Para que Instagram y Facebook vean los comentarios del público, la app de Meta «Oraciones Publisher» tiene que estar <strong>en modo en vivo</strong> (en modo desarrollo solo ve los de sus administradores). Política de privacidad: <code>tu-dominio.com/privacidad</code>; eliminación de datos: <code>/eliminar-datos</code>.</p>
+        <p class="warn">Para que Instagram y Facebook vean los comentarios del público, la app de Meta «Oraciones Publisher» tiene que estar <strong>en modo en vivo</strong> (en modo desarrollo solo ve los de sus administradores). Política de privacidad: <code>your-domain.com/privacidad</code>; eliminación de datos: <code>/eliminar-datos</code>.</p>
         <p>En <em>Redes → Respuestas automáticas</em> ves cuántas van hoy, la próxima vuelta, el estado de cada red y las últimas respuestas con su enlace.</p>`
+    },
+    {
+      slug: 'mensajes',
+      title: 'Mensajes: conectar apps y automatizar',
+      summary: 'Conectar Instagram, Facebook, WhatsApp, Telegram y YouTube, crear un mensaje por vídeo y ver qué salió.',
+      keywords: 'mensajes bandeja inbox automatizaciones reglas ejecuciones cuentas conectar whatsapp telegram instagram facebook youtube tiktok meta en vivo app review',
+      body: `
+        <p class="lead">Todas tus conversaciones y respuestas automáticas en un solo lugar: menú <strong>Mensajes</strong>.</p>
+        <dl class="guide-defs">
+          <dt>Resumen</dt><dd>Cada cuenta conectada, si tiene error, sus reglas activas y lo que salió hoy.</dd>
+          <dt>Bandeja</dt><dd>Los privados de Instagram, Facebook, WhatsApp y Telegram juntos. Contestas desde ahí (Meta solo deja contestar en las 24 h siguientes al último mensaje de la persona).</dd>
+          <dt>Automatizaciones</dt><dd>Las reglas: «en este vídeo, quien comente <em>libro</em> recibe este privado y esta respuesta».</dd>
+          <dt>Ejecuciones</dt><dd>Cada comentario o mensaje atendido: a quién, qué escribió, si salió y, si no, por qué.</dd>
+          <dt>Cuentas</dt><dd>Conectar y quitar apps. Puedes tener varias de cada una.</dd>
+        </dl>
+        <h3>1. Conectar una app</h3>
+        <ol class="steps">
+          <li><em>Mensajes → Cuentas → Conectar cuenta</em>.</li>
+          <li>Elige la app. Se abren sus <strong>instrucciones paso a paso</strong> (dónde sacar el token y qué permisos marcar).</li>
+          <li>Pega los datos y pulsa <strong>Comprobar y conectar</strong>: se prueba con la app de verdad antes de guardar. El token queda cifrado y no se vuelve a mostrar.</li>
+        </ol>
+        <p><strong>Telegram</strong> funciona al momento. <strong>YouTube</strong> usa el canal que ya publica (sin token). <strong>Instagram, Facebook y WhatsApp</strong> dependen de que la app de Meta esté en vivo (punto 4). <strong>TikTok y X</strong> aún no: sus APIs piden aprobación o son de pago; el catálogo explica por qué.</p>
+        <h3>2. Crear un mensaje automático para un vídeo</h3>
+        <ol class="steps">
+          <li><em>Automatizaciones → Nueva regla</em>. Elige la cuenta y el vídeo (o «Todas las publicaciones»).</li>
+          <li>Escribe las palabras que la activan (<code>libro, oración</code>). Vacío = cualquier comentario. Da igual mayúsculas y tildes, pero tiene que ser la palabra entera.</li>
+          <li>Escribe el mensaje privado (<code>{usuario}</code> pone el @ de la persona) y 3 o más respuestas públicas, una por línea: se van turnando para que Meta no lo tome por spam.</li>
+          <li>Guarda. Se revisa cada 5 minutos y contesta a los 4-9 minutos del comentario.</li>
+        </ol>
+        <p>Qué admite cada app: <strong>Instagram y Facebook</strong> privado + respuesta pública. <strong>YouTube</strong> solo respuesta pública (no tiene privados; tope 30 al día por la cuota). <strong>WhatsApp y Telegram</strong> respuesta automática al mensaje que te escriben.</p>
+        <p>La regla de un vídeo manda sobre la general. Lo que atiende una regla ya no lo toca la oración por privado ni el «Amén» automático de <em>Redes</em>: nadie recibe dos mensajes. «Una vez por persona» viene marcado; quien escribió BORRAR no recibe nada.</p>
+        <h3>3. Ver qué pasó</h3>
+        <p><em>Ejecuciones</em> filtra por cuenta y estado. <strong>Omitido</strong> = ya lo había recibido o pidió no recibir mensajes. <strong>Falló</strong> = en comentarios se reintenta solo hasta 3 veces (los mensajes de chat no se reintentan: contéstalos desde la Bandeja); si es por permisos, la cuenta descansa 1 hora.</p>
+        <h3>4. Pasar la app de Meta a «En vivo» (lo que hoy bloquea Instagram y Facebook)</h3>
+        <ol class="steps">
+          <li><a href="https://developers.facebook.com/apps" target="_blank" rel="noopener">developers.facebook.com → Mis apps</a> → «Oraciones Publisher» → <em>Configuración de la app → Básica</em>: rellena la URL de la política de privacidad (<code>https://your-domain.com/privacidad</code>), la de eliminación de datos (<code>/eliminar-datos</code>), el icono, la categoría y el correo de contacto. Guarda.</li>
+          <li><em>Revisión de la app → Permisos y funciones</em>: pide <strong>acceso avanzado</strong> para <code>instagram_business_manage_comments</code>, <code>instagram_business_manage_messages</code>, <code>pages_read_user_content</code>, <code>pages_manage_engagement</code> y <code>pages_messaging</code>.</li>
+          <li>Por cada permiso, Meta pide explicar para qué es y un vídeo corto de pantalla enseñando el uso (por ejemplo: un comentario en un Reel → llega la oración por privado). Puede pedir también la verificación del negocio.</li>
+          <li>Cuando lo aprueben (suele tardar días), arriba en la app cambia el interruptor <strong>Modo de la app</strong> de «Desarrollo» a «En vivo».</li>
+          <li>Vuelve a <em>Mensajes → Resumen</em>: el error de permisos desaparece en la siguiente vuelta (como mucho 1 hora).</li>
+        </ol>
+        <p class="warn">WhatsApp necesita además que la dirección <code>/webhooks/whatsapp/</code> sea pública en el servidor para que Meta entregue los mensajes. Es un cambio de configuración del servidor; pídelo cuando vayas a usar WhatsApp.</p>`
     },
     {
       slug: 'historia',
@@ -99,7 +142,7 @@
         <ol class="steps">
           <li>Abre <a href="/historia" target="_blank" rel="noopener">/historia</a> en el teléfono (guárdala en la pantalla de inicio).</li>
           <li>Toca <em>Copiar enlace y abrir Instagram</em> → Instagram → Historia.</li>
-          <li>Sticker 🔗 Enlace → pegar. El enlace <code>panel.tu-dominio.com/hoy</code> siempre abre el vídeo del día.</li>
+          <li>Sticker 🔗 Enlace → pegar. El enlace <code>panel.your-domain.com/hoy</code> siempre abre el vídeo del día.</li>
           <li>Escóndelo detrás de «VER ORACIÓN COMPLETA», pon tu manito y compártela.</li>
         </ol>
         <p class="tip">La API de Instagram no permite stickers: por eso esta parte es a mano. En Facebook la historia sale sola.</p>`
@@ -111,8 +154,8 @@
       keywords: 'libro ebook hotmart venta cupon devocional pdf',
       body: `
         <dl class="guide-defs">
-          <dt>Página de venta</dt><dd><a href="https://tu-dominio.com/libro" target="_blank" rel="noopener">tu-dominio.com/libro</a> (botón al pago de Hotmart).</dd>
-          <dt>Cupón</dt><dd>TU_CUPON, 10 % (se cambia en <em>Textos y enlaces</em> y en Hotmart → Cupones).</dd>
+          <dt>Página de venta</dt><dd><a href="https://your-domain.com/libro" target="_blank" rel="noopener">your-domain.com/libro</a> (botón al pago de Hotmart).</dd>
+          <dt>Cupón</dt><dd>YOUR_COUPON, 10 % (se cambia en <em>Textos y enlaces</em> y en Hotmart → Cupones).</dd>
           <dt>Dónde aparece</dt><dd>Pie de todas las descripciones de YouTube, textos de Instagram y Facebook, mensaje privado de Instagram.</dd>
           <dt>Regenerar el PDF</dt><dd><code>node scripts/ebook.js</code> (lleva el nombre del autor dentro, como pide Hotmart).</dd>
         </dl>`
@@ -238,7 +281,7 @@ Juan 3:16 | Tu propio texto, si no quieres el de la 1909</pre>
           <dt>Pexels</dt><dd>Fotos y videos de stock gratis para las escenas.</dd>
           <dt>API key del panel</dt><dd>Protege los botones que cambian cosas. Recomendado ponerla.</dd>
         </dl>
-        <p>Las marcadas «del .env» se cambian en el servidor, en <code>/ruta/a/oraflow/.env</code>, y luego se reinicia el contenedor (<code>docker compose up -d oraflow</code> dentro de esa carpeta).</p>
+        <p>Las marcadas «del .env» se cambian en el servidor, en <code>/path/to/oraflow/.env</code>, y luego se reinicia el contenedor (<code>docker compose up -d oraflow</code> dentro de esa carpeta).</p>
         <p class="warn">Si alguna clave se vio en una captura, un chat o un archivo compartido, <strong>rótala</strong>: crea una nueva en el servicio y borra la vieja.</p>`
     },
     {
@@ -302,6 +345,7 @@ Juan 3:16 | Tu propio texto, si no quieres el de la 1909</pre>
     }
   ];
 
+  const GUIAS = i18n.language === 'es' || !window.agentGuidesEn ? GUIAS_ES : window.agentGuidesEn;
   const estado = { slug: GUIAS[0].slug };
 
   function lista(filtro = '') {
@@ -312,13 +356,13 @@ Juan 3:16 | Tu propio texto, si no quieres el de la 1909</pre>
       <button type="button" class="docs-link ${g.slug === estado.slug ? 'active' : ''}" data-guide="${escapeHTML(g.slug)}">
         <strong>${core ? core.highlight(g.title, filtro, escapeHTML) : escapeHTML(g.title)}</strong>
         <span>${escapeHTML(g.summary)}</span>
-      </button>`).join('') : '<p class="empty-inline">Ninguna guía coincide.</p>';
+      </button>`).join('') : `<p class="empty-inline">${escapeHTML(i18n.t('No guide matches.'))}</p>`;
   }
 
   function abrir(slug) {
     const g = GUIAS.find(x => x.slug === slug) || GUIAS[0];
     estado.slug = g.slug;
-    $('#docs-article').innerHTML = `<p class="eyebrow">GUÍA</p><h2>${escapeHTML(g.title)}</h2>${g.body}`;
+    $('#docs-article').innerHTML = `<p class="eyebrow">${escapeHTML(i18n.t('GUIDE'))}</p><h2>${escapeHTML(g.title)}</h2>${g.body}`;
     lista($('#docs-search').value);
   }
 

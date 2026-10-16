@@ -1,4 +1,4 @@
-// 07/10/2026: en Conexiones se ve si el PC está haciendo los vídeos o si la VPS lo cubre.
+// 07/10/2026: Connections shows whether the PC is making the videos or the VPS is covering.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { pc } = require('../../utils/conexiones');
@@ -19,13 +19,13 @@ test('PC sano: taller, voz e IA local', async () => {
   assert.match(e.detalle, /voz/i);
 });
 
-test('PC apagado: la VPS cubre y se dice', async () => {
+test('PC off: the VPS covers and says so', async () => {
   const e = await pc({ env: ENV, fetchImpl: responde({ ':8096': 'caido', ':8095': 'caido', ':11434': 'caido' }), taller: { remotos: 0, locales: 5, fallos: 2 } });
   assert.equal(e.estado, 'partial');
   assert.match(e.detalle, /VPS/);
 });
 
-test('sin configurar', async () => {
+test('not configured', async () => {
   const e = await pc({ env: {}, fetchImpl: responde({}) });
   assert.equal(e.estado, 'not_configured');
 });
