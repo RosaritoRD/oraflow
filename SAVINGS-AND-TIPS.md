@@ -27,7 +27,7 @@ Comment analysis uses **qwen3:8b with Ollama** on your PC, and only falls back t
 → `LOCAL_LLM_URL`, `LOCAL_LLM_MODEL`
 
 ### 6. Free local voice *(not wired in yet)*
-There's a client for local voice with Kokoro or Piper (`utils/local-tts-client.js`). It works in testing, but **it's not hooked into production yet**. See `docs/local-voice.md` and [voz-local](https://github.com/RosaritoRD/voz-local).
+There's a client for local voice with Kokoro or Piper (`utils/local-tts-client.js`). It works in testing, but **it's not hooked into production yet**. See `docs/local-voice.md` and [voz-local](https://github.com/RosaritoRD/local-voice).
 
 ### 7. Images and video without paying per item
 - `VIDEO_PROVIDER=slideshow`: landscapes and photos with motion instead of AI-generated video, which is the most expensive option.

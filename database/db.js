@@ -565,6 +565,12 @@ class Database {
         de_mi INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL
       )`,
+      // Indexes for what Messages reads every minute (16/10/2026): conversations, «once per
+      // person», the Runs screen and today's overview.
+      `CREATE INDEX IF NOT EXISTS idx_chat_messages_conversacion ON chat_messages(cuenta_id, contacto, created_at)`,
+      `CREATE INDEX IF NOT EXISTS idx_message_runs_regla_usuario ON message_runs(regla_id, usuario)`,
+      `CREATE INDEX IF NOT EXISTS idx_message_runs_fecha ON message_runs(created_at, id)`,
+      `CREATE INDEX IF NOT EXISTS idx_message_rules_cuenta ON message_rules(cuenta_id, created_at)`,
       `CREATE TABLE IF NOT EXISTS shorts_clips (
         id TEXT PRIMARY KEY,
         production_id TEXT NOT NULL,
@@ -737,6 +743,7 @@ class Database {
     await this.ensureColumns('discoverability_audits', {
       error_code: 'TEXT'
     });
+    await this.dropIfEmpty('whatsapp_messages');
 
     // Insert default settings
     await this.insertDefaultSettings();
@@ -751,6 +758,13 @@ class Database {
         await this.executeQuery(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`);
       }
     }
+  }
+
+  // whatsapp_messages was replaced by chat_messages (15/10/2026). Dropped only if nothing is in it.
+  async dropIfEmpty(tableName) {
+    if (tableName !== 'whatsapp_messages') throw new Error(`Unsupported table: ${tableName}`);
+    if (!await this.getRow('SELECT name FROM sqlite_master WHERE type = ? AND name = ?', ['table', tableName])) return;
+    if (!await this.getRow(`SELECT 1 FROM ${tableName} LIMIT 1`)) await this.executeQuery(`DROP TABLE ${tableName}`);
   }
 
   async insertDefaultSettings() {

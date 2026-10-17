@@ -193,9 +193,13 @@ class DailyAutomation {
         // First the per-post rules of ALL accounts (Messages section, 15/10/2026); whatever
         // they handle is no longer touched by the private-message prayer below.
         const motor = require('../utils/mensajes/motor');
-        await motor.ejecutaTodas({ db: this.db, logger: this.logger, youtube: this.agents.publishing?.youtube || null })
-          .catch(error => this.logger.warn(`Mensajes (reglas): ${error.message}`));
+        // Never two rounds at once: the old engine below would also answer what the rules are
+        // still sending, and the same person would get two private messages.
+        if (this.mensajesReglasEnCurso) return;
+        this.mensajesReglasEnCurso = true;
         try {
+          await motor.ejecutaTodas({ db: this.db, logger: this.logger, youtube: this.agents.publishing?.youtube || null })
+            .catch(error => this.logger.warn(`Mensajes (reglas): ${error.message}`));
           const token = await require('../utils/instagram-reels').tokenInstagram(this.db, process.env);
           if (!token || await this.db.getSetting('dm_amen_enabled') !== 'true') return;
           const amen = require('../utils/amen-automatico');
@@ -209,6 +213,8 @@ class DailyAutomation {
           });
         } catch (error) {
           this.logger.warn(`Instagram (private-message prayer): ${error.message}`);
+        } finally {
+          this.mensajesReglasEnCurso = false;
         }
       }, { scheduled: false })
     );
@@ -217,13 +223,29 @@ class DailyAutomation {
     // weekly renewal of Instagram tokens added in Messages → Accounts (15/10/2026).
     this.scheduledTasks.set('mensajes-chats',
       cron.schedule('* * * * *', async () => {
-        if (!this.isEnabled) return;
-        const motor = require('../utils/mensajes/motor');
-        await motor.recogeChats({ db: this.db, logger: this.logger })
-          .catch(error => this.logger.warn(`Mensajes (chats): ${error.message}`));
-        if (new Date().getMinutes() === 7) {
-          await require('../utils/mensajes/cuentas').renuevaTokensIG(this.db, { logger: this.logger })
-            .catch(error => this.logger.warn(`Mensajes (renovar tokens): ${error.message}`));
+        // A slow round (Telegram not answering) must not overlap the next one: both would read
+        // the same messages and answer twice.
+        if (!this.isEnabled || this.mensajesChatsEnCurso) return;
+        this.mensajesChatsEnCurso = true;
+        try {
+          const motor = require('../utils/mensajes/motor');
+          await motor.recogeChats({ db: this.db, logger: this.logger })
+            .catch(error => this.logger.warn(`Mensajes (chats): ${error.message}`));
+          const ahora = new Date();
+          if (ahora.getMinutes() === 7) {
+            await require('../utils/mensajes/cuentas').renuevaTokensIG(this.db, { logger: this.logger })
+              .catch(error => this.logger.warn(`Mensajes (renovar tokens): ${error.message}`));
+          }
+          // From 4:23 on, the first free round of the day (if 4:23 itself was busy it isn't lost).
+          const dia = ahora.toDateString();
+          if (ahora.getHours() * 60 + ahora.getMinutes() >= 4 * 60 + 23 && this.mensajesLimpiezaDia !== dia) {
+            this.mensajesLimpiezaDia = dia;
+            await motor.limpia(this.db)
+              .then(r => (r.ejecuciones || r.chats) && this.logger.info(`Messages: cleaned ${r.ejecuciones} old runs and ${r.chats} old chat messages`))
+              .catch(error => this.logger.warn(`Mensajes (limpieza): ${error.message}`));
+          }
+        } finally {
+          this.mensajesChatsEnCurso = false;
         }
       }, { scheduled: false })
     );
